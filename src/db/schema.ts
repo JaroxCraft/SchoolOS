@@ -12,12 +12,19 @@ export const periods = sqliteTable("periods", {
   endTime: text("end_time").notNull(),
 });
 
+export const teachers = sqliteTable("teachers", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  name: text("name").notNull(),
+  abbreviation: text("abbreviation").notNull(),
+  email: text("email"),
+});
+
 export const subjects = sqliteTable("subjects", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   name: text("name").notNull(),
   abbreviation: text("abbreviation").notNull(),
   color: text("color").notNull(),
-  teacher: text("teacher"),
+  teacherId: integer("teacher_id").references(() => teachers.id, { onDelete: "set null" }),
 });
 
 export const lessons = sqliteTable("lessons", {
@@ -79,6 +86,7 @@ export const settings = sqliteTable("settings", {
 });
 
 export type Period = typeof periods.$inferSelect;
+export type Teacher = typeof teachers.$inferSelect;
 export type Subject = typeof subjects.$inferSelect;
 export type Lesson = typeof lessons.$inferSelect;
 export type Semester = typeof semesters.$inferSelect;

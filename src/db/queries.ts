@@ -2,7 +2,15 @@ import { asc, eq } from "drizzle-orm";
 import { useLiveQuery } from "drizzle-orm/expo-sqlite";
 
 import { db } from "@/db/client";
-import { entries, lessons, periods, settings, subjects, type Settings } from "@/db/schema";
+import {
+  entries,
+  lessons,
+  periods,
+  settings,
+  subjects,
+  teachers,
+  type Settings,
+} from "@/db/schema";
 
 const DEFAULT_SETTINGS: Settings = {
   id: 1,
@@ -20,6 +28,10 @@ export function usePeriods() {
 
 export function useSubjects() {
   return useLiveQuery(db.select().from(subjects).orderBy(asc(subjects.name))).data;
+}
+
+export function useTeachers() {
+  return useLiveQuery(db.select().from(teachers).orderBy(asc(teachers.name))).data;
 }
 
 export function useLessons() {
