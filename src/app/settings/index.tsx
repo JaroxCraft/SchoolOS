@@ -5,7 +5,7 @@ import { Platform } from "react-native";
 import { FormFooter, FormList } from "@/components/form-list";
 import { SelectRow } from "@/components/select-row";
 import { updateSettings } from "@/db/actions";
-import { useLessons, usePeriods, useSettings, useSubjects } from "@/db/queries";
+import { useLessons, usePeriods, useSettings, useSubjects, useTeachers } from "@/db/queries";
 
 const LEAD_DAY_OPTIONS = Array.from({ length: 22 }, (_, days) => ({
   label: days === 1 ? "1 Tag" : `${days} Tage`,
@@ -15,6 +15,7 @@ const LEAD_DAY_OPTIONS = Array.from({ length: 22 }, (_, days) => ({
 export default function SettingsScreen() {
   const periods = usePeriods();
   const subjects = useSubjects();
+  const teachers = useTeachers();
   const lessons = useLessons();
   const settings = useSettings();
 
@@ -41,6 +42,11 @@ export default function SettingsScreen() {
             onPress={() => router.push("/settings/subjects")}
             supportingText={`${subjects.length} Fächer`}>
             Fächer
+          </ListItem>
+          <ListItem
+            onPress={() => router.push("/settings/teachers")}
+            supportingText={`${teachers.length} Lehrpersonen`}>
+            Lehrpersonen
           </ListItem>
           <ListItem
             onPress={() => router.push("/settings/timetable")}

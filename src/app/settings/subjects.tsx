@@ -3,13 +3,14 @@ import { router, Stack } from "expo-router";
 
 import { FormList } from "@/components/form-list";
 import { SubjectDot } from "@/components/subject-dot";
-import { useSubjects } from "@/db/queries";
+import { useSubjects, useTeachers } from "@/db/queries";
 
 const openSubject = (id: string) =>
   router.push({ pathname: "/settings/subject/[id]", params: { id } });
 
 export default function SubjectsScreen() {
   const subjects = useSubjects();
+  const teachers = useTeachers();
 
   return (
     <>
@@ -21,7 +22,12 @@ export default function SubjectsScreen() {
               key={subject.id}
               onPress={() => openSubject(String(subject.id))}
               leading={<SubjectDot color={subject.color} />}
-              supportingText={[subject.abbreviation, subject.teacher].filter(Boolean).join(" · ")}>
+              supportingText={[
+                subject.abbreviation,
+                teachers.find((teacher) => teacher.id === subject.teacherId)?.name,
+              ]
+                .filter(Boolean)
+                .join(" · ")}>
               {subject.name}
             </ListItem>
           ))}
