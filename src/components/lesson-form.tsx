@@ -3,11 +3,11 @@ import { router, Stack } from "expo-router";
 import { useState } from "react";
 
 import { FormList } from "@/components/form-list";
-import { HeaderButton } from "@/components/header-button";
 import { SelectRow } from "@/components/select-row";
 import { setLesson } from "@/db/actions";
 import type { Lesson, Subject } from "@/db/schema";
 import { weekdayName } from "@/lib/dates";
+import { useHeaderButton } from "@/hooks/use-header-button";
 
 const FREE = 0;
 
@@ -23,6 +23,8 @@ export function LessonForm({ weekday, periodId, periodNumber, lesson, subjects }
   const [subjectId, setSubjectId] = useState(lesson?.subjectId ?? FREE);
   const [room, setRoom] = useState(lesson?.room ?? "");
 
+  const saveButton = useHeaderButton("Sichern", "check");
+
   const save = async () => {
     await setLesson(weekday, periodId, subjectId === FREE ? null : subjectId, room.trim() || null);
     router.back();
@@ -32,7 +34,7 @@ export function LessonForm({ weekday, periodId, periodNumber, lesson, subjects }
     <>
       <Stack.Title>{`${weekdayName(weekday)}, ${periodNumber}. Lektion`}</Stack.Title>
       <Stack.Toolbar placement="right">
-        <HeaderButton label="Sichern" icon="check" onPress={save} />
+        {saveButton && <Stack.Toolbar.Button {...saveButton} onPress={save} />}
       </Stack.Toolbar>
 
       <FormList>
