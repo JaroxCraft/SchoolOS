@@ -37,6 +37,8 @@ export function DateField({ label, value, onChange, mode = "date" }: DateFieldPr
               `${date.getUTCFullYear()}-${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())}`
             );
           }}
+          confirmButtonLabel="OK"
+          dismissButtonLabel="Abbrechen"
           onDismissRequest={() => setOpen(false)}
         />
       )}
@@ -48,6 +50,8 @@ export function DateField({ label, value, onChange, mode = "date" }: DateFieldPr
             setOpen(false);
             onChange(`${pad(date.getHours())}:${pad(date.getMinutes())}`);
           }}
+          confirmButtonLabel="OK"
+          dismissButtonLabel="Abbrechen"
           onDismissRequest={() => setOpen(false)}
         />
       )}

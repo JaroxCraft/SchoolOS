@@ -20,14 +20,17 @@ export function Screen({ title, onAdd, children }: ScreenProps) {
       {children}
       <Stack.Title large>{title}</Stack.Title>
       <Stack.Toolbar placement="right">
-        {onAdd && (
+        {/* On Android the icons load asynchronously; render the buttons once they are ready */}
+        {onAdd && addIcon && (
           <Stack.Toolbar.Button icon={addIcon} accessibilityLabel="Hinzufügen" onPress={onAdd} />
         )}
-        <Stack.Toolbar.Button
-          icon={settingsIcon}
-          accessibilityLabel="Einstellungen"
-          onPress={() => router.push("/settings")}
-        />
+        {settingsIcon && (
+          <Stack.Toolbar.Button
+            icon={settingsIcon}
+            accessibilityLabel="Einstellungen"
+            onPress={() => router.push("/settings")}
+          />
+        )}
       </Stack.Toolbar>
     </>
   );

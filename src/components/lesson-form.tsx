@@ -3,6 +3,7 @@ import { router, Stack } from "expo-router";
 import { useState } from "react";
 
 import { FormList } from "@/components/form-list";
+import { HeaderButton } from "@/components/header-button";
 import { SelectRow } from "@/components/select-row";
 import { setLesson } from "@/db/actions";
 import type { Lesson, Subject } from "@/db/schema";
@@ -31,9 +32,7 @@ export function LessonForm({ weekday, periodId, periodNumber, lesson, subjects }
     <>
       <Stack.Title>{`${weekdayName(weekday)}, ${periodNumber}. Lektion`}</Stack.Title>
       <Stack.Toolbar placement="right">
-        <Stack.Toolbar.Button variant="done" onPress={save}>
-          Sichern
-        </Stack.Toolbar.Button>
+        <HeaderButton label="Sichern" icon="check" onPress={save} />
       </Stack.Toolbar>
 
       <FormList>
