@@ -35,6 +35,7 @@ export function EntryRow({ entry, subject }: EntryRowProps) {
         checkable ? (
           <TaskCheckbox
             value={entry.completed}
+            color={subject?.color ?? NEUTRAL_COLOR}
             onValueChange={(completed) => setEntryCompleted(entry.id, completed)}
           />
         ) : (

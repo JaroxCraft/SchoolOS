@@ -4,6 +4,8 @@ export type TaskCheckboxProps = {
   value: boolean;
   onValueChange: (value: boolean) => void;
   label?: string;
+  // Fill color of the checked circle on iOS, e.g. the subject color
+  color?: string;
 };
 
 // Android: the Material checkbox.
