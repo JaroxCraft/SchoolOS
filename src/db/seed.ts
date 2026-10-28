@@ -1,5 +1,5 @@
-import { db } from "./client";
-import { lessons, periods, subjects } from "./schema";
+import { db } from "@/db/client";
+import { lessons, periods, subjects } from "@/db/schema";
 
 // Test data for development: the S3a timetable 2026/27 of the Oberstufe Uznach.
 
