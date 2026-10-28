@@ -1,10 +1,11 @@
 import { Button, FieldGroup, Switch, TextInput } from "@expo/ui";
 import { router, Stack } from "expo-router";
 import { useState } from "react";
-import { Alert } from "react-native";
+import { Alert, Platform } from "react-native";
 
 import { DateField } from "@/components/date-field";
 import { FormList } from "@/components/form-list";
+import { HeaderButton } from "@/components/header-button";
 import { SelectRow } from "@/components/select-row";
 import { deleteEntry, saveEntry } from "@/db/actions";
 import {
@@ -36,6 +37,7 @@ type FormState = {
   studyStart: string | null;
   topic: string;
   // Set once the user picks the value, so it is no longer derived automatically
+  dateTouched: boolean;
   periodTouched: boolean;
   studyStartTouched: boolean;
 };
@@ -63,21 +65,30 @@ export function EntryForm({
   const derive = (state: FormState): FormState => {
     const next = { ...state };
 
-    if (next.type === "homework" && next.dueChoice !== "custom") {
-      const [first, second] = upcoming(next.subjectId);
-      const pick = next.dueChoice === "next" ? first : (second ?? first);
-      next.date = pick?.date ?? addDays(today(), 1);
-      next.periodId = pick?.period.id ?? NONE;
-    } else if (next.type !== "homework" && !next.periodTouched) {
-      next.periodId =
-        subjectLessonOn(next.subjectId, next.date, lessons, periods)?.period.id ?? NONE;
+    if (next.type === "homework") {
+      if (next.dueChoice !== "custom") {
+        const [first, second] = upcoming(next.subjectId);
+        const pick = next.dueChoice === "next" ? first : (second ?? first);
+        next.date = pick?.date ?? addDays(today(), 1);
+        next.periodId = pick?.period.id ?? NONE;
+      }
+    } else {
+      if (!next.dateTouched) {
+        next.date = upcoming(next.subjectId)[0]?.date ?? addDays(today(), 1);
+      }
+      if (!next.periodTouched) {
+        next.periodId =
+          subjectLessonOn(next.subjectId, next.date, lessons, periods)?.period.id ?? NONE;
+      }
     }
 
     const leadDays = defaultLeadDays(next.type, settings);
     if (leadDays === null) {
       next.studyStart = null;
     } else if (!next.studyStartTouched || next.studyStart === null) {
-      next.studyStart = addDays(next.date, -leadDays);
+      // Not before today, but never after the entry itself
+      const suggested = addDays(next.date, -leadDays);
+      next.studyStart = suggested >= today() ? suggested : [today(), next.date].sort()[0];
     }
     return next;
   };
@@ -95,6 +106,7 @@ export function EntryForm({
           completed: entry.completed,
           studyStart: entry.studyStart,
           topic: entry.topic ?? "",
+          dateTouched: true,
           periodTouched: true,
           studyStartTouched: true,
         }
@@ -109,6 +121,7 @@ export function EntryForm({
           completed: false,
           studyStart: null,
           topic: "",
+          dateTouched: false,
           periodTouched: false,
           studyStartTouched: false,
         })
@@ -154,13 +167,14 @@ export function EntryForm({
   return (
     <>
       <Stack.Title>{entry ? info.label : "Neuer Eintrag"}</Stack.Title>
-      <Stack.Toolbar placement="left">
-        <Stack.Toolbar.Button onPress={() => router.back()}>Abbrechen</Stack.Toolbar.Button>
-      </Stack.Toolbar>
+      {/* Android shows the back arrow instead */}
+      {Platform.OS === "ios" && (
+        <Stack.Toolbar placement="left">
+          <Stack.Toolbar.Button onPress={() => router.back()}>Abbrechen</Stack.Toolbar.Button>
+        </Stack.Toolbar>
+      )}
       <Stack.Toolbar placement="right">
-        <Stack.Toolbar.Button variant="done" disabled={!canSave} onPress={save}>
-          Sichern
-        </Stack.Toolbar.Button>
+        <HeaderButton label="Sichern" icon="check" disabled={!canSave} onPress={save} />
       </Stack.Toolbar>
 
       <FormList>
@@ -191,7 +205,7 @@ export function EntryForm({
           />
         </FieldGroup.Section>
 
-        <FieldGroup.Section title={form.type === "homework" ? "Fällig" : "Termin"}>
+        <FieldGroup.Section title="Termin">
           {form.type === "homework" && (
             <SelectRow
               label="Fällig"
@@ -215,7 +229,11 @@ export function EntryForm({
             />
           )}
           {(form.type !== "homework" || form.dueChoice === "custom") && (
-            <DateField label="Datum" value={form.date} onChange={(date) => change({ date })} />
+            <DateField
+              label="Datum"
+              value={form.date}
+              onChange={(date) => change({ date, dateTouched: true })}
+            />
           )}
           {form.type !== "homework" && (
             <SelectRow
