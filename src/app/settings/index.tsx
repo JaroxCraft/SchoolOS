@@ -1,16 +1,27 @@
-import { FieldGroup, ListItem } from "@expo/ui";
+import { Button, FieldGroup, ListItem } from "@expo/ui";
 import { router, Stack } from "expo-router";
-import { Platform } from "react-native";
+import { Alert, Platform } from "react-native";
 
 import { FormFooter, FormList } from "@/components/form-list";
 import { SelectRow } from "@/components/select-row";
-import { updateSettings } from "@/db/actions";
+import { clearDatabase, updateSettings } from "@/db/actions";
 import { useLessons, usePeriods, useSettings, useSubjects, useTeachers } from "@/db/queries";
 
 const LEAD_DAY_OPTIONS = Array.from({ length: 22 }, (_, days) => ({
   label: days === 1 ? "1 Tag" : `${days} Tage`,
   value: days,
 }));
+
+function confirmClearDatabase() {
+  Alert.alert(
+    "Datenbank leeren?",
+    "Alle Fächer, Lektionen, Einträge und Einstellungen werden gelöscht. Beim nächsten Start kommen die Testdaten zurück.",
+    [
+      { text: "Abbrechen", style: "cancel" },
+      { text: "Leeren", style: "destructive", onPress: () => clearDatabase() },
+    ]
+  );
+}
 
 export default function SettingsScreen() {
   const periods = usePeriods();
@@ -78,6 +89,16 @@ export default function SettingsScreen() {
             Wie viele Tage vor dem Termin das Lernen beginnt. Lässt sich bei jedem Eintrag anpassen.
           </FormFooter>
         </FieldGroup.Section>
+
+        {/* Development only: the test data is seeded again on the next launch */}
+        {__DEV__ && (
+          <FieldGroup.Section title="Entwicklung">
+            <Button variant="text" label="Datenbank leeren" onPress={confirmClearDatabase} />
+            <FormFooter>
+              Löscht alle Daten. Beim nächsten Start der App werden die Testdaten neu geladen.
+            </FormFooter>
+          </FieldGroup.Section>
+        )}
       </FormList>
     </>
   );

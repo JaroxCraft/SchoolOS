@@ -3,8 +3,10 @@ import { and, eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import {
   entries,
+  grades,
   lessons,
   periods,
+  semesters,
   settings,
   subjects,
   teachers,
@@ -14,6 +16,22 @@ import {
 type NewTeacher = typeof teachers.$inferInsert;
 type NewSubject = typeof subjects.$inferInsert;
 type NewEntry = typeof entries.$inferInsert;
+
+// Deletes all data, children before the rows they reference.
+export async function clearDatabase() {
+  for (const table of [
+    grades,
+    entries,
+    lessons,
+    subjects,
+    teachers,
+    periods,
+    semesters,
+    settings,
+  ]) {
+    await db.delete(table);
+  }
+}
 
 export async function ensureSettings() {
   await db.insert(settings).values({ id: 1 }).onConflictDoNothing();
