@@ -3,8 +3,7 @@ import { FloatingActionButton, Icon } from "@expo/ui/jetpack-compose";
 import { router } from "expo-router";
 
 import { useToolbarIcon } from "@/hooks/use-toolbar-icon";
-
-export const NEW_ENTRY = { pathname: "/entry/[id]", params: { id: "new" } } as const;
+import { NEW_ENTRY } from "@/lib/routes";
 
 // Android: the Material floating action button that opens a new entry.
 export function AddButton() {
