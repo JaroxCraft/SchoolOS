@@ -1,9 +1,10 @@
-import { Button, FieldGroup, TextInput } from "@expo/ui";
+import { FieldGroup, TextInput } from "@expo/ui";
 import { router, Stack } from "expo-router";
 import { useState } from "react";
 import { Alert, Platform } from "react-native";
 
 import { DateField } from "@/components/date-field";
+import { DestructiveButton } from "@/components/destructive-button";
 import { FormList } from "@/components/form-list";
 import { SelectRow } from "@/components/select-row";
 import { TaskCheckbox } from "@/components/task-checkbox";
@@ -292,7 +293,7 @@ export function EntryForm({
 
         {entry && (
           <FieldGroup.Section>
-            <Button variant="text" label="Eintrag löschen" onPress={remove} />
+            <DestructiveButton label="Eintrag löschen" onPress={remove} />
           </FieldGroup.Section>
         )}
       </FormList>

@@ -1,8 +1,9 @@
-import { Button, FieldGroup, TextInput } from "@expo/ui";
+import { FieldGroup, TextInput } from "@expo/ui";
 import { router, Stack } from "expo-router";
 import { useState } from "react";
 import { Alert } from "react-native";
 
+import { DestructiveButton } from "@/components/destructive-button";
 import { FormList } from "@/components/form-list";
 import { deleteTeacher, saveTeacher } from "@/db/actions";
 import type { Teacher } from "@/db/schema";
@@ -83,7 +84,7 @@ export function TeacherForm({ teacher }: TeacherFormProps) {
 
         {teacher && (
           <FieldGroup.Section>
-            <Button variant="text" label="Lehrperson löschen" onPress={remove} />
+            <DestructiveButton label="Lehrperson löschen" onPress={remove} />
           </FieldGroup.Section>
         )}
       </FormList>

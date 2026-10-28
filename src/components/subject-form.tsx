@@ -1,8 +1,9 @@
-import { Button, FieldGroup, TextInput } from "@expo/ui";
+import { FieldGroup, TextInput } from "@expo/ui";
 import { router, Stack } from "expo-router";
 import { useState } from "react";
 import { Alert } from "react-native";
 
+import { DestructiveButton } from "@/components/destructive-button";
 import { FormList } from "@/components/form-list";
 import { SelectRow } from "@/components/select-row";
 import { deleteSubject, saveSubject } from "@/db/actions";
@@ -105,7 +106,7 @@ export function SubjectForm({ subject, usedColors, teachers }: SubjectFormProps)
 
         {subject && (
           <FieldGroup.Section>
-            <Button variant="text" label="Fach löschen" onPress={remove} />
+            <DestructiveButton label="Fach löschen" onPress={remove} />
           </FieldGroup.Section>
         )}
       </FormList>
