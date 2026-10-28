@@ -19,10 +19,6 @@
       },
       "predictiveBackGestureEnabled": false
     },
-    "web": {
-      "output": "server",
-      "favicon": "./assets/images/favicon.png"
-    },
     "plugins": [
       "expo-router",
       [
@@ -33,19 +29,13 @@
           "imageWidth": 76
         }
       ],
-      "expo-font",
-      "expo-image"
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
     },
     "extra": {
-      "router": {
-        "asyncRoutes": {
-          "web": true
-        }
-      },
       "eas": {
         "projectId": "a8fff5e3-4c16-47c0-8cba-4f6974fdeefc"
       }
