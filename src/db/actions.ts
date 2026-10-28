@@ -1,7 +1,7 @@
 import { and, eq } from "drizzle-orm";
 
-import { db } from "./client";
-import { entries, lessons, periods, settings, subjects, type Settings } from "./schema";
+import { db } from "@/db/client";
+import { entries, lessons, periods, settings, subjects, type Settings } from "@/db/schema";
 
 type NewSubject = typeof subjects.$inferInsert;
 type NewEntry = typeof entries.$inferInsert;

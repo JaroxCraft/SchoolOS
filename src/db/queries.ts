@@ -1,8 +1,8 @@
 import { asc, eq } from "drizzle-orm";
 import { useLiveQuery } from "drizzle-orm/expo-sqlite";
 
-import { db } from "./client";
-import { entries, lessons, periods, settings, subjects, type Settings } from "./schema";
+import { db } from "@/db/client";
+import { entries, lessons, periods, settings, subjects, type Settings } from "@/db/schema";
 
 const DEFAULT_SETTINGS: Settings = {
   id: 1,
