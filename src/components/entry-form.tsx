@@ -1,4 +1,4 @@
-import { Button, FieldGroup, Switch, TextInput } from "@expo/ui";
+import { Button, FieldGroup, TextInput } from "@expo/ui";
 import { router, Stack } from "expo-router";
 import { useState } from "react";
 import { Alert, Platform } from "react-native";
@@ -6,6 +6,7 @@ import { Alert, Platform } from "react-native";
 import { DateField } from "@/components/date-field";
 import { FormList } from "@/components/form-list";
 import { SelectRow } from "@/components/select-row";
+import { TaskCheckbox } from "@/components/task-checkbox";
 import { deleteEntry, saveEntry } from "@/db/actions";
 import {
   ENTRY_TYPES,
@@ -252,7 +253,7 @@ export function EntryForm({
             />
           )}
           {isCheckable(form.type) && entry && (
-            <Switch
+            <TaskCheckbox
               label="Erledigt"
               value={form.completed}
               onValueChange={(completed) => change({ completed })}
