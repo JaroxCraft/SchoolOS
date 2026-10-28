@@ -1,0 +1,276 @@
+import { Button, FieldGroup, Switch, TextInput } from "@expo/ui";
+import { router, Stack } from "expo-router";
+import { useState } from "react";
+import { Alert } from "react-native";
+
+import { DateField } from "@/components/date-field";
+import { FormList } from "@/components/form-list";
+import { SelectRow } from "@/components/select-row";
+import { deleteEntry, saveEntry } from "@/db/actions";
+import {
+  ENTRY_TYPES,
+  type Entry,
+  type EntryType,
+  type Lesson,
+  type Period,
+  type Settings,
+  type Subject,
+} from "@/db/schema";
+import { addDays, formatDate, today } from "@/lib/dates";
+import { defaultLeadDays, ENTRY_TYPE_INFO, isCheckable } from "@/lib/entry-types";
+import { subjectLessonOn, upcomingSubjectLessons } from "@/lib/schedule";
+
+const NONE = 0;
+
+type DueChoice = "next" | "afterNext" | "custom";
+
+type FormState = {
+  type: EntryType;
+  title: string;
+  description: string;
+  subjectId: number;
+  date: string;
+  periodId: number;
+  dueChoice: DueChoice;
+  completed: boolean;
+  studyStart: string | null;
+  topic: string;
+  // Set once the user picks the value, so it is no longer derived automatically
+  periodTouched: boolean;
+  studyStartTouched: boolean;
+};
+
+type EntryFormProps = {
+  entry: Entry | undefined;
+  initialSubjectId: number | null;
+  subjects: Subject[];
+  periods: Period[];
+  lessons: Lesson[];
+  settings: Settings;
+};
+
+export function EntryForm({
+  entry,
+  initialSubjectId,
+  subjects,
+  periods,
+  lessons,
+  settings,
+}: EntryFormProps) {
+  const upcoming = (subjectId: number) => upcomingSubjectLessons(subjectId, lessons, periods, 2);
+
+  // Fills in the due date, period and study start that follow from the other fields.
+  const derive = (state: FormState): FormState => {
+    const next = { ...state };
+
+    if (next.type === "homework" && next.dueChoice !== "custom") {
+      const [first, second] = upcoming(next.subjectId);
+      const pick = next.dueChoice === "next" ? first : (second ?? first);
+      next.date = pick?.date ?? addDays(today(), 1);
+      next.periodId = pick?.period.id ?? NONE;
+    } else if (next.type !== "homework" && !next.periodTouched) {
+      next.periodId =
+        subjectLessonOn(next.subjectId, next.date, lessons, periods)?.period.id ?? NONE;
+    }
+
+    const leadDays = defaultLeadDays(next.type, settings);
+    if (leadDays === null) {
+      next.studyStart = null;
+    } else if (!next.studyStartTouched || next.studyStart === null) {
+      next.studyStart = addDays(next.date, -leadDays);
+    }
+    return next;
+  };
+
+  const [form, setForm] = useState<FormState>(() =>
+    entry
+      ? {
+          type: entry.type,
+          title: entry.title,
+          description: entry.description ?? "",
+          subjectId: entry.subjectId ?? NONE,
+          date: entry.date,
+          periodId: entry.periodId ?? NONE,
+          dueChoice: "custom",
+          completed: entry.completed,
+          studyStart: entry.studyStart,
+          topic: entry.topic ?? "",
+          periodTouched: true,
+          studyStartTouched: true,
+        }
+      : derive({
+          type: "homework",
+          title: "",
+          description: "",
+          subjectId: initialSubjectId ?? NONE,
+          date: today(),
+          periodId: NONE,
+          dueChoice: "next",
+          completed: false,
+          studyStart: null,
+          topic: "",
+          periodTouched: false,
+          studyStartTouched: false,
+        })
+  );
+
+  const change = (changes: Partial<FormState>) =>
+    setForm((state) => derive({ ...state, ...changes }));
+
+  const info = ENTRY_TYPE_INFO[form.type];
+  const [nextLesson, lessonAfter] = upcoming(form.subjectId);
+  const canSave = form.title.trim().length > 0;
+
+  const save = async () => {
+    await saveEntry(entry?.id ?? null, {
+      type: form.type,
+      title: form.title.trim(),
+      description: form.description.trim() || null,
+      subjectId: form.subjectId === NONE ? null : form.subjectId,
+      date: form.date,
+      periodId: form.periodId === NONE ? null : form.periodId,
+      completed: isCheckable(form.type) && form.completed,
+      studyStart: form.studyStart,
+      topic: info.gradable ? form.topic.trim() || null : null,
+    });
+    router.back();
+  };
+
+  const remove = () => {
+    if (!entry) return;
+    Alert.alert("Eintrag löschen?", `«${entry.title}» wird gelöscht.`, [
+      { text: "Abbrechen", style: "cancel" },
+      {
+        text: "Löschen",
+        style: "destructive",
+        onPress: async () => {
+          router.back();
+          await deleteEntry(entry.id);
+        },
+      },
+    ]);
+  };
+
+  return (
+    <>
+      <Stack.Title>{entry ? info.label : "Neuer Eintrag"}</Stack.Title>
+      <Stack.Toolbar placement="left">
+        <Stack.Toolbar.Button onPress={() => router.back()}>Abbrechen</Stack.Toolbar.Button>
+      </Stack.Toolbar>
+      <Stack.Toolbar placement="right">
+        <Stack.Toolbar.Button variant="done" disabled={!canSave} onPress={save}>
+          Sichern
+        </Stack.Toolbar.Button>
+      </Stack.Toolbar>
+
+      <FormList>
+        <FieldGroup.Section>
+          <SelectRow
+            label="Typ"
+            value={form.type}
+            onChange={(type) => change({ type })}
+            options={ENTRY_TYPES.map((type) => ({
+              label: ENTRY_TYPE_INFO[type].label,
+              value: type,
+            }))}
+          />
+          <TextInput
+            placeholder={form.type === "homework" ? "Aufgabe" : "Titel"}
+            defaultValue={form.title}
+            autoFocus={!entry}
+            onChangeText={(title) => change({ title })}
+          />
+          <SelectRow
+            label="Fach"
+            value={form.subjectId}
+            onChange={(subjectId) => change({ subjectId })}
+            options={[
+              { label: "Allgemein", value: NONE },
+              ...subjects.map((subject) => ({ label: subject.name, value: subject.id })),
+            ]}
+          />
+        </FieldGroup.Section>
+
+        <FieldGroup.Section title={form.type === "homework" ? "Fällig" : "Termin"}>
+          {form.type === "homework" && (
+            <SelectRow
+              label="Fällig"
+              value={form.dueChoice}
+              onChange={(dueChoice) => change({ dueChoice })}
+              options={[
+                {
+                  label: nextLesson ? `Nächste Lektion (${formatDate(nextLesson.date)})` : "Morgen",
+                  value: "next",
+                },
+                ...(lessonAfter
+                  ? [
+                      {
+                        label: `Übernächste Lektion (${formatDate(lessonAfter.date)})`,
+                        value: "afterNext" as const,
+                      },
+                    ]
+                  : []),
+                { label: "Datum wählen", value: "custom" },
+              ]}
+            />
+          )}
+          {(form.type !== "homework" || form.dueChoice === "custom") && (
+            <DateField label="Datum" value={form.date} onChange={(date) => change({ date })} />
+          )}
+          {form.type !== "homework" && (
+            <SelectRow
+              label="Lektion"
+              value={form.periodId}
+              onChange={(periodId) => change({ periodId, periodTouched: true })}
+              options={[
+                { label: "Keine", value: NONE },
+                ...periods.map((period, index) => ({
+                  label: `${index + 1}. Lektion (${period.startTime})`,
+                  value: period.id,
+                })),
+              ]}
+            />
+          )}
+          {isCheckable(form.type) && entry && (
+            <Switch
+              label="Erledigt"
+              value={form.completed}
+              onValueChange={(completed) => change({ completed })}
+            />
+          )}
+        </FieldGroup.Section>
+
+        {info.gradable && form.studyStart && (
+          <FieldGroup.Section title="Vorbereitung">
+            <DateField
+              label="Lernbeginn"
+              value={form.studyStart}
+              onChange={(studyStart) => change({ studyStart, studyStartTouched: true })}
+            />
+            <TextInput
+              placeholder="Stoff"
+              defaultValue={form.topic}
+              multiline
+              onChangeText={(topic) => change({ topic })}
+            />
+          </FieldGroup.Section>
+        )}
+
+        <FieldGroup.Section title="Notizen">
+          <TextInput
+            placeholder="Beschreibung"
+            defaultValue={form.description}
+            multiline
+            onChangeText={(description) => change({ description })}
+          />
+        </FieldGroup.Section>
+
+        {entry && (
+          <FieldGroup.Section>
+            <Button variant="text" label="Eintrag löschen" onPress={remove} />
+          </FieldGroup.Section>
+        )}
+      </FormList>
+    </>
+  );
+}
