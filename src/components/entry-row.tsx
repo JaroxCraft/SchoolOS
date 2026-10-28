@@ -1,7 +1,8 @@
-import { Checkbox, ListItem, Text } from "@expo/ui";
+import { ListItem, Text } from "@expo/ui";
 import { router } from "expo-router";
 
 import { SubjectDot } from "@/components/subject-dot";
+import { TaskCheckbox } from "@/components/task-checkbox";
 import { setEntryCompleted } from "@/db/actions";
 import type { Entry, Subject } from "@/db/schema";
 import { formatDate, relativeDay, today } from "@/lib/dates";
@@ -32,7 +33,7 @@ export function EntryRow({ entry, subject }: EntryRowProps) {
       onPress={() => router.push({ pathname: "/entry/[id]", params: { id: String(entry.id) } })}
       leading={
         checkable ? (
-          <Checkbox
+          <TaskCheckbox
             value={entry.completed}
             onValueChange={(completed) => setEntryCompleted(entry.id, completed)}
           />
