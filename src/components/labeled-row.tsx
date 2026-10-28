@@ -1,0 +1,22 @@
+import { Row, Spacer, Text } from "@expo/ui";
+import type { ReactNode } from "react";
+
+import { useInk } from "@/hooks/use-ink";
+
+type LabeledRowProps = {
+  label: string;
+  children: ReactNode;
+};
+
+// A form row with a label on the left and a control or value on the right.
+export function LabeledRow({ label, children }: LabeledRowProps) {
+  const ink = useInk();
+
+  return (
+    <Row alignment="center">
+      <Text textStyle={{ color: ink.label }}>{label}</Text>
+      <Spacer flexible />
+      {children}
+    </Row>
+  );
+}
