@@ -20,6 +20,7 @@ import {
 import { addDays, formatDate, today } from "@/lib/dates";
 import { defaultLeadDays, ENTRY_TYPE_INFO, isCheckable } from "@/lib/entry-types";
 import { subjectLessonOn, upcomingSubjectLessons } from "@/lib/schedule";
+import { NEUTRAL_COLOR } from "@/lib/subject-colors";
 import { useHeaderButton } from "@/hooks/use-header-button";
 
 const NONE = 0;
@@ -256,6 +257,9 @@ export function EntryForm({
             <TaskCheckbox
               label="Erledigt"
               value={form.completed}
+              color={
+                subjects.find((subject) => subject.id === form.subjectId)?.color ?? NEUTRAL_COLOR
+              }
               onValueChange={(completed) => change({ completed })}
             />
           )}
