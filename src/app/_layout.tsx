@@ -1,6 +1,6 @@
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from "expo-router";
 import { useEffect } from "react";
-import { useColorScheme } from "react-native";
+import { Platform, useColorScheme } from "react-native";
 
 import { EmptyState } from "@/components/empty-state";
 import { ensureSettings } from "@/db/actions";
@@ -28,7 +28,11 @@ export default function RootLayout() {
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="settings" options={{ presentation: "modal", headerShown: false }} />
-        <Stack.Screen name="entry/[id]" options={{ presentation: "modal" }} />
+        {/* iOS pushes the entry so it can zoom out of the add button */}
+        <Stack.Screen
+          name="entry/[id]"
+          options={{ presentation: Platform.OS === "ios" ? "card" : "modal" }}
+        />
       </Stack>
     </ThemeProvider>
   );

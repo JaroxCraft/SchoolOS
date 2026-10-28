@@ -22,11 +22,10 @@ export default function OverviewScreen() {
   const entries = useEntries();
 
   const subjectById = (id: number | null) => subjects.find((subject) => subject.id === id);
-  const addEntry = () => router.push({ pathname: "/entry/[id]", params: { id: "new" } });
 
   if (periods.length === 0 || subjects.length === 0) {
     return (
-      <Screen title="Übersicht" onAdd={addEntry}>
+      <Screen title="Übersicht" showAddButton>
         <EmptyState
           title="Willkommen bei SchoolOS"
           message="Erfasse über das Zahnrad oben rechts dein Lektionenraster, deine Fächer und deinen Stundenplan."
@@ -46,7 +45,7 @@ export default function OverviewScreen() {
   const lessonsDate = upcomingLessons[0]?.date;
 
   return (
-    <Screen title="Übersicht" onAdd={addEntry}>
+    <Screen title="Übersicht" showAddButton>
       <FormList>
         <FieldGroup.Section
           title={

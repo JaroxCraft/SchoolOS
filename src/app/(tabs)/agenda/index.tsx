@@ -1,5 +1,4 @@
 import { FieldGroup } from "@expo/ui";
-import { router } from "expo-router";
 import { useState } from "react";
 
 import { EmptyState } from "@/components/empty-state";
@@ -23,11 +22,10 @@ export default function AgendaScreen() {
   const [subjectFilter, setSubjectFilter] = useState(ALL_SUBJECTS);
 
   const subjectById = (id: number | null) => subjects.find((subject) => subject.id === id);
-  const addEntry = () => router.push({ pathname: "/entry/[id]", params: { id: "new" } });
 
   if (entries.length === 0) {
     return (
-      <Screen title="Agenda" onAdd={addEntry}>
+      <Screen title="Agenda" showAddButton>
         <EmptyState
           title="Keine Termine"
           message="Hausaufgaben, Prüfungen, Präsentationen und Abgaben erscheinen hier. Tippe auf +, um einen Eintrag zu erfassen."
@@ -58,7 +56,7 @@ export default function AgendaScreen() {
   ];
 
   return (
-    <Screen title="Agenda" onAdd={addEntry}>
+    <Screen title="Agenda" showAddButton>
       <FormList>
         <FieldGroup.Section title="Filter">
           <SelectRow
