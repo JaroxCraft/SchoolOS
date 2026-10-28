@@ -1,5 +1,6 @@
 import { FieldGroup, ListItem } from "@expo/ui";
 import { router, Stack } from "expo-router";
+import { Platform } from "react-native";
 
 import { FormFooter, FormList } from "@/components/form-list";
 import { SelectRow } from "@/components/select-row";
@@ -20,11 +21,14 @@ export default function SettingsScreen() {
   return (
     <>
       <Stack.Title>Einstellungen</Stack.Title>
-      <Stack.Toolbar placement="right">
-        <Stack.Toolbar.Button variant="done" onPress={() => router.back()}>
-          Fertig
-        </Stack.Toolbar.Button>
-      </Stack.Toolbar>
+      {/* Android closes the settings with the back arrow */}
+      {Platform.OS === "ios" && (
+        <Stack.Toolbar placement="right">
+          <Stack.Toolbar.Button variant="done" onPress={() => router.back()}>
+            Fertig
+          </Stack.Toolbar.Button>
+        </Stack.Toolbar>
+      )}
 
       <FormList>
         <FieldGroup.Section title="Schule">

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Alert } from "react-native";
 
 import { FormList } from "@/components/form-list";
+import { HeaderButton } from "@/components/header-button";
 import { SelectRow } from "@/components/select-row";
 import { deleteSubject, saveSubject } from "@/db/actions";
 import type { Subject } from "@/db/schema";
@@ -62,9 +63,7 @@ export function SubjectForm({ subject, usedColors }: SubjectFormProps) {
     <>
       <Stack.Title>{subject ? subject.name : "Neues Fach"}</Stack.Title>
       <Stack.Toolbar placement="right">
-        <Stack.Toolbar.Button variant="done" disabled={!canSave} onPress={save}>
-          Sichern
-        </Stack.Toolbar.Button>
+        <HeaderButton label="Sichern" icon="check" disabled={!canSave} onPress={save} />
       </Stack.Toolbar>
 
       <FormList>

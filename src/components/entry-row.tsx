@@ -27,6 +27,8 @@ export function EntryRow({ entry, subject }: EntryRowProps) {
 
   return (
     <ListItem
+      // Android: same background as the other rows of the section
+      colors={{ containerColor: "transparent" }}
       onPress={() => router.push({ pathname: "/entry/[id]", params: { id: String(entry.id) } })}
       leading={
         checkable ? (
