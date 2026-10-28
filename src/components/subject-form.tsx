@@ -6,14 +6,17 @@ import { Alert } from "react-native";
 import { FormList } from "@/components/form-list";
 import { SelectRow } from "@/components/select-row";
 import { deleteSubject, saveSubject } from "@/db/actions";
-import type { Subject } from "@/db/schema";
+import type { Subject, Teacher } from "@/db/schema";
 import { SUBJECT_COLORS } from "@/lib/subject-colors";
 import { useHeaderButton } from "@/hooks/use-header-button";
 
 type SubjectFormProps = {
   subject: Subject | undefined;
   usedColors: string[];
+  teachers: Teacher[];
 };
+
+const NO_TEACHER = 0;
 
 // New subjects get the first color that is not taken yet.
 function firstFreeColor(usedColors: string[]): string {
@@ -21,10 +24,10 @@ function firstFreeColor(usedColors: string[]): string {
     .value;
 }
 
-export function SubjectForm({ subject, usedColors }: SubjectFormProps) {
+export function SubjectForm({ subject, usedColors, teachers }: SubjectFormProps) {
   const [name, setName] = useState(subject?.name ?? "");
   const [abbreviation, setAbbreviation] = useState(subject?.abbreviation ?? "");
-  const [teacher, setTeacher] = useState(subject?.teacher ?? "");
+  const [teacherId, setTeacherId] = useState(subject?.teacherId ?? NO_TEACHER);
   const [color, setColor] = useState(() => subject?.color ?? firstFreeColor(usedColors));
 
   const canSave = name.trim().length > 0;
@@ -37,7 +40,7 @@ export function SubjectForm({ subject, usedColors }: SubjectFormProps) {
       name: trimmedName,
       abbreviation: abbreviation.trim() || trimmedName.slice(0, 3),
       color,
-      teacher: teacher.trim() || null,
+      teacherId: teacherId === NO_TEACHER ? null : teacherId,
     });
     router.back();
   };
@@ -83,11 +86,14 @@ export function SubjectForm({ subject, usedColors }: SubjectFormProps) {
             maxLength={5}
             onChangeText={setAbbreviation}
           />
-          <TextInput
-            placeholder="Lehrperson (optional)"
-            defaultValue={teacher}
-            autoCapitalize="words"
-            onChangeText={setTeacher}
+          <SelectRow
+            label="Lehrperson"
+            value={teacherId}
+            onChange={setTeacherId}
+            options={[
+              { label: "Keine", value: NO_TEACHER },
+              ...teachers.map((teacher) => ({ label: teacher.name, value: teacher.id })),
+            ]}
           />
           <SelectRow
             label="Farbe"

@@ -1,11 +1,12 @@
 import { FieldGroup, ListItem, Text } from "@expo/ui";
 import { router, Stack, useLocalSearchParams } from "expo-router";
+import { Linking } from "react-native";
 
 import { EmptyState } from "@/components/empty-state";
 import { EntryRow } from "@/components/entry-row";
 import { FormList } from "@/components/form-list";
 import { LabeledRow } from "@/components/labeled-row";
-import { useEntries, useLessons, usePeriods, useSubjects } from "@/db/queries";
+import { useEntries, useLessons, usePeriods, useSubjects, useTeachers } from "@/db/queries";
 import { today, weekdayName } from "@/lib/dates";
 import { isCheckable } from "@/lib/entry-types";
 import { periodNumber } from "@/lib/schedule";
@@ -16,6 +17,7 @@ export default function SubjectScreen() {
   const { subjectId } = useLocalSearchParams<{ subjectId: string }>();
   const id = Number(subjectId);
   const subject = useSubjects().find((candidate) => candidate.id === id);
+  const teacher = useTeachers().find((candidate) => candidate.id === subject?.teacherId);
   const periods = usePeriods();
   const lessons = useLessons()
     .filter((lesson) => lesson.subjectId === id)
@@ -41,10 +43,19 @@ export default function SubjectScreen() {
           <LabeledRow label="Kürzel">
             <Text textStyle={{ color: ink.secondary }}>{subject.abbreviation}</Text>
           </LabeledRow>
-          {subject.teacher && (
+          {teacher && (
             <LabeledRow label="Lehrperson">
-              <Text textStyle={{ color: ink.secondary }}>{subject.teacher}</Text>
+              <Text textStyle={{ color: ink.secondary }}>
+                {teacher.abbreviation ? `${teacher.name} (${teacher.abbreviation})` : teacher.name}
+              </Text>
             </LabeledRow>
+          )}
+          {teacher?.email && (
+            <ListItem
+              onPress={() => Linking.openURL(`mailto:${teacher.email}`)}
+              supportingText={teacher.email}>
+              E-Mail schreiben
+            </ListItem>
           )}
         </FieldGroup.Section>
 
