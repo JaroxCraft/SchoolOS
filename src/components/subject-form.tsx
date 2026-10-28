@@ -4,11 +4,11 @@ import { useState } from "react";
 import { Alert } from "react-native";
 
 import { FormList } from "@/components/form-list";
-import { HeaderButton } from "@/components/header-button";
 import { SelectRow } from "@/components/select-row";
 import { deleteSubject, saveSubject } from "@/db/actions";
 import type { Subject } from "@/db/schema";
 import { SUBJECT_COLORS } from "@/lib/subject-colors";
+import { useHeaderButton } from "@/hooks/use-header-button";
 
 type SubjectFormProps = {
   subject: Subject | undefined;
@@ -28,6 +28,8 @@ export function SubjectForm({ subject, usedColors }: SubjectFormProps) {
   const [color, setColor] = useState(() => subject?.color ?? firstFreeColor(usedColors));
 
   const canSave = name.trim().length > 0;
+
+  const saveButton = useHeaderButton("Sichern", "check");
 
   const save = async () => {
     const trimmedName = name.trim();
@@ -63,7 +65,7 @@ export function SubjectForm({ subject, usedColors }: SubjectFormProps) {
     <>
       <Stack.Title>{subject ? subject.name : "Neues Fach"}</Stack.Title>
       <Stack.Toolbar placement="right">
-        <HeaderButton label="Sichern" icon="check" disabled={!canSave} onPress={save} />
+        {saveButton && <Stack.Toolbar.Button {...saveButton} disabled={!canSave} onPress={save} />}
       </Stack.Toolbar>
 
       <FormList>

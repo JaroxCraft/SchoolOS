@@ -5,7 +5,6 @@ import { Alert, Platform } from "react-native";
 
 import { DateField } from "@/components/date-field";
 import { FormList } from "@/components/form-list";
-import { HeaderButton } from "@/components/header-button";
 import { SelectRow } from "@/components/select-row";
 import { deleteEntry, saveEntry } from "@/db/actions";
 import {
@@ -20,6 +19,7 @@ import {
 import { addDays, formatDate, today } from "@/lib/dates";
 import { defaultLeadDays, ENTRY_TYPE_INFO, isCheckable } from "@/lib/entry-types";
 import { subjectLessonOn, upcomingSubjectLessons } from "@/lib/schedule";
+import { useHeaderButton } from "@/hooks/use-header-button";
 
 const NONE = 0;
 
@@ -134,6 +134,8 @@ export function EntryForm({
   const [nextLesson, lessonAfter] = upcoming(form.subjectId);
   const canSave = form.title.trim().length > 0;
 
+  const saveButton = useHeaderButton("Sichern", "check");
+
   const save = async () => {
     await saveEntry(entry?.id ?? null, {
       type: form.type,
@@ -174,7 +176,7 @@ export function EntryForm({
         </Stack.Toolbar>
       )}
       <Stack.Toolbar placement="right">
-        <HeaderButton label="Sichern" icon="check" disabled={!canSave} onPress={save} />
+        {saveButton && <Stack.Toolbar.Button {...saveButton} disabled={!canSave} onPress={save} />}
       </Stack.Toolbar>
 
       <FormList>
