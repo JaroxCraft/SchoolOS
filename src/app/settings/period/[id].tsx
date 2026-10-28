@@ -1,8 +1,9 @@
-import { Button, FieldGroup } from "@expo/ui";
+import { FieldGroup } from "@expo/ui";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { Alert } from "react-native";
 
 import { DateField } from "@/components/date-field";
+import { DestructiveButton } from "@/components/destructive-button";
 import { FormList } from "@/components/form-list";
 import { deletePeriod, updatePeriod } from "@/db/actions";
 import { usePeriods } from "@/db/queries";
@@ -51,7 +52,7 @@ export default function PeriodScreen() {
           />
         </FieldGroup.Section>
         <FieldGroup.Section>
-          <Button variant="text" label="Lektion löschen" onPress={remove} />
+          <DestructiveButton label="Lektion löschen" onPress={remove} />
         </FieldGroup.Section>
       </FormList>
     </>

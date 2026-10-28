@@ -1,7 +1,8 @@
-import { Button, FieldGroup, ListItem } from "@expo/ui";
+import { FieldGroup, ListItem } from "@expo/ui";
 import { router, Stack } from "expo-router";
 import { Alert, Platform } from "react-native";
 
+import { DestructiveButton } from "@/components/destructive-button";
 import { FormFooter, FormList } from "@/components/form-list";
 import { SelectRow } from "@/components/select-row";
 import { clearDatabase, updateSettings } from "@/db/actions";
@@ -93,7 +94,7 @@ export default function SettingsScreen() {
         {/* Development only: the test data is seeded again on the next launch */}
         {__DEV__ && (
           <FieldGroup.Section title="Entwicklung">
-            <Button variant="text" label="Datenbank leeren" onPress={confirmClearDatabase} />
+            <DestructiveButton label="Datenbank leeren" onPress={confirmClearDatabase} />
             <FormFooter>
               Löscht alle Daten. Beim nächsten Start der App werden die Testdaten neu geladen.
             </FormFooter>
