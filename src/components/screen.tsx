@@ -1,28 +1,34 @@
-import { Stack } from "expo-router";
+import { router, Stack } from "expo-router";
 import type { ReactNode } from "react";
-import { ScrollView, StyleSheet } from "react-native";
 
-import { SettingsButton } from "@/components/settings-button";
+import { useToolbarIcon } from "@/hooks/use-toolbar-icon";
 
 type ScreenProps = {
   title: string;
+  // Shows a "+" button in the header
+  onAdd?: () => void;
   children: ReactNode;
 };
 
-export function Screen({ title, children }: ScreenProps) {
+// A tab screen with a large title and the gear button to the settings.
+export function Screen({ title, onAdd, children }: ScreenProps) {
+  const addIcon = useToolbarIcon("plus", "add");
+  const settingsIcon = useToolbarIcon("gearshape", "settings");
+
   return (
     <>
-      <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.content}>
-        {children}
-      </ScrollView>
+      {children}
       <Stack.Title large>{title}</Stack.Title>
-      <SettingsButton />
+      <Stack.Toolbar placement="right">
+        {onAdd && (
+          <Stack.Toolbar.Button icon={addIcon} accessibilityLabel="Hinzufügen" onPress={onAdd} />
+        )}
+        <Stack.Toolbar.Button
+          icon={settingsIcon}
+          accessibilityLabel="Einstellungen"
+          onPress={() => router.push("/settings")}
+        />
+      </Stack.Toolbar>
     </>
   );
 }
-
-const styles = StyleSheet.create({
-  content: {
-    flexGrow: 1,
-  },
-});
