@@ -1,14 +1,13 @@
 import { Host } from "@expo/ui";
 import { FloatingActionButton, Icon } from "@expo/ui/jetpack-compose";
+import { router } from "expo-router";
 
 import { useToolbarIcon } from "@/hooks/use-toolbar-icon";
 
-export type AddButtonProps = {
-  onPress: () => void;
-};
+export const NEW_ENTRY = { pathname: "/entry/[id]", params: { id: "new" } } as const;
 
-// Android: the Material floating action button.
-export function AddButton({ onPress }: AddButtonProps) {
+// Android: the Material floating action button that opens a new entry.
+export function AddButton() {
   const icon = useToolbarIcon("plus", "add");
 
   // The Material Symbol loads asynchronously
@@ -16,7 +15,7 @@ export function AddButton({ onPress }: AddButtonProps) {
 
   return (
     <Host matchContents>
-      <FloatingActionButton onClick={onPress}>
+      <FloatingActionButton onClick={() => router.push(NEW_ENTRY)}>
         <FloatingActionButton.Icon>
           <Icon source={icon} size={24} />
         </FloatingActionButton.Icon>

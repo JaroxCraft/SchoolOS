@@ -8,23 +8,23 @@ import { useToolbarIcon } from "@/hooks/use-toolbar-icon";
 
 type ScreenProps = {
   title: string;
-  // Shows a floating "+" button in the bottom right corner
-  onAdd?: () => void;
+  // Shows the floating "+" button for a new entry in the bottom right corner
+  showAddButton?: boolean;
   children: ReactNode;
 };
 
 // A tab screen with a large title and the gear button to the settings.
-export function Screen({ title, onAdd, children }: ScreenProps) {
+export function Screen({ title, showAddButton, children }: ScreenProps) {
   const settingsIcon = useToolbarIcon("gearshape", "settings");
 
   return (
     <>
       {children}
-      {onAdd && (
+      {showAddButton && (
         // The safe area of this view includes the tab bar, so the button sits right above it
         <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
           <SafeAreaView edges={["bottom", "right"]} pointerEvents="box-none" style={styles.corner}>
-            <AddButton onPress={onAdd} />
+            <AddButton />
           </SafeAreaView>
         </View>
       )}
