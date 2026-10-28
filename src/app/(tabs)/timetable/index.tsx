@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 
 import { EmptyState } from "@/components/empty-state";
 import { Screen } from "@/components/screen";
@@ -7,7 +7,18 @@ import { colors } from "@/constants/colors";
 import { useLessons, usePeriods, useSubjects } from "@/db/queries";
 import { isoWeekday, SCHOOL_WEEKDAYS, today, weekdayShort } from "@/lib/dates";
 
+const GRID_PADDING = 12;
+const GAP = 4;
+const TIME_COLUMN_WIDTH = 40;
+
 export default function TimetableScreen() {
+  // Fixed column width, so a row with free periods lines up with full rows
+  const cellWidth =
+    (useWindowDimensions().width -
+      2 * GRID_PADDING -
+      TIME_COLUMN_WIDTH -
+      SCHOOL_WEEKDAYS.length * GAP) /
+    SCHOOL_WEEKDAYS.length;
   const periods = usePeriods();
   const subjects = useSubjects();
   const lessons = useLessons();
@@ -33,7 +44,11 @@ export default function TimetableScreen() {
           {SCHOOL_WEEKDAYS.map((weekday) => (
             <Text
               key={weekday}
-              style={[styles.dayLabel, weekday === currentWeekday && styles.currentDay]}>
+              style={[
+                styles.dayLabel,
+                { width: cellWidth },
+                weekday === currentWeekday && styles.currentDay,
+              ]}>
               {weekdayShort(weekday)}
             </Text>
           ))}
@@ -51,7 +66,7 @@ export default function TimetableScreen() {
               );
               const subject = subjects.find((candidate) => candidate.id === lesson?.subjectId);
               if (!lesson || !subject) {
-                return <View key={weekday} style={styles.cell} />;
+                return <View key={weekday} style={[styles.cell, { width: cellWidth }]} />;
               }
               return (
                 <Pressable
@@ -65,17 +80,18 @@ export default function TimetableScreen() {
                   }
                   style={[
                     styles.cell,
-                    styles.lesson,
-                    { backgroundColor: `${subject.color}33`, borderColor: subject.color },
+                    { width: cellWidth, backgroundColor: `${subject.color}33` },
                   ]}>
-                  <Text style={styles.abbreviation} numberOfLines={1}>
-                    {subject.abbreviation}
-                  </Text>
-                  {lesson.room && (
-                    <Text style={styles.room} numberOfLines={1}>
-                      {lesson.room}
+                  <View style={[styles.lesson, { borderColor: subject.color }]}>
+                    <Text style={styles.abbreviation} numberOfLines={1}>
+                      {subject.abbreviation}
                     </Text>
-                  )}
+                    {lesson.room && (
+                      <Text style={styles.room} numberOfLines={1}>
+                        {lesson.room}
+                      </Text>
+                    )}
+                  </View>
                 </Pressable>
               );
             })}
@@ -88,19 +104,18 @@ export default function TimetableScreen() {
 
 const styles = StyleSheet.create({
   grid: {
-    padding: 12,
-    gap: 4,
+    padding: GRID_PADDING,
+    gap: GAP,
   },
   row: {
     flexDirection: "row",
-    gap: 4,
+    gap: GAP,
   },
   timeColumn: {
-    width: 40,
+    width: TIME_COLUMN_WIDTH,
     justifyContent: "center",
   },
   dayLabel: {
-    flex: 1,
     textAlign: "center",
     fontSize: 13,
     fontWeight: "600",
@@ -121,11 +136,12 @@ const styles = StyleSheet.create({
     fontVariant: ["tabular-nums"],
   },
   cell: {
-    flex: 1,
     height: 52,
     borderRadius: 8,
+    overflow: "hidden",
   },
   lesson: {
+    flex: 1,
     borderLeftWidth: 3,
     paddingHorizontal: 4,
     justifyContent: "center",
