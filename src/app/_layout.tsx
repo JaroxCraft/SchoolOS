@@ -5,13 +5,17 @@ import { useColorScheme } from "react-native";
 import { EmptyState } from "@/components/empty-state";
 import { ensureSettings } from "@/db/actions";
 import { useDatabaseMigrations } from "@/db/migrate";
+import { seedDevData } from "@/db/seed";
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const { success, error } = useDatabaseMigrations();
 
   useEffect(() => {
-    if (success) ensureSettings();
+    if (!success) return;
+    ensureSettings();
+    // Test timetable while developing; builds for testers start empty
+    if (__DEV__) seedDevData();
   }, [success]);
 
   if (error) {
