@@ -3,7 +3,7 @@ import { Color, Link } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { Pressable, StyleSheet, View } from "react-native";
 
-import { NEW_ENTRY } from "@/components/add-button";
+import { NEW_ENTRY } from "@/lib/routes";
 
 const SIZE = 56;
 const canUseGlass = isLiquidGlassAvailable() && isGlassEffectAPIAvailable();
