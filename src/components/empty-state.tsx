@@ -1,6 +1,6 @@
 import { Button, Host } from "@expo/ui";
 import { SymbolView, type SymbolViewProps } from "expo-symbols";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, useColorScheme, View } from "react-native";
 
 import { colors } from "@/constants/colors";
 
@@ -15,6 +15,9 @@ type EmptyStateProps = {
 
 // Centered placeholder for a screen without content, like ContentUnavailableView on iOS.
 export function EmptyState({ icon, title, message, action }: EmptyStateProps) {
+  // Re-renders on light/dark changes, so Android resolves the native colors again
+  useColorScheme();
+
   return (
     <View style={styles.container}>
       {icon && <SymbolView name={icon} size={48} tintColor={colors.secondaryLabel} />}
