@@ -1,3 +1,1 @@
-import { TabStack } from "@/components/tab-stack";
-
-export default TabStack;
+export { Stack as default } from "expo-router";
