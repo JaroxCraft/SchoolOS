@@ -1,12 +1,13 @@
 import { FieldGroup, ListItem } from "@expo/ui";
 import { router, Stack } from "expo-router";
-import { Alert, Platform } from "react-native";
+import { Platform } from "react-native";
 
 import { DestructiveButton } from "@/components/destructive-button";
 import { FormFooter, FormList } from "@/components/form-list";
 import { SelectRow } from "@/components/select-row";
 import { clearDatabase, updateSettings } from "@/db/actions";
 import { useLessons, usePeriods, useSettings, useSubjects, useTeachers } from "@/db/queries";
+import { confirm } from "@/lib/confirm";
 
 const LEAD_DAY_OPTIONS = Array.from({ length: 22 }, (_, days) => ({
   label: days === 1 ? "1 Tag" : `${days} Tage`,
@@ -14,14 +15,13 @@ const LEAD_DAY_OPTIONS = Array.from({ length: 22 }, (_, days) => ({
 }));
 
 function confirmClearDatabase() {
-  Alert.alert(
-    "Datenbank leeren?",
-    "Alle Fächer, Lektionen, Einträge und Einstellungen werden gelöscht. Beim nächsten Start kommen die Testdaten zurück.",
-    [
-      { text: "Abbrechen", style: "cancel" },
-      { text: "Leeren", style: "destructive", onPress: () => clearDatabase() },
-    ]
-  );
+  confirm({
+    title: "Datenbank leeren?",
+    message:
+      "Alle Fächer, Lektionen, Einträge und Einstellungen werden gelöscht. Beim nächsten Start kommen die Testdaten zurück.",
+    confirmLabel: "Leeren",
+    onConfirm: () => clearDatabase(),
+  });
 }
 
 export default function SettingsScreen() {
