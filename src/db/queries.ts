@@ -1,5 +1,7 @@
 import { asc, eq } from "drizzle-orm";
-import { useLiveQuery } from "drizzle-orm/expo-sqlite";
+import { getTableConfig, type SQLiteTable } from "drizzle-orm/sqlite-core";
+import { addDatabaseChangeListener } from "expo-sqlite";
+import { useEffect, useState } from "react";
 
 import { db } from "@/db/client";
 import {
@@ -22,38 +24,52 @@ const DEFAULT_SETTINGS: Settings = {
   noLessonSummaryTime: "10:00",
 };
 
+// Reads the table synchronously on the first render and again whenever it changes. The database
+// is opened synchronously, so screens get their data right away and never show an empty state
+// while loading.
+function useTable<T>(table: SQLiteTable, read: () => T): T {
+  const [data, setData] = useState(read);
+
+  useEffect(() => {
+    const { name } = getTableConfig(table);
+    const listener = addDatabaseChangeListener(({ tableName }) => {
+      if (tableName === name) setData(read());
+    });
+    return () => listener.remove();
+  }, [table, read]);
+
+  return data;
+}
+
+// Periods are sorted by start time, which periodNumber relies on
+const readPeriods = () => db.select().from(periods).orderBy(asc(periods.startTime)).all();
+const readSubjects = () => db.select().from(subjects).orderBy(asc(subjects.name)).all();
+const readTeachers = () => db.select().from(teachers).orderBy(asc(teachers.name)).all();
+const readLessons = () => db.select().from(lessons).all();
+const readEntries = () => db.select().from(entries).orderBy(asc(entries.date)).all();
+const readSettings = () =>
+  db.select().from(settings).where(eq(settings.id, 1)).get() ?? DEFAULT_SETTINGS;
+
 export function usePeriods() {
-  return useLiveQuery(db.select().from(periods).orderBy(asc(periods.startTime))).data;
+  return useTable(periods, readPeriods);
 }
 
 export function useSubjects() {
-  return useLiveQuery(db.select().from(subjects).orderBy(asc(subjects.name))).data;
+  return useTable(subjects, readSubjects);
 }
 
 export function useTeachers() {
-  return useLiveQuery(db.select().from(teachers).orderBy(asc(teachers.name))).data;
+  return useTable(teachers, readTeachers);
 }
 
 export function useLessons() {
-  return useLiveQuery(db.select().from(lessons)).data;
-}
-
-// Period grid and lessons together, with a flag once both have been read from the database.
-export function useTimetable() {
-  const periodsQuery = useLiveQuery(db.select().from(periods).orderBy(asc(periods.startTime)));
-  const lessonsQuery = useLiveQuery(db.select().from(lessons));
-  return {
-    periods: periodsQuery.data,
-    lessons: lessonsQuery.data,
-    loaded: periodsQuery.updatedAt !== undefined && lessonsQuery.updatedAt !== undefined,
-  };
+  return useTable(lessons, readLessons);
 }
 
 export function useEntries() {
-  return useLiveQuery(db.select().from(entries).orderBy(asc(entries.date))).data;
+  return useTable(entries, readEntries);
 }
 
 export function useSettings(): Settings {
-  const { data } = useLiveQuery(db.select().from(settings).where(eq(settings.id, 1)));
-  return data[0] ?? DEFAULT_SETTINGS;
+  return useTable(settings, readSettings);
 }
