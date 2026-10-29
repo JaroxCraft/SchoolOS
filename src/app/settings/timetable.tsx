@@ -8,7 +8,9 @@ import { SelectRow } from "@/components/select-row";
 import { SubjectDot } from "@/components/subject-dot";
 import { useLessons, usePeriods, useSubjects } from "@/db/queries";
 import { isoWeekday, SCHOOL_WEEKDAYS, today, weekdayName } from "@/lib/dates";
+import { lessonAt, periodRange } from "@/lib/schedule";
 import { NEUTRAL_COLOR } from "@/lib/subject-colors";
+import { joinDetails } from "@/lib/text";
 
 export default function TimetableSettingsScreen() {
   const periods = usePeriods();
@@ -47,9 +49,7 @@ export default function TimetableSettingsScreen() {
 
         <FieldGroup.Section title={weekdayName(weekday)}>
           {periods.map((period, index) => {
-            const lesson = lessons.find(
-              (candidate) => candidate.weekday === weekday && candidate.periodId === period.id
-            );
+            const lesson = lessonAt(lessons, weekday, period.id);
             const subject = subjects.find((candidate) => candidate.id === lesson?.subjectId);
             return (
               <ListItem
@@ -61,9 +61,7 @@ export default function TimetableSettingsScreen() {
                   })
                 }
                 leading={<SubjectDot color={subject?.color ?? NEUTRAL_COLOR} />}
-                supportingText={[`${period.startTime}–${period.endTime}`, lesson?.room]
-                  .filter(Boolean)
-                  .join(" · ")}>
+                supportingText={joinDetails(periodRange(period), lesson?.room)}>
                 {`${index + 1}. ${subject?.name ?? "Frei"}`}
               </ListItem>
             );

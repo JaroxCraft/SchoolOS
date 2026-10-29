@@ -10,6 +10,7 @@ import { useEntries, useLessons, usePeriods, useSubjects, useTeachers } from "@/
 import { today, weekdayName } from "@/lib/dates";
 import { isCheckable } from "@/lib/entry-types";
 import { periodNumber } from "@/lib/schedule";
+import { joinDetails } from "@/lib/text";
 import { useInk } from "@/hooks/use-ink";
 
 export default function SubjectScreen() {
@@ -67,7 +68,7 @@ export default function SubjectScreen() {
                 key={lesson.id}
                 label={`${weekdayName(lesson.weekday)}, ${periodNumber(periods, lesson.periodId)}. Lektion`}>
                 <Text textStyle={{ color: ink.secondary }}>
-                  {[period?.startTime, lesson.room].filter(Boolean).join(" · ")}
+                  {joinDetails(period?.startTime, lesson.room)}
                 </Text>
               </LabeledRow>
             );

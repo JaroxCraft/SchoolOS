@@ -9,7 +9,8 @@ import { SubjectDot } from "@/components/subject-dot";
 import { useEntries, useLessons, usePeriods, useSubjects } from "@/db/queries";
 import { formatDate, relativeDay, today } from "@/lib/dates";
 import { isCheckable } from "@/lib/entry-types";
-import { nextLessons, periodNumber } from "@/lib/schedule";
+import { nextLessons, periodNumber, periodRange } from "@/lib/schedule";
+import { joinDetails } from "@/lib/text";
 import { useInk } from "@/hooks/use-ink";
 
 const UPCOMING_EVENTS = 5;
@@ -68,9 +69,7 @@ export default function OverviewScreen() {
                   })
                 }
                 leading={<SubjectDot color={subject?.color ?? ink.secondary} />}
-                supportingText={[`${period.startTime}–${period.endTime}`, lesson.room]
-                  .filter(Boolean)
-                  .join(" · ")}>
+                supportingText={joinDetails(periodRange(period), lesson.room)}>
                 {`${periodNumber(periods, period.id)}. ${subject?.name ?? ""}`}
               </ListItem>
             );

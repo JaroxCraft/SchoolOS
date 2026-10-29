@@ -6,6 +6,7 @@ import { Screen } from "@/components/screen";
 import { colors } from "@/constants/colors";
 import { useLessons, usePeriods, useSubjects } from "@/db/queries";
 import { isoWeekday, SCHOOL_WEEKDAYS, today, weekdayShort } from "@/lib/dates";
+import { lessonAt } from "@/lib/schedule";
 
 const GRID_PADDING = 12;
 const GAP = 4;
@@ -61,9 +62,7 @@ export default function TimetableScreen() {
               <Text style={styles.periodTime}>{period.startTime}</Text>
             </View>
             {SCHOOL_WEEKDAYS.map((weekday) => {
-              const lesson = lessons.find(
-                (candidate) => candidate.weekday === weekday && candidate.periodId === period.id
-              );
+              const lesson = lessonAt(lessons, weekday, period.id);
               const subject = subjects.find((candidate) => candidate.id === lesson?.subjectId);
               if (!lesson || !subject) {
                 return <View key={weekday} style={[styles.cell, { width: cellWidth }]} />;

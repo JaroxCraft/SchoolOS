@@ -9,17 +9,14 @@ import { FormList } from "@/components/form-list";
 import { SelectRow } from "@/components/select-row";
 import { TaskCheckbox } from "@/components/task-checkbox";
 import { deleteEntry, saveEntry } from "@/db/actions";
-import {
-  ENTRY_TYPES,
-  type Entry,
-  type EntryType,
-  type Lesson,
-  type Period,
-  type Settings,
-  type Subject,
-} from "@/db/schema";
+import type { Entry, EntryType, Lesson, Period, Settings, Subject } from "@/db/schema";
 import { addDays, formatDate, today } from "@/lib/dates";
-import { defaultLeadDays, ENTRY_TYPE_INFO, isCheckable } from "@/lib/entry-types";
+import {
+  defaultLeadDays,
+  ENTRY_TYPE_INFO,
+  ENTRY_TYPE_OPTIONS,
+  isCheckable,
+} from "@/lib/entry-types";
 import { subjectLessonOn, upcomingSubjectLessons } from "@/lib/schedule";
 import { NEUTRAL_COLOR } from "@/lib/subject-colors";
 import { useHeaderButton } from "@/hooks/use-header-button";
@@ -188,10 +185,7 @@ export function EntryForm({
             label="Typ"
             value={form.type}
             onChange={(type) => change({ type })}
-            options={ENTRY_TYPES.map((type) => ({
-              label: ENTRY_TYPE_INFO[type].label,
-              value: type,
-            }))}
+            options={ENTRY_TYPE_OPTIONS}
           />
           <TextInput
             placeholder={form.type === "homework" ? "Aufgabe" : "Titel"}

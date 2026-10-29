@@ -1,4 +1,4 @@
-import type { EntryType, Settings } from "@/db/schema";
+import { ENTRY_TYPES, type EntryType, type Settings } from "@/db/schema";
 
 type EntryTypeInfo = {
   label: string;
@@ -13,6 +13,11 @@ export const ENTRY_TYPE_INFO: Record<EntryType, EntryTypeInfo> = {
   submission: { label: "Abgabe", gradable: true },
   other: { label: "Sonstiges", gradable: false },
 };
+
+export const ENTRY_TYPE_OPTIONS = ENTRY_TYPES.map((type) => ({
+  label: ENTRY_TYPE_INFO[type].label,
+  value: type,
+}));
 
 export function defaultLeadDays(type: EntryType, settings: Settings): number | null {
   switch (type) {

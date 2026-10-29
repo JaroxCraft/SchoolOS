@@ -5,6 +5,7 @@ import { FormFooter, FormList } from "@/components/form-list";
 import { addPeriod } from "@/db/actions";
 import { usePeriods } from "@/db/queries";
 import { addMinutes } from "@/lib/dates";
+import { periodRange } from "@/lib/schedule";
 
 const LESSON_MINUTES = 45;
 const BREAK_MINUTES = 5;
@@ -33,7 +34,7 @@ export default function PeriodsScreen() {
                   params: { id: String(period.id) },
                 })
               }
-              supportingText={`${period.startTime}–${period.endTime}`}>
+              supportingText={periodRange(period)}>
               {`${index + 1}. Lektion`}
             </ListItem>
           ))}

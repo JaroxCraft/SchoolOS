@@ -3,7 +3,7 @@ import { DatePickerDialog, TimePickerDialog } from "@expo/ui/jetpack-compose";
 import { useState } from "react";
 
 import { LabeledRow } from "@/components/labeled-row";
-import { formatDate } from "@/lib/dates";
+import { dateToTime, formatDate } from "@/lib/dates";
 
 export type DateFieldProps = {
   label: string;
@@ -48,7 +48,7 @@ export function DateField({ label, value, onChange, mode = "date" }: DateFieldPr
           is24Hour
           onDateSelected={(date) => {
             setOpen(false);
-            onChange(`${pad(date.getHours())}:${pad(date.getMinutes())}`);
+            onChange(dateToTime(date));
           }}
           confirmButtonLabel="OK"
           dismissButtonLabel="Abbrechen"
