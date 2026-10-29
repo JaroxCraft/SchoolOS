@@ -61,7 +61,8 @@ export async function saveTeacher(id: number | null, values: NewTeacher) {
   }
 }
 
-// Subjects of the teacher keep existing without a teacher.
+// Subjects of the teacher keep existing without a teacher. Cleared by hand: the column was added
+// in a migration (ALTER TABLE), so the database lacks the "on delete set null" of the schema.
 export async function deleteTeacher(id: number) {
   await db.update(subjects).set({ teacherId: null }).where(eq(subjects.teacherId, id));
   await db.delete(teachers).where(eq(teachers.id, id));
