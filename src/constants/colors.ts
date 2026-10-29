@@ -7,4 +7,5 @@ export const colors = {
     ios: Color.ios.secondaryLabel,
     default: Color.android.dynamic.onSurfaceVariant,
   }),
+  tint: Platform.select({ ios: Color.ios.systemBlue, default: Color.android.dynamic.primary }),
 };
