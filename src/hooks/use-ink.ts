@@ -1,7 +1,14 @@
 import { useColorScheme } from "react-native";
 
-// Text colors for @expo/ui, whose Text only accepts plain color strings.
-export function useInk() {
+export type Ink = {
+  label: string;
+  secondary: string;
+  danger: string;
+};
+
+// iOS: text colors for @expo/ui, whose Text only accepts plain color strings. The values are the
+// iOS label, secondary label and red system colors.
+export function useInk(): Ink {
   const dark = useColorScheme() === "dark";
   return {
     label: dark ? "#FFFFFF" : "#000000",
