@@ -1,14 +1,14 @@
-import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from "expo-router";
+import { Stack, ThemeProvider } from "expo-router";
 import { useEffect } from "react";
-import { useColorScheme } from "react-native";
 
 import { EmptyState } from "@/components/empty-state";
 import { ensureSettings } from "@/db/actions";
 import { useDatabaseMigrations } from "@/db/migrate";
 import { seedDevData } from "@/db/seed";
+import { useNavigationTheme } from "@/hooks/use-navigation-theme";
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
+  const theme = useNavigationTheme();
   const { success, error } = useDatabaseMigrations();
 
   useEffect(() => {
@@ -30,7 +30,7 @@ export default function RootLayout() {
   if (!success) return null;
 
   return (
-    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+    <ThemeProvider value={theme}>
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="settings" options={{ presentation: "modal", headerShown: false }} />
