@@ -1,7 +1,7 @@
 import { useLocalSearchParams } from "expo-router";
 
 import { LessonForm } from "@/components/lesson-form";
-import { useSubjects, useTimetable } from "@/db/queries";
+import { useLessons, usePeriods, useSubjects } from "@/db/queries";
 import { lessonAt, periodNumber } from "@/lib/schedule";
 
 export default function LessonScreen() {
@@ -9,9 +9,8 @@ export default function LessonScreen() {
   const weekday = Number(params.weekday);
   const periodId = Number(params.periodId);
   const subjects = useSubjects();
-  const { periods, lessons, loaded } = useTimetable();
-
-  if (!loaded) return null;
+  const periods = usePeriods();
+  const lessons = useLessons();
 
   return (
     <LessonForm
