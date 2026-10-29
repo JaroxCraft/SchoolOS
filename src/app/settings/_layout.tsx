@@ -1,5 +1,1 @@
-import { Stack } from "expo-router";
-
-export default function SettingsLayout() {
-  return <Stack />;
-}
+export { Stack as default } from "expo-router";
