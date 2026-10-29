@@ -130,6 +130,9 @@ export function EntryForm({
 
   const change = (changes: Partial<FormState>) =>
     setForm((state) => derive({ ...state, ...changes }));
+  // The texts do not affect the derived fields, so typing skips the schedule lookups
+  const edit = (changes: Partial<Pick<FormState, "title" | "topic" | "description">>) =>
+    setForm((state) => ({ ...state, ...changes }));
 
   const info = ENTRY_TYPE_INFO[form.type];
   const [nextLesson, lessonAfter] = upcoming(form.subjectId);
@@ -184,7 +187,7 @@ export function EntryForm({
             placeholder={form.type === "homework" ? "Aufgabe" : "Titel"}
             defaultValue={form.title}
             autoFocus={!entry}
-            onChangeText={(title) => change({ title })}
+            onChangeText={(title) => edit({ title })}
           />
           <SelectRow
             label="Fach"
@@ -264,7 +267,7 @@ export function EntryForm({
               placeholder="Stoff"
               defaultValue={form.topic}
               multiline
-              onChangeText={(topic) => change({ topic })}
+              onChangeText={(topic) => edit({ topic })}
             />
           </FieldGroup.Section>
         )}
@@ -274,7 +277,7 @@ export function EntryForm({
             placeholder="Beschreibung"
             defaultValue={form.description}
             multiline
-            onChangeText={(description) => change({ description })}
+            onChangeText={(description) => edit({ description })}
           />
         </FieldGroup.Section>
 
