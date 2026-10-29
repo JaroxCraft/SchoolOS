@@ -1,6 +1,7 @@
 import { Stack, ThemeProvider } from "expo-router";
 import { useEffect } from "react";
 
+import { ConfirmDialog } from "@/components/confirm-dialog";
 import { EmptyState } from "@/components/empty-state";
 import { ensureSettings } from "@/db/actions";
 import { useDatabaseMigrations } from "@/db/migrate";
@@ -36,6 +37,7 @@ export default function RootLayout() {
         <Stack.Screen name="settings" options={{ presentation: "modal", headerShown: false }} />
         <Stack.Screen name="entry/[id]" options={{ presentation: "modal" }} />
       </Stack>
+      <ConfirmDialog />
     </ThemeProvider>
   );
 }
