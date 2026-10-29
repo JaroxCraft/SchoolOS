@@ -1,5 +1,13 @@
 import { router } from "expo-router";
-import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
+import {
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  useColorScheme,
+  useWindowDimensions,
+  View,
+} from "react-native";
 
 import { EmptyState } from "@/components/empty-state";
 import { Screen } from "@/components/screen";
@@ -14,6 +22,8 @@ const GAP = 4;
 const TIME_COLUMN_WIDTH = 40;
 
 export default function TimetableScreen() {
+  // Re-renders on light/dark changes, so Android resolves the native colors again
+  useColorScheme();
   // Fixed column width, so a row with free periods lines up with full rows
   const cellWidth =
     (useWindowDimensions().width -
