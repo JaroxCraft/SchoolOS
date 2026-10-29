@@ -1,6 +1,7 @@
 import { Stack, ThemeProvider } from "expo-router";
 import { useEffect } from "react";
 
+import { AppStack } from "@/components/app-stack";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { EmptyState } from "@/components/empty-state";
 import { ensureSettings } from "@/db/actions";
@@ -32,11 +33,11 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={theme}>
-      <Stack>
+      <AppStack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="settings" options={{ presentation: "modal", headerShown: false }} />
         <Stack.Screen name="entry/[id]" options={{ presentation: "modal" }} />
-      </Stack>
+      </AppStack>
       <ConfirmDialog />
     </ThemeProvider>
   );
