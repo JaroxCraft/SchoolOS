@@ -7,7 +7,7 @@ import { FormList } from "@/components/form-list";
 import { deleteTeacher, saveTeacher } from "@/db/actions";
 import type { Teacher } from "@/db/schema";
 import { confirmDelete } from "@/lib/confirm-delete";
-import { useHeaderButton } from "@/hooks/use-header-button";
+import { useSaveButton } from "@/hooks/use-save-button";
 
 type TeacherFormProps = {
   teacher: Teacher | undefined;
@@ -19,7 +19,7 @@ export function TeacherForm({ teacher }: TeacherFormProps) {
   const [email, setEmail] = useState(teacher?.email ?? "");
 
   const canSave = name.trim().length > 0;
-  const saveButton = useHeaderButton("Sichern", "check");
+  const saveButton = useSaveButton();
 
   const save = async () => {
     await saveTeacher(teacher?.id ?? null, {

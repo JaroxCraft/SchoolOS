@@ -9,7 +9,7 @@ import { deleteSubject, saveSubject } from "@/db/actions";
 import type { Subject, Teacher } from "@/db/schema";
 import { confirmDelete } from "@/lib/confirm-delete";
 import { SUBJECT_COLORS } from "@/lib/subject-colors";
-import { useHeaderButton } from "@/hooks/use-header-button";
+import { useSaveButton } from "@/hooks/use-save-button";
 
 type SubjectFormProps = {
   subject: Subject | undefined;
@@ -33,7 +33,7 @@ export function SubjectForm({ subject, usedColors, teachers }: SubjectFormProps)
 
   const canSave = name.trim().length > 0;
 
-  const saveButton = useHeaderButton("Sichern", "check");
+  const saveButton = useSaveButton();
 
   const save = async () => {
     const trimmedName = name.trim();

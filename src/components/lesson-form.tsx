@@ -7,7 +7,7 @@ import { SelectRow } from "@/components/select-row";
 import { setLesson } from "@/db/actions";
 import type { Lesson, Subject } from "@/db/schema";
 import { weekdayName } from "@/lib/dates";
-import { useHeaderButton } from "@/hooks/use-header-button";
+import { useSaveButton } from "@/hooks/use-save-button";
 
 const FREE = 0;
 
@@ -23,7 +23,7 @@ export function LessonForm({ weekday, periodId, periodNumber, lesson, subjects }
   const [subjectId, setSubjectId] = useState(lesson?.subjectId ?? FREE);
   const [room, setRoom] = useState(lesson?.room ?? "");
 
-  const saveButton = useHeaderButton("Sichern", "check");
+  const saveButton = useSaveButton();
 
   const save = async () => {
     await setLesson(weekday, periodId, subjectId === FREE ? null : subjectId, room.trim() || null);
