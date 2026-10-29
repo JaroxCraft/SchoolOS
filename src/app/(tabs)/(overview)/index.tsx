@@ -28,8 +28,10 @@ export default function OverviewScreen() {
     return (
       <Screen title="Übersicht" showAddButton>
         <EmptyState
+          icon={{ ios: "graduationcap", android: "school" }}
           title="Willkommen bei SchoolOS"
-          message="Erfasse über das Zahnrad oben rechts dein Lektionenraster, deine Fächer und deinen Stundenplan."
+          message="Erfasse in den Einstellungen dein Lektionenraster, deine Fächer und deinen Stundenplan."
+          action={{ label: "Einrichten", onPress: () => router.push("/settings") }}
         />
       </Screen>
     );
