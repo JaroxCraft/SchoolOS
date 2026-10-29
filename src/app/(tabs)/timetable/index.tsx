@@ -5,8 +5,9 @@ import { EmptyState } from "@/components/empty-state";
 import { Screen } from "@/components/screen";
 import { colors } from "@/constants/colors";
 import { useLessons, usePeriods, useSubjects } from "@/db/queries";
-import { isoWeekday, SCHOOL_WEEKDAYS, today, weekdayShort } from "@/lib/dates";
+import { isoWeekday, SCHOOL_WEEKDAYS, today, weekdayName, weekdayShort } from "@/lib/dates";
 import { lessonAt } from "@/lib/schedule";
+import { joinDetails } from "@/lib/text";
 
 const GRID_PADDING = 12;
 const GAP = 4;
@@ -72,16 +73,22 @@ export default function TimetableScreen() {
               return (
                 <Pressable
                   key={weekday}
-                  accessibilityLabel={`${subject.name}, ${weekdayShort(weekday)} ${index + 1}. Lektion`}
+                  accessibilityRole="button"
+                  accessibilityLabel={joinDetails(
+                    subject.name,
+                    `${weekdayName(weekday)}, ${index + 1}. Lektion`,
+                    lesson.room && `Zimmer ${lesson.room}`
+                  )}
                   onPress={() =>
                     router.push({
                       pathname: "/timetable/[subjectId]",
                       params: { subjectId: String(subject.id) },
                     })
                   }
-                  style={[
+                  style={({ pressed }) => [
                     styles.cell,
                     { width: cellWidth, backgroundColor: `${subject.color}33` },
+                    pressed && styles.pressed,
                   ]}>
                   <View style={[styles.lesson, { borderColor: subject.color }]}>
                     <Text style={styles.abbreviation} numberOfLines={1}>
@@ -124,12 +131,13 @@ const styles = StyleSheet.create({
     paddingBottom: 4,
   },
   currentDay: {
-    color: colors.label,
+    color: colors.tint,
   },
   periodNumber: {
     fontSize: 15,
     fontWeight: "600",
     color: colors.label,
+    fontVariant: ["tabular-nums"],
   },
   periodTime: {
     fontSize: 11,
@@ -137,9 +145,14 @@ const styles = StyleSheet.create({
     fontVariant: ["tabular-nums"],
   },
   cell: {
-    height: 52,
+    // Grows with large text sizes; the cells of a row stretch to the same height
+    minHeight: 52,
     borderRadius: 8,
+    borderCurve: "continuous",
     overflow: "hidden",
+  },
+  pressed: {
+    opacity: 0.6,
   },
   lesson: {
     flex: 1,
