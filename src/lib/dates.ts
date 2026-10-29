@@ -82,8 +82,7 @@ export function relativeDay(value: string, from = today()): string {
 }
 
 export function currentTime(): string {
-  const now = new Date();
-  return `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  return dateToTime(new Date());
 }
 
 export function timeToDate(value: string): Date {

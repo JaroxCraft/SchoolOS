@@ -12,12 +12,20 @@ export function periodNumber(periods: Period[], periodId: number): number {
   return periods.findIndex((period) => period.id === periodId) + 1;
 }
 
+// "07:30–08:15"
+export function periodRange(period: Period): string {
+  return `${period.startTime}–${period.endTime}`;
+}
+
+// The lesson in a slot of the timetable; each slot holds at most one.
+export function lessonAt(lessons: Lesson[], weekday: number, periodId: number): Lesson | undefined {
+  return lessons.find((lesson) => lesson.weekday === weekday && lesson.periodId === periodId);
+}
+
 function lessonsOn(date: string, lessons: Lesson[], periods: Period[]): LessonOccurrence[] {
   const weekday = isoWeekday(date);
   return periods.flatMap((period) => {
-    const lesson = lessons.find(
-      (candidate) => candidate.weekday === weekday && candidate.periodId === period.id
-    );
+    const lesson = lessonAt(lessons, weekday, period.id);
     return lesson ? [{ date, lesson, period }] : [];
   });
 }

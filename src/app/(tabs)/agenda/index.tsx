@@ -7,9 +7,9 @@ import { FormList } from "@/components/form-list";
 import { Screen } from "@/components/screen";
 import { SelectRow } from "@/components/select-row";
 import { useEntries, useSubjects } from "@/db/queries";
-import { ENTRY_TYPES, type Entry, type EntryType } from "@/db/schema";
+import type { Entry, EntryType } from "@/db/schema";
 import { today } from "@/lib/dates";
-import { ENTRY_TYPE_INFO, isCheckable } from "@/lib/entry-types";
+import { ENTRY_TYPE_OPTIONS, isCheckable } from "@/lib/entry-types";
 
 const ALL = "all";
 const ALL_SUBJECTS = 0;
@@ -63,10 +63,7 @@ export default function AgendaScreen() {
             label="Typ"
             value={typeFilter}
             onChange={setTypeFilter}
-            options={[
-              { label: "Alle", value: ALL },
-              ...ENTRY_TYPES.map((type) => ({ label: ENTRY_TYPE_INFO[type].label, value: type })),
-            ]}
+            options={[{ label: "Alle", value: ALL }, ...ENTRY_TYPE_OPTIONS]}
           />
           <SelectRow
             label="Fach"

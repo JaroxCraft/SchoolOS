@@ -3,6 +3,7 @@ import { router, Stack } from "expo-router";
 
 import { FormList } from "@/components/form-list";
 import { useSubjects, useTeachers } from "@/db/queries";
+import { joinDetails } from "@/lib/text";
 
 const openTeacher = (id: string) =>
   router.push({ pathname: "/settings/teacher/[id]", params: { id } });
@@ -20,15 +21,13 @@ export default function TeachersScreen() {
             <ListItem
               key={teacher.id}
               onPress={() => openTeacher(String(teacher.id))}
-              supportingText={[
+              supportingText={joinDetails(
                 teacher.abbreviation,
                 subjects
                   .filter((subject) => subject.teacherId === teacher.id)
                   .map((subject) => subject.abbreviation)
-                  .join(", "),
-              ]
-                .filter(Boolean)
-                .join(" · ")}>
+                  .join(", ")
+              )}>
               {teacher.name}
             </ListItem>
           ))}
