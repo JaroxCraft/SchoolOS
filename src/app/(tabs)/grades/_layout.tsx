@@ -1,1 +1,1 @@
-export { Stack as default } from "expo-router";
+export { AppStack as default } from "@/components/app-stack";
