@@ -1,13 +1,13 @@
 import { FieldGroup, TextInput } from "@expo/ui";
 import { router, Stack } from "expo-router";
 import { useState } from "react";
-import { Alert } from "react-native";
 
 import { DestructiveButton } from "@/components/destructive-button";
 import { FormList } from "@/components/form-list";
 import { SelectRow } from "@/components/select-row";
 import { deleteSubject, saveSubject } from "@/db/actions";
 import type { Subject, Teacher } from "@/db/schema";
+import { confirmDelete } from "@/lib/confirm-delete";
 import { SUBJECT_COLORS } from "@/lib/subject-colors";
 import { useHeaderButton } from "@/hooks/use-header-button";
 
@@ -48,20 +48,10 @@ export function SubjectForm({ subject, usedColors, teachers }: SubjectFormProps)
 
   const remove = () => {
     if (!subject) return;
-    Alert.alert(
+    confirmDelete(
       `${subject.name} löschen?`,
       "Die Lektionen und Noten des Fachs werden gelöscht. Hausaufgaben und Termine bleiben und erscheinen unter «Allgemein».",
-      [
-        { text: "Abbrechen", style: "cancel" },
-        {
-          text: "Löschen",
-          style: "destructive",
-          onPress: async () => {
-            router.back();
-            await deleteSubject(subject.id);
-          },
-        },
-      ]
+      () => deleteSubject(subject.id)
     );
   };
 

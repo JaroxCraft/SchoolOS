@@ -1,12 +1,12 @@
 import { FieldGroup } from "@expo/ui";
-import { router, Stack, useLocalSearchParams } from "expo-router";
-import { Alert } from "react-native";
+import { Stack, useLocalSearchParams } from "expo-router";
 
 import { DateField } from "@/components/date-field";
 import { DestructiveButton } from "@/components/destructive-button";
 import { FormList } from "@/components/form-list";
 import { deletePeriod, updatePeriod } from "@/db/actions";
 import { usePeriods } from "@/db/queries";
+import { confirmDelete } from "@/lib/confirm-delete";
 
 export default function PeriodScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -17,20 +17,10 @@ export default function PeriodScreen() {
   if (!period) return null;
 
   const remove = () =>
-    Alert.alert(
+    confirmDelete(
       "Lektion löschen?",
       "Die Lektionen im Stundenplan zu dieser Zeit werden ebenfalls entfernt.",
-      [
-        { text: "Abbrechen", style: "cancel" },
-        {
-          text: "Löschen",
-          style: "destructive",
-          onPress: async () => {
-            router.back();
-            await deletePeriod(period.id);
-          },
-        },
-      ]
+      () => deletePeriod(period.id)
     );
 
   return (

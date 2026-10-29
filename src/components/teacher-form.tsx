@@ -1,12 +1,12 @@
 import { FieldGroup, TextInput } from "@expo/ui";
 import { router, Stack } from "expo-router";
 import { useState } from "react";
-import { Alert } from "react-native";
 
 import { DestructiveButton } from "@/components/destructive-button";
 import { FormList } from "@/components/form-list";
 import { deleteTeacher, saveTeacher } from "@/db/actions";
 import type { Teacher } from "@/db/schema";
+import { confirmDelete } from "@/lib/confirm-delete";
 import { useHeaderButton } from "@/hooks/use-header-button";
 
 type TeacherFormProps = {
@@ -32,20 +32,10 @@ export function TeacherForm({ teacher }: TeacherFormProps) {
 
   const remove = () => {
     if (!teacher) return;
-    Alert.alert(
+    confirmDelete(
       `${teacher.name} löschen?`,
       "Die Fächer dieser Lehrperson bleiben bestehen, aber ohne Lehrperson.",
-      [
-        { text: "Abbrechen", style: "cancel" },
-        {
-          text: "Löschen",
-          style: "destructive",
-          onPress: async () => {
-            router.back();
-            await deleteTeacher(teacher.id);
-          },
-        },
-      ]
+      () => deleteTeacher(teacher.id)
     );
   };
 

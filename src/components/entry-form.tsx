@@ -1,7 +1,7 @@
 import { FieldGroup, TextInput } from "@expo/ui";
 import { router, Stack } from "expo-router";
 import { useState } from "react";
-import { Alert, Platform } from "react-native";
+import { Platform } from "react-native";
 
 import { DateField } from "@/components/date-field";
 import { DestructiveButton } from "@/components/destructive-button";
@@ -10,6 +10,7 @@ import { SelectRow } from "@/components/select-row";
 import { TaskCheckbox } from "@/components/task-checkbox";
 import { deleteEntry, saveEntry } from "@/db/actions";
 import type { Entry, EntryType, Lesson, Period, Settings, Subject } from "@/db/schema";
+import { confirmDelete } from "@/lib/confirm-delete";
 import { addDays, formatDate, today } from "@/lib/dates";
 import {
   defaultLeadDays,
@@ -153,17 +154,9 @@ export function EntryForm({
 
   const remove = () => {
     if (!entry) return;
-    Alert.alert("Eintrag löschen?", `«${entry.title}» wird gelöscht.`, [
-      { text: "Abbrechen", style: "cancel" },
-      {
-        text: "Löschen",
-        style: "destructive",
-        onPress: async () => {
-          router.back();
-          await deleteEntry(entry.id);
-        },
-      },
-    ]);
+    confirmDelete("Eintrag löschen?", `«${entry.title}» wird gelöscht.`, () =>
+      deleteEntry(entry.id)
+    );
   };
 
   return (
