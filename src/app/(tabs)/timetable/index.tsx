@@ -28,8 +28,10 @@ export default function TimetableScreen() {
     return (
       <Screen title="Stundenplan">
         <EmptyState
+          icon={{ ios: "calendar", android: "calendar_view_week" }}
           title="Kein Stundenplan"
           message="Erfasse in den Einstellungen dein Lektionenraster, deine Fächer und deine Lektionen."
+          action={{ label: "Einrichten", onPress: () => router.push("/settings") }}
         />
       </Screen>
     );

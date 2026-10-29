@@ -33,7 +33,13 @@ export default function SubjectScreen() {
   );
 
   if (!subject) {
-    return <EmptyState title="Fach nicht gefunden" message="Dieses Fach wurde gelöscht." />;
+    return (
+      <EmptyState
+        icon={{ ios: "questionmark.folder", android: "folder_off" }}
+        title="Fach nicht gefunden"
+        message="Dieses Fach wurde gelöscht."
+      />
+    );
   }
 
   return (

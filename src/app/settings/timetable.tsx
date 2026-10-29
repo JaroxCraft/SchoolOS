@@ -27,8 +27,10 @@ export default function TimetableSettingsScreen() {
       <>
         <Stack.Title>Stundenplan</Stack.Title>
         <EmptyState
+          icon={{ ios: "clock", android: "schedule" }}
           title="Kein Lektionenraster"
-          message="Lege zuerst im Lektionenraster fest, wann deine Lektionen beginnen und enden."
+          message="Lege zuerst fest, wann deine Lektionen beginnen und enden."
+          action={{ label: "Lektionenraster", onPress: () => router.replace("/settings/periods") }}
         />
       </>
     );

@@ -19,7 +19,13 @@ export default function RootLayout() {
   }, [success]);
 
   if (error) {
-    return <EmptyState title="Datenbank konnte nicht geladen werden" message={error.message} />;
+    return (
+      <EmptyState
+        icon={{ ios: "exclamationmark.triangle", android: "warning" }}
+        title="Datenbank konnte nicht geladen werden"
+        message={error.message}
+      />
+    );
   }
   if (!success) return null;
 

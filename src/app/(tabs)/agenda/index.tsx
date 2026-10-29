@@ -1,4 +1,5 @@
 import { FieldGroup } from "@expo/ui";
+import { router } from "expo-router";
 import { useState } from "react";
 
 import { EmptyState } from "@/components/empty-state";
@@ -10,6 +11,7 @@ import { useEntries, useSubjects } from "@/db/queries";
 import type { Entry, EntryType } from "@/db/schema";
 import { today } from "@/lib/dates";
 import { ENTRY_TYPE_OPTIONS, isCheckable } from "@/lib/entry-types";
+import { NEW_ENTRY } from "@/lib/routes";
 
 const ALL = "all";
 const ALL_SUBJECTS = 0;
@@ -27,8 +29,10 @@ export default function AgendaScreen() {
     return (
       <Screen title="Agenda" showAddButton>
         <EmptyState
+          icon={{ ios: "checklist", android: "checklist" }}
           title="Keine Termine"
-          message="Hausaufgaben, Prüfungen, Präsentationen und Abgaben erscheinen hier. Tippe auf +, um einen Eintrag zu erfassen."
+          message="Hausaufgaben, Prüfungen, Präsentationen und Abgaben erscheinen hier."
+          action={{ label: "Eintrag erfassen", onPress: () => router.push(NEW_ENTRY) }}
         />
       </Screen>
     );
