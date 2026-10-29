@@ -20,7 +20,7 @@ import {
 } from "@/lib/entry-types";
 import { subjectLessonOn, upcomingSubjectLessons } from "@/lib/schedule";
 import { NEUTRAL_COLOR } from "@/lib/subject-colors";
-import { useHeaderButton } from "@/hooks/use-header-button";
+import { useSaveButton } from "@/hooks/use-save-button";
 
 const NONE = 0;
 
@@ -135,7 +135,7 @@ export function EntryForm({
   const [nextLesson, lessonAfter] = upcoming(form.subjectId);
   const canSave = form.title.trim().length > 0;
 
-  const saveButton = useHeaderButton("Sichern", "check");
+  const saveButton = useSaveButton();
 
   const save = async () => {
     await saveEntry(entry?.id ?? null, {
