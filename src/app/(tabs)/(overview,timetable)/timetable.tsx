@@ -91,7 +91,7 @@ export default function TimetableScreen() {
                   )}
                   onPress={() =>
                     router.push({
-                      pathname: "/timetable/[subjectId]",
+                      pathname: "/subject/[subjectId]",
                       params: { subjectId: String(subject.id) },
                     })
                   }

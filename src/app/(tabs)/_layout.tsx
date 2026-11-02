@@ -11,7 +11,7 @@ export default function TabsLayout() {
         <NativeTabs.Trigger.Icon sf="square.grid.2x2" md="dashboard" />
         <NativeTabs.Trigger.Label>Übersicht</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="timetable">
+      <NativeTabs.Trigger name="(timetable)">
         <NativeTabs.Trigger.Icon sf="calendar" md="calendar_view_week" />
         <NativeTabs.Trigger.Label>Stundenplan</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>

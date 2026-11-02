@@ -66,7 +66,7 @@ export default function OverviewScreen() {
                 key={lesson.id}
                 onPress={() =>
                   router.push({
-                    pathname: "/timetable/[subjectId]",
+                    pathname: "/subject/[subjectId]",
                     params: { subjectId: String(lesson.subjectId) },
                   })
                 }
