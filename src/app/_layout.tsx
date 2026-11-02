@@ -16,7 +16,7 @@ export default function RootLayout() {
   useEffect(() => {
     if (!success) return;
     ensureSettings();
-    // Test timetable while developing; builds for testers start empty
+    // Test subjects and lessons while developing; builds for testers only get the period grid
     if (__DEV__) seedDevData();
   }, [success]);
 

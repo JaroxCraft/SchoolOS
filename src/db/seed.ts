@@ -1,23 +1,10 @@
-import { and, eq, isNull } from "drizzle-orm";
+import { and, asc, eq, isNull } from "drizzle-orm";
 
 import { db } from "@/db/client";
 import { lessons, periods, subjects, teachers } from "@/db/schema";
 
 // Test data for development: the S3a timetable 2026/27 of the Oberstufe Uznach.
-
-const PERIODS = [
-  ["07:25", "08:15"],
-  ["08:15", "09:05"],
-  ["09:05", "09:55"],
-  ["10:15", "11:05"],
-  ["11:05", "11:55"],
-  ["11:55", "12:45"],
-  ["12:45", "13:35"],
-  ["13:40", "14:30"],
-  ["14:30", "15:20"],
-  ["15:35", "16:25"],
-  ["16:25", "17:15"],
-] as const;
+// The period grid comes from the default_periods migration, which runs in every build.
 
 const TEACHERS = [
   { abbreviation: "JRi", name: "Julian Riegger" },
@@ -112,13 +99,13 @@ export async function seedDevData() {
 }
 
 async function seedTimetable() {
-  const existing = await db.select({ id: periods.id }).from(periods).limit(1);
+  const existing = await db.select({ id: subjects.id }).from(subjects).limit(1);
   if (existing.length > 0) return;
 
   const periodIds = await db
-    .insert(periods)
-    .values(PERIODS.map(([startTime, endTime]) => ({ startTime, endTime })))
-    .returning({ id: periods.id });
+    .select({ id: periods.id })
+    .from(periods)
+    .orderBy(asc(periods.startTime));
   const subjectRows = await db
     .insert(subjects)
     .values(SUBJECTS.map(({ teacher, ...subject }) => subject))
