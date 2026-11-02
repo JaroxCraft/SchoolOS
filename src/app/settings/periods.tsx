@@ -7,16 +7,15 @@ import { usePeriods } from "@/db/queries";
 import { addMinutes } from "@/lib/dates";
 import { periodRange } from "@/lib/schedule";
 
-const LESSON_MINUTES = 45;
-const BREAK_MINUTES = 5;
-const FIRST_START = "07:30";
+const LESSON_MINUTES = 50;
+const FIRST_START = "07:25";
 
 export default function PeriodsScreen() {
   const periods = usePeriods();
 
   const add = () => {
     const last = periods.at(-1);
-    const start = last ? addMinutes(last.endTime, BREAK_MINUTES) : FIRST_START;
+    const start = last ? last.endTime : FIRST_START;
     addPeriod(start, addMinutes(start, LESSON_MINUTES));
   };
 
@@ -40,7 +39,7 @@ export default function PeriodsScreen() {
           ))}
           <Button variant="text" label="Lektion hinzufügen" onPress={add} />
           <FormFooter>
-            Das Raster gilt für jeden Schultag. Neue Lektionen beginnen 5 Minuten nach der letzten.
+            Das Raster gilt für jeden Schultag. Neue Lektionen schliessen direkt an die letzte an.
           </FormFooter>
         </FieldGroup.Section>
       </FormList>
