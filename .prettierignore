@@ -2,3 +2,5 @@ bun.lock
 .expo/
 dist/
 drizzle/
+assets/schoolos.icon/
+design/icon/export/
