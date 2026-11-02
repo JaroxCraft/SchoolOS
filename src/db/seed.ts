@@ -4,7 +4,7 @@ import { db } from "@/db/client";
 import { lessons, periods, subjects, teachers } from "@/db/schema";
 
 // Test data for development: the S3a timetable 2026/27 of the Oberstufe Uznach.
-// The period grid comes from the default_periods migration, which runs in every build.
+// The period grid is filled in by initDatabase in every build.
 
 const TEACHERS = [
   { abbreviation: "JRi", name: "Julian Riegger" },
@@ -114,14 +114,16 @@ async function seedTimetable() {
   const subjectId = (abbreviation: string) =>
     subjectRows.find((row) => row.abbreviation === abbreviation)!.id;
 
-  await db.insert(lessons).values(
-    LESSONS.map(([weekday, period, abbreviation, room]) => ({
+  // Lessons in periods the grid does not have (anymore) are left out
+  const lessonRows = LESSONS.filter(([, period]) => period <= periodIds.length).map(
+    ([weekday, period, abbreviation, room]) => ({
       weekday,
       periodId: periodIds[period - 1].id,
       subjectId: subjectId(abbreviation),
       room,
-    }))
+    })
   );
+  if (lessonRows.length > 0) await db.insert(lessons).values(lessonRows);
 }
 
 // Also fills in the teachers of test databases created before teachers were objects.

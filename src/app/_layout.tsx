@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { AppStack } from "@/components/app-stack";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { EmptyState } from "@/components/empty-state";
-import { ensureSettings } from "@/db/actions";
+import { initDatabase } from "@/db/actions";
 import { useDatabaseMigrations } from "@/db/migrate";
 import { seedDevData } from "@/db/seed";
 import { useNavigationTheme } from "@/hooks/use-navigation-theme";
@@ -15,9 +15,10 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (!success) return;
-    ensureSettings();
-    // Test subjects and lessons while developing; builds for testers only get the period grid
-    if (__DEV__) seedDevData();
+    initDatabase().then(() => {
+      // Test subjects and lessons while developing; builds for testers only get the period grid
+      if (__DEV__) seedDevData();
+    });
   }, [success]);
 
   if (error) {
