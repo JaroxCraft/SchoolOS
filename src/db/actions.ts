@@ -33,8 +33,34 @@ export async function clearDatabase() {
   }
 }
 
-export async function ensureSettings() {
-  await db.insert(settings).values({ id: 1 }).onConflictDoNothing();
+// Period grid of the Oberstufe Uznach, the starting point of every new installation
+const DEFAULT_PERIODS = [
+  ["07:25", "08:15"],
+  ["08:15", "09:05"],
+  ["09:05", "09:55"],
+  ["10:15", "11:05"],
+  ["11:05", "11:55"],
+  ["11:55", "12:45"],
+  ["12:45", "13:35"],
+  ["13:40", "14:30"],
+  ["14:30", "15:20"],
+  ["15:35", "16:25"],
+  ["16:25", "17:15"],
+] as const;
+
+// Creates the settings row on the first launch (or after clearing the database)
+// and fills in the default period grid along with it.
+export async function initDatabase() {
+  const created = await db
+    .insert(settings)
+    .values({ id: 1 })
+    .onConflictDoNothing()
+    .returning({ id: settings.id });
+  if (created.length === 0) return;
+
+  await db
+    .insert(periods)
+    .values(DEFAULT_PERIODS.map(([startTime, endTime]) => ({ startTime, endTime })));
 }
 
 export async function updateSettings(values: Partial<Omit<Settings, "id">>) {
