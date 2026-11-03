@@ -1,4 +1,4 @@
-import { FieldGroup, ListItem, Text } from "@expo/ui";
+import { FieldGroup, Text } from "@expo/ui";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { Linking } from "react-native";
 
@@ -6,6 +6,7 @@ import { EmptyState } from "@/components/empty-state";
 import { EntryRow } from "@/components/entry-row";
 import { FormList } from "@/components/form-list";
 import { LabeledRow } from "@/components/labeled-row";
+import { ActionRow } from "@/components/rows";
 import { useEntries, useLessons, usePeriods, useSubjects, useTeachers } from "@/db/queries";
 import { today, weekdayName } from "@/lib/dates";
 import { isCheckable } from "@/lib/entry-types";
@@ -58,11 +59,15 @@ export default function SubjectScreen() {
             </LabeledRow>
           )}
           {teacher?.email && (
-            <ListItem
+            <LabeledRow label="E-Mail">
+              <Text textStyle={{ color: ink.secondary }}>{teacher.email}</Text>
+            </LabeledRow>
+          )}
+          {teacher?.email && (
+            <ActionRow
+              label="E-Mail schreiben"
               onPress={() => Linking.openURL(`mailto:${teacher.email}`)}
-              supportingText={teacher.email}>
-              E-Mail schreiben
-            </ListItem>
+            />
           )}
         </FieldGroup.Section>
 
@@ -85,15 +90,15 @@ export default function SubjectScreen() {
           {openEntries.map((entry) => (
             <EntryRow key={entry.id} entry={entry} subject={subject} />
           ))}
-          <ListItem
+          <ActionRow
+            label="Eintrag hinzufügen"
             onPress={() =>
               router.push({
                 pathname: "/entry/[id]",
                 params: { id: "new", subjectId: String(subject.id) },
               })
-            }>
-            Eintrag hinzufügen
-          </ListItem>
+            }
+          />
         </FieldGroup.Section>
       </FormList>
     </>

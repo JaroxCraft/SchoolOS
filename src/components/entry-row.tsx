@@ -1,6 +1,7 @@
-import { ListItem, Text } from "@expo/ui";
+import { Text } from "@expo/ui";
 import { router } from "expo-router";
 
+import { NavigationRow } from "@/components/rows";
 import { SubjectDot } from "@/components/subject-dot";
 import { TaskCheckbox } from "@/components/task-checkbox";
 import { setEntryCompleted } from "@/db/actions";
@@ -27,9 +28,7 @@ export function EntryRow({ entry, subject }: EntryRowProps) {
   ].join(" · ");
 
   return (
-    <ListItem
-      // Android: same background as the other rows of the section
-      colors={{ containerColor: "transparent" }}
+    <NavigationRow
       onPress={() => router.push({ pathname: "/entry/[id]", params: { id: String(entry.id) } })}
       leading={
         checkable ? (
@@ -48,6 +47,6 @@ export function EntryRow({ entry, subject }: EntryRowProps) {
         </Text>
       }>
       {entry.title}
-    </ListItem>
+    </NavigationRow>
   );
 }

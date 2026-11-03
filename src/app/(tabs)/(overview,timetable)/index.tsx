@@ -1,9 +1,10 @@
-import { FieldGroup, ListItem, Text } from "@expo/ui";
+import { FieldGroup, Text } from "@expo/ui";
 import { router } from "expo-router";
 
 import { EmptyState } from "@/components/empty-state";
 import { EntryRow } from "@/components/entry-row";
 import { FormList } from "@/components/form-list";
+import { NavigationRow } from "@/components/rows";
 import { Screen } from "@/components/screen";
 import { SubjectDot } from "@/components/subject-dot";
 import { useEntries, useLessons, usePeriods, useSubjects } from "@/db/queries";
@@ -62,7 +63,7 @@ export default function OverviewScreen() {
           {upcomingLessons.map(({ lesson, period }) => {
             const subject = subjectById(lesson.subjectId);
             return (
-              <ListItem
+              <NavigationRow
                 key={lesson.id}
                 onPress={() =>
                   router.push({
@@ -73,7 +74,7 @@ export default function OverviewScreen() {
                 leading={<SubjectDot color={subject?.color ?? ink.secondary} />}
                 supportingText={joinDetails(periodRange(period), lesson.room)}>
                 {`${periodNumber(periods, period.id)}. ${subject?.name ?? ""}`}
-              </ListItem>
+              </NavigationRow>
             );
           })}
         </FieldGroup.Section>
@@ -94,7 +95,7 @@ export default function OverviewScreen() {
           {upcomingEvents.map((entry) => (
             <EntryRow key={entry.id} entry={entry} subject={subjectById(entry.subjectId)} />
           ))}
-          <ListItem onPress={() => router.navigate("/agenda")}>Alle anzeigen</ListItem>
+          <NavigationRow onPress={() => router.navigate("/agenda")}>Alle anzeigen</NavigationRow>
         </FieldGroup.Section>
       </FormList>
     </Screen>

@@ -4,7 +4,7 @@ import { Platform, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { AddButton } from "@/components/add-button";
-import { useToolbarIcon } from "@/hooks/use-toolbar-icon";
+import { useSymbol } from "@/hooks/use-symbol";
 
 type ScreenProps = {
   title: string;
@@ -15,7 +15,7 @@ type ScreenProps = {
 
 // A tab screen with a large title and the gear button to the settings.
 export function Screen({ title, showAddButton, children }: ScreenProps) {
-  const settingsIcon = useToolbarIcon("gearshape", "settings");
+  const settingsIcon = useSymbol("gearshape", "settings");
 
   return (
     <>

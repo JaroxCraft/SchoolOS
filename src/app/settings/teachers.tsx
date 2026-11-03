@@ -1,7 +1,8 @@
-import { FieldGroup, ListItem } from "@expo/ui";
+import { FieldGroup } from "@expo/ui";
 import { router, Stack } from "expo-router";
 
 import { FormList } from "@/components/form-list";
+import { ActionRow, NavigationRow } from "@/components/rows";
 import { useSubjects, useTeachers } from "@/db/queries";
 import { joinDetails } from "@/lib/text";
 
@@ -18,7 +19,7 @@ export default function TeachersScreen() {
       <FormList>
         <FieldGroup.Section>
           {teachers.map((teacher) => (
-            <ListItem
+            <NavigationRow
               key={teacher.id}
               onPress={() => openTeacher(String(teacher.id))}
               supportingText={joinDetails(
@@ -29,9 +30,9 @@ export default function TeachersScreen() {
                   .join(", ")
               )}>
               {teacher.name}
-            </ListItem>
+            </NavigationRow>
           ))}
-          <ListItem onPress={() => openTeacher("new")}>Lehrperson hinzufügen</ListItem>
+          <ActionRow label="Lehrperson hinzufügen" onPress={() => openTeacher("new")} />
         </FieldGroup.Section>
       </FormList>
     </>

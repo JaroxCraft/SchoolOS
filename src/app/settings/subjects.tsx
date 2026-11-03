@@ -1,7 +1,8 @@
-import { FieldGroup, ListItem } from "@expo/ui";
+import { FieldGroup } from "@expo/ui";
 import { router, Stack } from "expo-router";
 
 import { FormList } from "@/components/form-list";
+import { ActionRow, NavigationRow } from "@/components/rows";
 import { SubjectDot } from "@/components/subject-dot";
 import { useSubjects, useTeachers } from "@/db/queries";
 import { joinDetails } from "@/lib/text";
@@ -19,7 +20,7 @@ export default function SubjectsScreen() {
       <FormList>
         <FieldGroup.Section>
           {subjects.map((subject) => (
-            <ListItem
+            <NavigationRow
               key={subject.id}
               onPress={() => openSubject(String(subject.id))}
               leading={<SubjectDot color={subject.color} />}
@@ -28,9 +29,9 @@ export default function SubjectsScreen() {
                 teachers.find((teacher) => teacher.id === subject.teacherId)?.name
               )}>
               {subject.name}
-            </ListItem>
+            </NavigationRow>
           ))}
-          <ListItem onPress={() => openSubject("new")}>Fach hinzufügen</ListItem>
+          <ActionRow label="Fach hinzufügen" onPress={() => openSubject("new")} />
         </FieldGroup.Section>
       </FormList>
     </>

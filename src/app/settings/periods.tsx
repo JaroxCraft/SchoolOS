@@ -1,7 +1,8 @@
-import { Button, FieldGroup, ListItem } from "@expo/ui";
+import { FieldGroup } from "@expo/ui";
 import { router, Stack } from "expo-router";
 
 import { FormFooter, FormList } from "@/components/form-list";
+import { ActionRow, NavigationRow } from "@/components/rows";
 import { addPeriod } from "@/db/actions";
 import { usePeriods } from "@/db/queries";
 import { addMinutes } from "@/lib/dates";
@@ -25,7 +26,7 @@ export default function PeriodsScreen() {
       <FormList>
         <FieldGroup.Section>
           {periods.map((period, index) => (
-            <ListItem
+            <NavigationRow
               key={period.id}
               onPress={() =>
                 router.push({
@@ -35,9 +36,9 @@ export default function PeriodsScreen() {
               }
               supportingText={periodRange(period)}>
               {`${index + 1}. Lektion`}
-            </ListItem>
+            </NavigationRow>
           ))}
-          <Button variant="text" label="Lektion hinzufügen" onPress={add} />
+          <ActionRow label="Lektion hinzufügen" onPress={add} />
           <FormFooter>
             Das Raster gilt für jeden Schultag. Neue Lektionen schliessen direkt an die letzte an.
           </FormFooter>
