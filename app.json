@@ -50,6 +50,12 @@
         "projectId": "a8fff5e3-4c16-47c0-8cba-4f6974fdeefc"
       }
     },
-    "owner": "jarox"
+    "owner": "jarox",
+    "runtimeVersion": {
+      "policy": "fingerprint"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/a8fff5e3-4c16-47c0-8cba-4f6974fdeefc"
+    }
   }
 }
