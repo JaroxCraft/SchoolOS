@@ -1,9 +1,10 @@
-import { FieldGroup, ListItem } from "@expo/ui";
+import { FieldGroup } from "@expo/ui";
 import { router, Stack } from "expo-router";
 import { useState } from "react";
 
 import { EmptyState } from "@/components/empty-state";
 import { FormList } from "@/components/form-list";
+import { NavigationRow } from "@/components/rows";
 import { SelectRow } from "@/components/select-row";
 import { SubjectDot } from "@/components/subject-dot";
 import { useLessons, usePeriods, useSubjects } from "@/db/queries";
@@ -54,7 +55,7 @@ export default function TimetableSettingsScreen() {
             const lesson = lessonAt(lessons, weekday, period.id);
             const subject = subjects.find((candidate) => candidate.id === lesson?.subjectId);
             return (
-              <ListItem
+              <NavigationRow
                 key={period.id}
                 onPress={() =>
                   router.push({
@@ -65,7 +66,7 @@ export default function TimetableSettingsScreen() {
                 leading={<SubjectDot color={subject?.color ?? NEUTRAL_COLOR} />}
                 supportingText={joinDetails(periodRange(period), lesson?.room)}>
                 {`${index + 1}. ${subject?.name ?? "Frei"}`}
-              </ListItem>
+              </NavigationRow>
             );
           })}
         </FieldGroup.Section>

@@ -6,8 +6,8 @@ import { type ImageSourcePropType, Platform } from "react-native";
 // Material Symbols loaded so far, so screens opened again show their buttons right away.
 const androidIcons = new Map<AndroidSymbol, ImageSourcePropType>();
 
-// The toolbar only takes SF Symbols on iOS, Android needs the Material Symbol as an image.
-export function useToolbarIcon(
+// SF Symbol on iOS; Android needs the Material Symbol as an image (black, tinted where it is shown).
+export function useSymbol(
   sf: SFSymbol,
   md: AndroidSymbol
 ): SFSymbol | ImageSourcePropType | undefined {

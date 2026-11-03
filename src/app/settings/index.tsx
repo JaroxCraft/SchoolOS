@@ -1,9 +1,10 @@
-import { FieldGroup, ListItem } from "@expo/ui";
+import { FieldGroup } from "@expo/ui";
 import { router, Stack } from "expo-router";
 import { Platform } from "react-native";
 
 import { DestructiveButton } from "@/components/destructive-button";
 import { FormFooter, FormList } from "@/components/form-list";
+import { NavigationRow } from "@/components/rows";
 import { SelectRow } from "@/components/select-row";
 import { clearDatabase, updateSettings } from "@/db/actions";
 import { useLessons, usePeriods, useSettings, useSubjects, useTeachers } from "@/db/queries";
@@ -45,26 +46,30 @@ export default function SettingsScreen() {
 
       <FormList>
         <FieldGroup.Section title="Schule">
-          <ListItem
+          <NavigationRow
+            icon={{ sf: "clock", md: "schedule", color: "#FF9500" }}
             onPress={() => router.push("/settings/periods")}
             supportingText={`${periods.length} Lektionen pro Tag`}>
             Lektionenraster
-          </ListItem>
-          <ListItem
+          </NavigationRow>
+          <NavigationRow
+            icon={{ sf: "books.vertical", md: "menu_book", color: "#007AFF" }}
             onPress={() => router.push("/settings/subjects")}
             supportingText={`${subjects.length} Fächer`}>
             Fächer
-          </ListItem>
-          <ListItem
+          </NavigationRow>
+          <NavigationRow
+            icon={{ sf: "person.2", md: "group", color: "#34C759" }}
             onPress={() => router.push("/settings/teachers")}
             supportingText={`${teachers.length} Lehrpersonen`}>
             Lehrpersonen
-          </ListItem>
-          <ListItem
+          </NavigationRow>
+          <NavigationRow
+            icon={{ sf: "calendar", md: "calendar_view_week", color: "#FF3B30" }}
             onPress={() => router.push("/settings/timetable")}
             supportingText={`${lessons.length} Lektionen pro Woche`}>
             Stundenplan
-          </ListItem>
+          </NavigationRow>
         </FieldGroup.Section>
 
         <FieldGroup.Section title="Lernbeginn">

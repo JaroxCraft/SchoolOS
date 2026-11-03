@@ -8,6 +8,7 @@ export function useInk(): Ink {
   return {
     label: colors.onSurface,
     secondary: colors.onSurfaceVariant,
+    tertiary: colors.outline,
     danger: colors.error,
   };
 }
