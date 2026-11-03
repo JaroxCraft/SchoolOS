@@ -2,12 +2,14 @@ name: Release
 
 on:
   push:
-    tags: ['v*']
+    tags: ['v*.*.*']
 
 jobs:
   build_ios:
     name: Build iOS
     type: build
+    env:
+      APP_VERSION: ${{ github.ref_name }}
     params:
       platform: ios
       profile: production
@@ -24,6 +26,8 @@ jobs:
   build_android:
     name: Build Android APK
     type: build
+    env:
+      APP_VERSION: ${{ github.ref_name }}
     params:
       platform: android
       profile: preview
