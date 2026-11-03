@@ -1,0 +1,13 @@
+name: Update
+
+on:
+  push:
+    branches: ['master']
+
+jobs:
+  publish_update:
+    name: Publish update
+    type: update
+    environment: production
+    params:
+      branch: production
