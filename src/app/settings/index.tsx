@@ -8,6 +8,7 @@ import { NavigationRow } from "@/components/rows";
 import { SelectRow } from "@/components/select-row";
 import { clearDatabase, updateSettings } from "@/db/actions";
 import { useLessons, usePeriods, useSettings, useSubjects, useTeachers } from "@/db/queries";
+import { versionLabel } from "@/lib/app-info";
 import { confirm } from "@/lib/confirm";
 
 const LEAD_DAY_OPTIONS = Array.from({ length: 22 }, (_, days) => ({
@@ -94,6 +95,15 @@ export default function SettingsScreen() {
           <FormFooter>
             Wie viele Tage vor dem Termin das Lernen beginnt. Lässt sich bei jedem Eintrag anpassen.
           </FormFooter>
+        </FieldGroup.Section>
+
+        <FieldGroup.Section title="Info">
+          <NavigationRow
+            icon={{ sf: "info", md: "info", color: "#8E8E93" }}
+            onPress={() => router.push("/settings/about")}
+            supportingText={versionLabel}>
+            Über SchoolOS
+          </NavigationRow>
         </FieldGroup.Section>
 
         {/* Development only: the test data is seeded again on the next launch */}
