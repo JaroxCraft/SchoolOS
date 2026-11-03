@@ -3,7 +3,7 @@
 // Run with `bun run icons`. Validate the .icon package afterwards with the compose-app-icon skill.
 
 import { Resvg } from "@resvg/resvg-js";
-import { mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { copyFileSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { PNG } from "pngjs";
 
@@ -11,6 +11,8 @@ const ROOT = join(import.meta.dirname, "..", "..");
 const ICON_PACKAGE = join(ROOT, "assets", "schoolos.icon");
 const IMAGES = join(ROOT, "assets", "images");
 const EXPORT = join(import.meta.dirname, "export");
+// Icons rendered by Apple (Liquid Glass), downloaded from App Store Connect; not generated here
+const RENDERED = join(import.meta.dirname, "rendered");
 
 // Canvas of Icon Composer and the App Store
 const CANVAS = 1024;
@@ -25,10 +27,13 @@ const SUBJECTS = {
 type Subject = keyof typeof SUBJECTS;
 
 const FREE = { light: "#DFE3EA", dark: "#FFFFFF1F" };
-const BACKGROUND = {
+// iOS renders the gradient itself (Icon Composer), so the icon keeps it there
+const IOS_BACKGROUND = {
   light: ["#FFFFFF", "#E9EDF3"],
   dark: ["#2C2C2E", "#0B0B0C"],
 } as const;
+// The PNGs get a plain color: a subtle gradient shows visible bands as an 8-bit PNG on Android
+const BACKGROUND = { light: "#F4F6F9", dark: "#1C1C1E" } as const;
 type Mode = "light" | "dark";
 
 // Grid: columns are weekdays, rows are periods
@@ -82,14 +87,8 @@ function grid(mode: Mode, scale = 1) {
 }
 
 function background(mode: Mode) {
-  const [top, bottom] = BACKGROUND[mode];
-  return (
-    `<defs><linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">` +
-    `<stop offset="0" stop-color="${top}"/><stop offset="1" stop-color="${bottom}"/>` +
-    `</linearGradient></defs><rect width="${CANVAS}" height="${CANVAS}" fill="url(#bg)"/>`
-  );
+  return `<rect width="${CANVAS}" height="${CANVAS}" fill="${BACKGROUND[mode]}"/>`;
 }
-
 function svg(content: string, clipRadius?: number) {
   const clip =
     clipRadius === undefined
@@ -140,8 +139,8 @@ function buildIconPackage() {
 
   const document = {
     "fill-specializations": [
-      { value: { "linear-gradient": BACKGROUND.light.map(icColor) } },
-      { appearance: "dark", value: { "linear-gradient": BACKGROUND.dark.map(icColor) } },
+      { value: { "linear-gradient": IOS_BACKGROUND.light.map(icColor) } },
+      { appearance: "dark", value: { "linear-gradient": IOS_BACKGROUND.dark.map(icColor) } },
     ],
     groups: [
       {
@@ -169,6 +168,11 @@ function buildIconPackage() {
 function buildAppImages() {
   // Fallback icon (Expo Go, older Android without adaptive icons)
   write(join(IMAGES, "icon.png"), opaquePng(svg(background("light") + grid("light"))));
+  // Dark variant for the about screen in dark mode
+  write(join(IMAGES, "icon-dark.png"), opaquePng(svg(background("dark") + grid("dark"))));
+  // The about screen on iOS shows the icon as the home screen does, rendered by Apple
+  copyFileSync(join(RENDERED, "icon-ios-light.png"), join(IMAGES, "icon-ios.png"));
+  console.log("  assets/images/icon-ios.png (copied from design/icon/rendered)");
 
   // Android adaptive icon
   write(join(IMAGES, "android-icon-background.png"), png(svg(background("light"))));
