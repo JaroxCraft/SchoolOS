@@ -2,29 +2,19 @@ import { FieldGroup } from "@expo/ui";
 import { router, Stack } from "expo-router";
 import { Platform } from "react-native";
 
-import { DestructiveButton } from "@/components/destructive-button";
-import { FormFooter, FormList } from "@/components/form-list";
-import { NavigationRow } from "@/components/rows";
+import { FooterText, FormList } from "@/components/form-list";
+import { ActionRow, NavigationRow } from "@/components/rows";
 import { SelectRow } from "@/components/select-row";
-import { clearDatabase, updateSettings } from "@/db/actions";
+import { updateSettings } from "@/db/actions";
 import { useLessons, usePeriods, useSettings, useSubjects, useTeachers } from "@/db/queries";
 import { versionLabel } from "@/lib/app-info";
-import { confirm } from "@/lib/confirm";
+import { SETUP_STEP_ICONS } from "@/lib/setup";
+import { pickAndImport, shareExport } from "@/lib/transfer-file";
 
 const LEAD_DAY_OPTIONS = Array.from({ length: 22 }, (_, days) => ({
   label: days === 1 ? "1 Tag" : `${days} Tage`,
   value: days,
 }));
-
-function confirmClearDatabase() {
-  confirm({
-    title: "Datenbank leeren?",
-    message:
-      "Alle Fächer, Lektionen, Einträge und Einstellungen werden gelöscht. Beim nächsten Start kommen die Testdaten zurück.",
-    confirmLabel: "Leeren",
-    onConfirm: () => clearDatabase(),
-  });
-}
 
 export default function SettingsScreen() {
   const periods = usePeriods();
@@ -46,31 +36,43 @@ export default function SettingsScreen() {
       )}
 
       <FormList>
+        {/* In the order they build on each other; teachers are optional */}
         <FieldGroup.Section title="Schule">
           <NavigationRow
-            icon={{ sf: "clock", md: "schedule", color: "#FF9500" }}
+            icon={SETUP_STEP_ICONS.periods}
             onPress={() => router.push("/settings/periods")}
             supportingText={`${periods.length} Lektionen pro Tag`}>
             Lektionenraster
           </NavigationRow>
           <NavigationRow
-            icon={{ sf: "books.vertical", md: "menu_book", color: "#007AFF" }}
+            icon={SETUP_STEP_ICONS.subjects}
             onPress={() => router.push("/settings/subjects")}
             supportingText={`${subjects.length} Fächer`}>
             Fächer
           </NavigationRow>
           <NavigationRow
-            icon={{ sf: "person.2", md: "group", color: "#34C759" }}
-            onPress={() => router.push("/settings/teachers")}
-            supportingText={`${teachers.length} Lehrpersonen`}>
-            Lehrpersonen
-          </NavigationRow>
-          <NavigationRow
-            icon={{ sf: "calendar", md: "calendar_view_week", color: "#FF3B30" }}
+            icon={SETUP_STEP_ICONS.timetable}
             onPress={() => router.push("/settings/timetable")}
             supportingText={`${lessons.length} Lektionen pro Woche`}>
             Stundenplan
           </NavigationRow>
+          <NavigationRow
+            icon={SETUP_STEP_ICONS.teachers}
+            onPress={() => router.push("/settings/teachers")}
+            supportingText={`${teachers.length} Lehrpersonen`}>
+            Lehrpersonen
+          </NavigationRow>
+        </FieldGroup.Section>
+
+        <FieldGroup.Section title="Teilen">
+          <ActionRow label="Stundenplan teilen" onPress={() => shareExport("timetable")} />
+          <ActionRow label="Datei importieren" onPress={() => pickAndImport()} />
+          <FieldGroup.SectionFooter>
+            <FooterText>
+              Schick deiner Klasse Lektionenraster, Fächer, Lehrpersonen und Stundenplan als Datei,
+              damit niemand alles von Hand erfassen muss. Einträge und Noten bleiben privat.
+            </FooterText>
+          </FieldGroup.SectionFooter>
         </FieldGroup.Section>
 
         <FieldGroup.Section title="Lernbeginn">
@@ -92,9 +94,22 @@ export default function SettingsScreen() {
             options={LEAD_DAY_OPTIONS}
             onChange={(submissionLeadDays) => updateSettings({ submissionLeadDays })}
           />
-          <FormFooter>
-            Wie viele Tage vor dem Termin das Lernen beginnt. Lässt sich bei jedem Eintrag anpassen.
-          </FormFooter>
+          <FieldGroup.SectionFooter>
+            <FooterText>
+              Wie viele Tage vor dem Termin das Lernen beginnt. Lässt sich bei jedem Eintrag
+              anpassen.
+            </FooterText>
+          </FieldGroup.SectionFooter>
+        </FieldGroup.Section>
+
+        <FieldGroup.Section title="Backup">
+          <ActionRow label="Backup sichern" onPress={() => shareExport("backup")} />
+          <FieldGroup.SectionFooter>
+            <FooterText>
+              Sichert alle Daten in einer Datei, zum Beispiel für ein neues Gerät. Wiederherstellen
+              mit «Datei importieren».
+            </FooterText>
+          </FieldGroup.SectionFooter>
         </FieldGroup.Section>
 
         <FieldGroup.Section title="Info">
@@ -105,16 +120,6 @@ export default function SettingsScreen() {
             Über SchoolOS
           </NavigationRow>
         </FieldGroup.Section>
-
-        {/* Development only: the test data is seeded again on the next launch */}
-        {__DEV__ && (
-          <FieldGroup.Section title="Entwicklung">
-            <DestructiveButton label="Datenbank leeren" onPress={confirmClearDatabase} />
-            <FormFooter>
-              Löscht alle Daten. Beim nächsten Start der App werden die Testdaten neu geladen.
-            </FormFooter>
-          </FieldGroup.Section>
-        )}
       </FormList>
     </>
   );

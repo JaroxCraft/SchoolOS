@@ -120,6 +120,10 @@ export async function setLesson(
   }
 }
 
+export async function setLessonRoom(id: number, room: string | null) {
+  await db.update(lessons).set({ room }).where(eq(lessons.id, id));
+}
+
 export async function saveEntry(id: number | null, values: NewEntry) {
   if (id === null) {
     await db.insert(entries).values(values);

@@ -1,9 +1,10 @@
-import { FieldGroup, TextInput } from "@expo/ui";
+import { FieldGroup } from "@expo/ui";
 import { router, Stack } from "expo-router";
 import { useState } from "react";
 
 import { DestructiveButton } from "@/components/destructive-button";
 import { FormList } from "@/components/form-list";
+import { TextField } from "@/components/text-field";
 import { deleteTeacher, saveTeacher } from "@/db/actions";
 import type { Teacher } from "@/db/schema";
 import { confirmDelete } from "@/lib/confirm-delete";
@@ -48,21 +49,21 @@ export function TeacherForm({ teacher }: TeacherFormProps) {
 
       <FormList>
         <FieldGroup.Section>
-          <TextInput
+          <TextField
             placeholder="Name, z. B. Julian Riegger"
             defaultValue={name}
             autoFocus={!teacher}
             autoCapitalize="words"
             onChangeText={setName}
           />
-          <TextInput
+          <TextField
             placeholder="Kürzel, z. B. JRi"
             defaultValue={abbreviation}
             autoCapitalize="none"
             maxLength={5}
             onChangeText={setAbbreviation}
           />
-          <TextInput
+          <TextField
             placeholder="E-Mail (optional)"
             defaultValue={email}
             keyboardType="email-address"

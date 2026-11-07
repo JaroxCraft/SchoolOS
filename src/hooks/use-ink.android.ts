@@ -10,5 +10,6 @@ export function useInk(): Ink {
     secondary: colors.onSurfaceVariant,
     tertiary: colors.outline,
     danger: colors.error,
+    accent: colors.primary,
   };
 }

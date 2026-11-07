@@ -41,8 +41,11 @@ export default function TimetableScreen() {
         <EmptyState
           icon={{ ios: "calendar", android: "calendar_view_week" }}
           title="Kein Stundenplan"
-          message="Erfasse in den Einstellungen dein Lektionenraster, deine Fächer und deine Lektionen."
-          action={{ label: "Einrichten", onPress: () => router.push("/settings") }}
+          message="Teile deinen Fächern die Lektionen der Woche zu, oder importiere den Stundenplan aus deiner Klasse."
+          action={{
+            label: "Stundenplan ausfüllen",
+            onPress: () => router.push("/settings/timetable"),
+          }}
         />
       </Screen>
     );

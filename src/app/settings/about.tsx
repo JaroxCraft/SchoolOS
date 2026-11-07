@@ -5,11 +5,14 @@ import { router, Stack } from "expo-router";
 import { useEffect, useState } from "react";
 import { Image, Platform, useColorScheme } from "react-native";
 
-import { FormList } from "@/components/form-list";
+import { DestructiveButton } from "@/components/destructive-button";
+import { FooterText, FormList } from "@/components/form-list";
 import { LabeledRow } from "@/components/labeled-row";
 import { ActionRow, LinkRow, NavigationRow } from "@/components/rows";
+import { clearDatabase, initDatabase } from "@/db/actions";
 import { useInk } from "@/hooks/use-ink";
 import { appInfoRows, appInfoText, GITHUB_URL, versionLabel } from "@/lib/app-info";
+import { confirm } from "@/lib/confirm";
 
 // iOS: the home screen icon as rendered by Apple (Liquid Glass, light only, already shaped).
 // Android: the generated icon in the current appearance, rounded here.
@@ -40,6 +43,24 @@ function CopyInfoRow() {
   };
 
   return <ActionRow label={copied ? "Kopiert ✓" : "Infos kopieren"} onPress={copy} />;
+}
+
+// Deletes everything and starts over like a new installation, e.g. before handing on the phone or
+// to set up again from a classmate's timetable. Kept at the end of "Über SchoolOS", out of the
+// way of the everyday settings.
+function confirmReset() {
+  confirm({
+    title: "App zurücksetzen?",
+    message:
+      "Stundenplan, Fächer, Lehrpersonen, Einträge, Noten und Einstellungen werden gelöscht. Sichere vorher ein Backup, wenn du die Daten behalten möchtest.",
+    confirmLabel: "Zurücksetzen",
+    onConfirm: async () => {
+      await clearDatabase();
+      await initDatabase();
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      router.replace("/");
+    },
+  });
 }
 
 export default function AboutScreen() {
@@ -101,6 +122,16 @@ export default function AboutScreen() {
             </LabeledRow>
           ))}
           <CopyInfoRow />
+        </FieldGroup.Section>
+
+        <FieldGroup.Section>
+          <DestructiveButton label="App zurücksetzen" onPress={confirmReset} />
+          <FieldGroup.SectionFooter>
+            <FooterText>
+              Löscht alle Daten auf diesem Gerät. Die App ist danach wie frisch installiert, mit dem
+              Standard-Lektionenraster.
+            </FooterText>
+          </FieldGroup.SectionFooter>
         </FieldGroup.Section>
       </FormList>
     </>

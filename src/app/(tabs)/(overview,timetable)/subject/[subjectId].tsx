@@ -13,6 +13,7 @@ import { isCheckable } from "@/lib/entry-types";
 import { periodNumber } from "@/lib/schedule";
 import { joinDetails } from "@/lib/text";
 import { useInk } from "@/hooks/use-ink";
+import { useWasCompleted } from "@/hooks/use-recently-completed";
 
 export default function SubjectScreen() {
   const ink = useInk();
@@ -28,9 +29,11 @@ export default function SubjectScreen() {
         a.weekday - b.weekday ||
         periodNumber(periods, a.periodId) - periodNumber(periods, b.periodId)
     );
+  const wasCompleted = useWasCompleted();
   const openEntries = useEntries().filter(
     (entry) =>
-      entry.subjectId === id && (isCheckable(entry.type) ? !entry.completed : entry.date >= today())
+      entry.subjectId === id &&
+      (isCheckable(entry.type) ? !wasCompleted(entry) : entry.date >= today())
   );
 
   if (!subject) {
