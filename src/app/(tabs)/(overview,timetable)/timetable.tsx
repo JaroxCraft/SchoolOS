@@ -1,41 +1,59 @@
+import { Host } from "@expo/ui";
 import { router } from "expo-router";
+import { useRef, useState } from "react";
 import {
-  Pressable,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
   ScrollView,
+  type ScrollViewInstance,
   StyleSheet,
-  Text,
-  useColorScheme,
   useWindowDimensions,
   View,
 } from "react-native";
 
 import { EmptyState } from "@/components/empty-state";
+import { GUTTER_WIDTH, LessonTimeline, type TimelineDay } from "@/components/lesson-timeline";
 import { Screen } from "@/components/screen";
-import { colors } from "@/constants/colors";
-import { useLessons, usePeriods, useSubjects } from "@/db/queries";
-import { isoWeekday, SCHOOL_WEEKDAYS, today, weekdayName, weekdayShort } from "@/lib/dates";
-import { lessonAt } from "@/lib/schedule";
-import { joinDetails } from "@/lib/text";
+import { SegmentedControl } from "@/components/segmented-control";
+import { WeekStrip } from "@/components/week-strip";
+import { useLessons, usePeriods, useSubjects, useTeachers } from "@/db/queries";
+import { useNow } from "@/hooks/use-now";
+import { addDays, isoWeekday, SCHOOL_WEEKDAYS } from "@/lib/dates";
+import { visiblePeriods } from "@/lib/timeline";
 
-const GRID_PADDING = 12;
-const GAP = 4;
-const TIME_COLUMN_WIDTH = 40;
+const PADDING = 16;
+const COLUMN_GAP = 4;
+// Points per minute: a 50-minute lesson is 80 pt tall in the day view, 55 pt in the week view
+const DAY_SCALE = 1.6;
+const WEEK_SCALE = 1.1;
 
+type Mode = "day" | "week";
+
+// The timetable in two views. "Tag" (default) shows one day as a time axis with large cards;
+// swiping sideways or tapping a date in the week row changes the day. "Woche" shows all five days
+// side by side; tapping a date there opens that day.
 export default function TimetableScreen() {
-  // Re-renders on light/dark changes, so Android resolves the native colors again
-  useColorScheme();
-  // Fixed column width, so a row with free periods lines up with full rows
-  const cellWidth =
-    (useWindowDimensions().width -
-      2 * GRID_PADDING -
-      TIME_COLUMN_WIDTH -
-      SCHOOL_WEEKDAYS.length * GAP) /
-    SCHOOL_WEEKDAYS.length;
+  const { width } = useWindowDimensions();
   const periods = usePeriods();
   const subjects = useSubjects();
+  const teachers = useTeachers();
   const lessons = useLessons();
+  const now = useNow();
+  const pager = useRef<ScrollViewInstance>(null);
 
-  if (periods.length === 0 || lessons.length === 0) {
+  // This week; at the weekend already the coming one
+  const todayWeekday = isoWeekday(now.date);
+  const monday = addDays(now.date, todayWeekday <= 5 ? 1 - todayWeekday : 8 - todayWeekday);
+  const days: TimelineDay[] = SCHOOL_WEEKDAYS.map((weekday) => ({
+    weekday,
+    date: addDays(monday, weekday - 1),
+  }));
+
+  const [mode, setMode] = useState<Mode>("day");
+  const [selected, setSelected] = useState(todayWeekday <= 5 ? todayWeekday : 1);
+
+  const shown = visiblePeriods(lessons, periods);
+  if (shown.length === 0) {
     return (
       <Screen title="Stundenplan">
         <EmptyState
@@ -44,142 +62,124 @@ export default function TimetableScreen() {
           message="Teile deinen Fächern die Lektionen der Woche zu, oder importiere den Stundenplan aus deiner Klasse."
           action={{
             label: "Stundenplan ausfüllen",
-            onPress: () => router.push("/settings/timetable"),
+            onPress: () => router.push("/setup/timetable"),
           }}
         />
       </Screen>
     );
   }
 
-  const currentWeekday = isoWeekday(today());
+  const scrollToDay = (weekday: number, animated: boolean) =>
+    pager.current?.scrollTo({ x: (weekday - 1) * width, animated });
+
+  const selectDay = (weekday: number) => {
+    setSelected(weekday);
+    if (mode === "week") {
+      setMode("day");
+      return;
+    }
+    scrollToDay(weekday, true);
+  };
+
+  // When the finger lifts, the week row switches to the day the page will come to rest on, so the
+  // circle animates while the page slides into place, like in Calendar. iOS reports where the
+  // scroll will end; otherwise the swipe direction decides.
+  const selectDayOfSwipe = ({ nativeEvent }: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const { targetContentOffset, contentOffset, velocity } = nativeEvent;
+    const page = targetContentOffset
+      ? Math.round(targetContentOffset.x / width)
+      : Math.abs(velocity?.x ?? 0) > 0.2
+        ? (velocity!.x > 0 ? Math.ceil : Math.floor)(contentOffset.x / width)
+        : Math.round(contentOffset.x / width);
+    const weekday = Math.min(Math.max(page + 1, 1), days.length);
+    if (weekday !== selected) setSelected(weekday);
+  };
+
+  const timeline = {
+    periods,
+    visiblePeriods: shown,
+    lessons,
+    subjects,
+    teachers,
+    now,
+  };
 
   return (
     <Screen title="Stundenplan">
-      <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.grid}>
-        <View style={styles.row}>
-          <View style={styles.timeColumn} />
-          {SCHOOL_WEEKDAYS.map((weekday) => (
-            <Text
-              key={weekday}
-              style={[
-                styles.dayLabel,
-                { width: cellWidth },
-                weekday === currentWeekday && styles.currentDay,
-              ]}>
-              {weekdayShort(weekday)}
-            </Text>
-          ))}
+      <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.content}>
+        <View style={styles.header}>
+          <Host matchContents={{ vertical: true }}>
+            <SegmentedControl
+              value={mode}
+              onChange={setMode}
+              options={[
+                { label: "Tag", value: "day" },
+                { label: "Woche", value: "week" },
+              ]}
+            />
+          </Host>
+        </View>
+        {/* In the week view the days line up with the columns below */}
+        <View style={mode === "week" ? styles.week : styles.header}>
+          <WeekStrip
+            days={days}
+            selected={mode === "day" ? selected : null}
+            today={now.date}
+            onSelect={selectDay}
+            inset={mode === "week" ? GUTTER_WIDTH + COLUMN_GAP : 0}
+            gap={COLUMN_GAP}
+          />
         </View>
 
-        {periods.map((period, index) => (
-          <View key={period.id} style={styles.row}>
-            <View style={styles.timeColumn}>
-              <Text style={styles.periodNumber}>{index + 1}</Text>
-              <Text style={styles.periodTime}>{period.startTime}</Text>
-            </View>
-            {SCHOOL_WEEKDAYS.map((weekday) => {
-              const lesson = lessonAt(lessons, weekday, period.id);
-              const subject = subjects.find((candidate) => candidate.id === lesson?.subjectId);
-              if (!lesson || !subject) {
-                return <View key={weekday} style={[styles.cell, { width: cellWidth }]} />;
-              }
-              return (
-                <Pressable
-                  key={weekday}
-                  accessibilityRole="button"
-                  accessibilityLabel={joinDetails(
-                    subject.name,
-                    `${weekdayName(weekday)}, ${index + 1}. Lektion`,
-                    lesson.room && `Zimmer ${lesson.room}`
-                  )}
-                  onPress={() =>
-                    router.push({
-                      pathname: "/subject/[subjectId]",
-                      params: { subjectId: String(subject.id) },
-                    })
-                  }
-                  style={({ pressed }) => [
-                    styles.cell,
-                    { width: cellWidth, backgroundColor: `${subject.color}33` },
-                    pressed && styles.pressed,
-                  ]}>
-                  <View style={[styles.lesson, { borderColor: subject.color }]}>
-                    <Text style={styles.abbreviation} numberOfLines={1}>
-                      {subject.abbreviation}
-                    </Text>
-                    {lesson.room && (
-                      <Text style={styles.room} numberOfLines={1}>
-                        {lesson.room}
-                      </Text>
-                    )}
-                  </View>
-                </Pressable>
-              );
-            })}
+        {mode === "day" ? (
+          <ScrollView
+            ref={pager}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            // Opens on the chosen day without a visible scroll
+            onLayout={() => scrollToDay(selected, false)}
+            onScrollEndDrag={selectDayOfSwipe}>
+            {days.map((day) => (
+              <View key={day.weekday} style={{ width, paddingHorizontal: PADDING }}>
+                <LessonTimeline
+                  {...timeline}
+                  days={[day]}
+                  scale={DAY_SCALE}
+                  width={width - 2 * PADDING}
+                  compact={false}
+                />
+              </View>
+            ))}
+          </ScrollView>
+        ) : (
+          <View style={styles.week}>
+            <LessonTimeline
+              {...timeline}
+              days={days}
+              scale={WEEK_SCALE}
+              width={width - PADDING}
+              compact
+            />
           </View>
-        ))}
+        )}
       </ScrollView>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  grid: {
-    padding: GRID_PADDING,
-    gap: GAP,
+  content: {
+    paddingTop: 8,
+    paddingBottom: 24,
+    gap: 16,
   },
-  row: {
-    flexDirection: "row",
-    gap: GAP,
+  header: {
+    paddingHorizontal: PADDING,
+    gap: 12,
   },
-  timeColumn: {
-    width: TIME_COLUMN_WIDTH,
-    justifyContent: "center",
-  },
-  dayLabel: {
-    textAlign: "center",
-    fontSize: 13,
-    fontWeight: "600",
-    color: colors.secondaryLabel,
-    paddingBottom: 4,
-  },
-  currentDay: {
-    color: colors.tint,
-  },
-  periodNumber: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: colors.label,
-    fontVariant: ["tabular-nums"],
-  },
-  periodTime: {
-    fontSize: 11,
-    color: colors.secondaryLabel,
-    fontVariant: ["tabular-nums"],
-  },
-  cell: {
-    // Grows with large text sizes; the cells of a row stretch to the same height
-    minHeight: 52,
-    borderRadius: 8,
-    borderCurve: "continuous",
-    overflow: "hidden",
-  },
-  pressed: {
-    opacity: 0.6,
-  },
-  lesson: {
-    flex: 1,
-    borderLeftWidth: 3,
-    paddingHorizontal: 4,
-    justifyContent: "center",
-  },
-  abbreviation: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: colors.label,
-  },
-  room: {
-    fontSize: 11,
-    color: colors.secondaryLabel,
+  week: {
+    paddingLeft: PADDING / 2,
+    paddingRight: PADDING / 2,
   },
 });

@@ -10,4 +10,15 @@ export const colors = {
     default: Color.android.dynamic.onSurfaceVariant,
   }),
   tint: Platform.select({ ios: Color.ios.systemBlue, default: Color.android.dynamic.primary }),
+  separator: Platform.select({
+    ios: Color.ios.separator,
+    default: Color.android.dynamic.outlineVariant,
+  }),
+  // The current time in the timetable, like the red line in Calendar
+  now: Platform.select({ ios: Color.ios.systemRed, default: Color.android.dynamic.error }),
+  // Today's column in the week view
+  highlight: Platform.select({
+    ios: Color.ios.secondarySystemFill,
+    default: Color.android.dynamic.surfaceContainerHigh,
+  }),
 };
