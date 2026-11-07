@@ -6,6 +6,10 @@ export type ConfirmOptions = {
   // Label of the button that carries out the action, e.g. "Löschen"
   confirmLabel: string;
   onConfirm: () => void;
+  // Shows the confirm label in red on iOS (default true)
+  destructive?: boolean;
+  // A plain message with a single button, without "Abbrechen"
+  messageOnly?: boolean;
 };
 
 // The confirmation shown by <ConfirmDialog> on Android, null while none is open.

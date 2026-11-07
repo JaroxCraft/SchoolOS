@@ -13,7 +13,8 @@ type ScreenProps = {
   children: ReactNode;
 };
 
-// A tab screen with a large title and the gear button to the settings.
+// A tab screen with a large title and the gear button to the settings, the only header button,
+// so it sits in exactly the same place in every tab.
 export function Screen({ title, showAddButton, children }: ScreenProps) {
   const settingsIcon = useSymbol("gearshape", "settings");
 

@@ -26,11 +26,13 @@ export function ConfirmDialog() {
             <Text>{options.confirmLabel}</Text>
           </TextButton>
         </AlertDialog.ConfirmButton>
-        <AlertDialog.DismissButton>
-          <TextButton onClick={closeConfirmDialog}>
-            <Text>Abbrechen</Text>
-          </TextButton>
-        </AlertDialog.DismissButton>
+        {!options.messageOnly && (
+          <AlertDialog.DismissButton>
+            <TextButton onClick={closeConfirmDialog}>
+              <Text>Abbrechen</Text>
+            </TextButton>
+          </AlertDialog.DismissButton>
+        )}
       </AlertDialog>
     </Host>
   );

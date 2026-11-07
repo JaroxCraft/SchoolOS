@@ -1,5 +1,5 @@
 // Builds every app icon asset from one definition: Mon, Thu and Fri, periods 1–4 of the
-// S3a timetable 2026/27 (see src/db/seed.ts), double lessons drawn as one block.
+// S3a timetable 2026/27, double lessons drawn as one block.
 // Run with `bun run icons`. Validate the .icon package afterwards with the compose-app-icon skill.
 
 import { Resvg } from "@resvg/resvg-js";

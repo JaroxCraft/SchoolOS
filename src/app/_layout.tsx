@@ -6,7 +6,6 @@ import { ConfirmDialog } from "@/components/confirm-dialog";
 import { EmptyState } from "@/components/empty-state";
 import { initDatabase } from "@/db/actions";
 import { useDatabaseMigrations } from "@/db/migrate";
-import { seedDevData } from "@/db/seed";
 import { useNavigationTheme } from "@/hooks/use-navigation-theme";
 
 export default function RootLayout() {
@@ -15,10 +14,7 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (!success) return;
-    initDatabase().then(() => {
-      // Test subjects and lessons while developing; builds for testers only get the period grid
-      if (__DEV__) seedDevData();
-    });
+    initDatabase();
   }, [success]);
 
   if (error) {

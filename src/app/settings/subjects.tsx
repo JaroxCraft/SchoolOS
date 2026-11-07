@@ -33,6 +33,15 @@ export default function SubjectsScreen() {
           ))}
           <ActionRow label="Fach hinzufügen" onPress={() => openSubject("new")} />
         </FieldGroup.Section>
+
+        {subjects.length > 0 && (
+          <FieldGroup.Section>
+            <ActionRow
+              label="Weiter zum Stundenplan"
+              onPress={() => router.push("/settings/timetable")}
+            />
+          </FieldGroup.Section>
+        )}
       </FormList>
     </>
   );

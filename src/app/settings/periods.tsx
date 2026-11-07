@@ -1,23 +1,57 @@
 import { FieldGroup } from "@expo/ui";
 import { router, Stack } from "expo-router";
 
-import { FormFooter, FormList } from "@/components/form-list";
-import { ActionRow, NavigationRow } from "@/components/rows";
-import { addPeriod } from "@/db/actions";
-import { usePeriods } from "@/db/queries";
-import { addMinutes } from "@/lib/dates";
-import { periodRange } from "@/lib/schedule";
+import { DestructiveButton } from "@/components/destructive-button";
+import { FooterText, FormList } from "@/components/form-list";
+import { ActionRow } from "@/components/rows";
+import { TimeRangeRow } from "@/components/time-range-row";
+import { addPeriod, deletePeriod, updatePeriod } from "@/db/actions";
+import { useLessons, usePeriods } from "@/db/queries";
+import type { Period } from "@/db/schema";
+import { confirm } from "@/lib/confirm";
+import { addMinutes, timeToDate } from "@/lib/dates";
 
 const LESSON_MINUTES = 50;
 const FIRST_START = "07:25";
 
+const minutesBetween = (start: string, end: string) =>
+  Math.round((timeToDate(end).getTime() - timeToDate(start).getTime()) / 60_000);
+
+// Moving the start keeps the length of the period, so a shifted period does not have to be fixed
+// twice; an end before the start is moved behind it.
+function changePeriod(period: Period, start: string, end: string) {
+  if (start !== period.startTime) {
+    const length = minutesBetween(period.startTime, period.endTime);
+    end = addMinutes(start, length > 0 ? length : LESSON_MINUTES);
+  } else if (minutesBetween(start, end) <= 0) {
+    end = addMinutes(start, LESSON_MINUTES);
+  }
+  updatePeriod(period.id, start, end);
+}
+
 export default function PeriodsScreen() {
   const periods = usePeriods();
+  const lessons = useLessons();
+  const last = periods.at(-1);
 
   const add = () => {
-    const last = periods.at(-1);
     const start = last ? last.endTime : FIRST_START;
     addPeriod(start, addMinutes(start, LESSON_MINUTES));
+  };
+
+  const removeLast = () => {
+    if (!last) return;
+    const used = lessons.filter((lesson) => lesson.periodId === last.id).length;
+    if (used === 0) {
+      deletePeriod(last.id);
+      return;
+    }
+    confirm({
+      title: `${periods.length}. Lektion entfernen?`,
+      message: `${used === 1 ? "Eine Lektion" : `${used} Lektionen`} im Stundenplan zu dieser Zeit ${used === 1 ? "wird" : "werden"} ebenfalls entfernt.`,
+      confirmLabel: "Entfernen",
+      onConfirm: () => deletePeriod(last.id),
+    });
   };
 
   return (
@@ -26,22 +60,34 @@ export default function PeriodsScreen() {
       <FormList>
         <FieldGroup.Section>
           {periods.map((period, index) => (
-            <NavigationRow
+            <TimeRangeRow
               key={period.id}
-              onPress={() =>
-                router.push({
-                  pathname: "/settings/period/[id]",
-                  params: { id: String(period.id) },
-                })
-              }
-              supportingText={periodRange(period)}>
-              {`${index + 1}. Lektion`}
-            </NavigationRow>
+              label={`${index + 1}. Lektion`}
+              start={period.startTime}
+              end={period.endTime}
+              onChange={(start, end) => changePeriod(period, start, end)}
+            />
           ))}
           <ActionRow label="Lektion hinzufügen" onPress={add} />
-          <FormFooter>
-            Das Raster gilt für jeden Schultag. Neue Lektionen schliessen direkt an die letzte an.
-          </FormFooter>
+          <FieldGroup.SectionFooter>
+            <FooterText>
+              Das Raster gilt für jeden Schultag. Tippe auf eine Zeit, um sie zu ändern; die Lektion
+              behält dabei ihre Länge. Neue Lektionen schliessen direkt an die letzte an.
+            </FooterText>
+          </FieldGroup.SectionFooter>
+        </FieldGroup.Section>
+
+        {last && (
+          <FieldGroup.Section>
+            <DestructiveButton label="Letzte Lektion entfernen" onPress={removeLast} />
+          </FieldGroup.Section>
+        )}
+
+        <FieldGroup.Section>
+          <ActionRow
+            label="Weiter zu den Fächern"
+            onPress={() => router.push("/settings/subjects")}
+          />
         </FieldGroup.Section>
       </FormList>
     </>

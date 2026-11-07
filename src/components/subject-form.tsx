@@ -1,10 +1,15 @@
-import { FieldGroup, TextInput } from "@expo/ui";
+import { FieldGroup } from "@expo/ui";
 import { router, Stack } from "expo-router";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
+import { Platform } from "react-native";
+
+import { ColorField } from "@/components/color-field";
 import { DestructiveButton } from "@/components/destructive-button";
-import { FormList } from "@/components/form-list";
+import { FooterText, FormList } from "@/components/form-list";
+import { ActionRow } from "@/components/rows";
 import { SelectRow } from "@/components/select-row";
+import { TextField } from "@/components/text-field";
 import { deleteSubject, saveSubject } from "@/db/actions";
 import type { Subject, Teacher } from "@/db/schema";
 import { confirmDelete } from "@/lib/confirm-delete";
@@ -25,21 +30,31 @@ function firstFreeColor(usedColors: string[]): string {
     .value;
 }
 
+// The abbreviation used when the field is left empty
+const defaultAbbreviation = (name: string) => name.trim().slice(0, 3);
+
 export function SubjectForm({ subject, usedColors, teachers }: SubjectFormProps) {
   const [name, setName] = useState(subject?.name ?? "");
   const [abbreviation, setAbbreviation] = useState(subject?.abbreviation ?? "");
   const [teacherId, setTeacherId] = useState(subject?.teacherId ?? NO_TEACHER);
   const [color, setColor] = useState(() => subject?.color ?? firstFreeColor(usedColors));
 
-  const canSave = name.trim().length > 0;
+  // A teacher created from here ("Neue Lehrperson") is selected when coming back
+  const knownTeachers = useRef(new Set(teachers.map((teacher) => teacher.id)));
+  useEffect(() => {
+    const added = teachers.filter((teacher) => !knownTeachers.current.has(teacher.id));
+    knownTeachers.current = new Set(teachers.map((teacher) => teacher.id));
+    if (added.length === 1) setTeacherId(added[0].id);
+  }, [teachers]);
 
+  const canSave = name.trim().length > 0;
   const saveButton = useSaveButton();
 
   const save = async () => {
     const trimmedName = name.trim();
     await saveSubject(subject?.id ?? null, {
       name: trimmedName,
-      abbreviation: abbreviation.trim() || trimmedName.slice(0, 3),
+      abbreviation: abbreviation.trim() || defaultAbbreviation(trimmedName),
       color,
       teacherId: teacherId === NO_TEACHER ? null : teacherId,
     });
@@ -64,19 +79,46 @@ export function SubjectForm({ subject, usedColors, teachers }: SubjectFormProps)
 
       <FormList>
         <FieldGroup.Section>
-          <TextInput
+          <TextField
             placeholder="Name, z. B. Mathematik"
             defaultValue={name}
             autoFocus={!subject}
+            autoCapitalize="words"
             onChangeText={setName}
           />
-          <TextInput
-            placeholder="Kürzel, z. B. M"
+          <TextField
+            placeholder={
+              name.trim() ? `Kürzel (sonst «${defaultAbbreviation(name)}»)` : "Kürzel, z. B. M"
+            }
             defaultValue={abbreviation}
             autoCapitalize="characters"
             maxLength={5}
             onChangeText={setAbbreviation}
           />
+          <FieldGroup.SectionFooter>
+            <FooterText>Das Kürzel erscheint im Stundenplan.</FooterText>
+          </FieldGroup.SectionFooter>
+        </FieldGroup.Section>
+
+        {/* iOS: a row with the system color picker; Android: the color swatches */}
+        <FieldGroup.Section title={Platform.OS === "android" ? "Farbe" : undefined}>
+          <ColorField
+            value={color}
+            onChange={setColor}
+            usedColors={usedColors.filter((used) => used !== subject?.color)}
+          />
+          {Platform.OS === "android" ? (
+            <FieldGroup.SectionFooter>
+              <FooterText>Ein Punkt markiert Farben, die schon ein anderes Fach hat.</FooterText>
+            </FieldGroup.SectionFooter>
+          ) : (
+            <FieldGroup.SectionFooter>
+              <FooterText>Die Farbe erscheint im Stundenplan und bei den Einträgen.</FooterText>
+            </FieldGroup.SectionFooter>
+          )}
+        </FieldGroup.Section>
+
+        <FieldGroup.Section title="Lehrperson">
           <SelectRow
             label="Lehrperson"
             value={teacherId}
@@ -86,11 +128,11 @@ export function SubjectForm({ subject, usedColors, teachers }: SubjectFormProps)
               ...teachers.map((teacher) => ({ label: teacher.name, value: teacher.id })),
             ]}
           />
-          <SelectRow
-            label="Farbe"
-            value={color}
-            onChange={setColor}
-            options={SUBJECT_COLORS.map((option) => ({ label: option.name, value: option.value }))}
+          <ActionRow
+            label="Neue Lehrperson"
+            onPress={() =>
+              router.push({ pathname: "/settings/teacher/[id]", params: { id: "new" } })
+            }
           />
         </FieldGroup.Section>
 

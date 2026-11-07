@@ -1,4 +1,4 @@
-import { FieldGroup, TextInput } from "@expo/ui";
+import { FieldGroup } from "@expo/ui";
 import { router, Stack } from "expo-router";
 import { useState } from "react";
 import { Platform } from "react-native";
@@ -7,8 +7,11 @@ import { DateField } from "@/components/date-field";
 import { DestructiveButton } from "@/components/destructive-button";
 import { FormList } from "@/components/form-list";
 import { SelectRow } from "@/components/select-row";
+import { useSubjectPicker } from "@/components/subject-picker";
 import { TaskCheckbox } from "@/components/task-checkbox";
+import { TextField } from "@/components/text-field";
 import { deleteEntry, saveEntry } from "@/db/actions";
+import { useTeachers } from "@/db/queries";
 import type { Entry, EntryType, Lesson, Period, Settings, Subject } from "@/db/schema";
 import { confirmDelete } from "@/lib/confirm-delete";
 import { addDays, formatDate, today } from "@/lib/dates";
@@ -139,6 +142,15 @@ export function EntryForm({
   const canSave = form.title.trim().length > 0;
 
   const saveButton = useSaveButton();
+  const subjectPicker = useSubjectPicker({
+    label: "Fach",
+    value: form.subjectId,
+    subjects,
+    teachers: useTeachers(),
+    lessons,
+    extraChoices: [{ label: "Allgemein", value: NONE }],
+    onChange: (subjectId) => change({ subjectId }),
+  });
 
   const save = async () => {
     await saveEntry(entry?.id ?? null, {
@@ -183,21 +195,13 @@ export function EntryForm({
             onChange={(type) => change({ type })}
             options={ENTRY_TYPE_OPTIONS}
           />
-          <TextInput
+          <TextField
             placeholder={form.type === "homework" ? "Aufgabe" : "Titel"}
             defaultValue={form.title}
             autoFocus={!entry}
             onChangeText={(title) => edit({ title })}
           />
-          <SelectRow
-            label="Fach"
-            value={form.subjectId}
-            onChange={(subjectId) => change({ subjectId })}
-            options={[
-              { label: "Allgemein", value: NONE },
-              ...subjects.map((subject) => ({ label: subject.name, value: subject.id })),
-            ]}
-          />
+          {subjectPicker.row}
         </FieldGroup.Section>
 
         <FieldGroup.Section title="Termin">
@@ -263,7 +267,7 @@ export function EntryForm({
               value={form.studyStart}
               onChange={(studyStart) => change({ studyStart, studyStartTouched: true })}
             />
-            <TextInput
+            <TextField
               placeholder="Stoff"
               defaultValue={form.topic}
               multiline
@@ -273,7 +277,7 @@ export function EntryForm({
         )}
 
         <FieldGroup.Section title="Notizen">
-          <TextInput
+          <TextField
             placeholder="Beschreibung"
             defaultValue={form.description}
             multiline
@@ -287,6 +291,7 @@ export function EntryForm({
           </FieldGroup.Section>
         )}
       </FormList>
+      {subjectPicker.sheet}
     </>
   );
 }

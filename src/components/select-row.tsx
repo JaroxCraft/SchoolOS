@@ -7,13 +7,14 @@ export type SelectOption<T extends PickerItemValue> = {
   value: T;
 };
 
-type SelectRowProps<T extends PickerItemValue> = {
+export type SelectRowProps<T extends PickerItemValue> = {
   label: string;
   value: T;
   options: SelectOption<T>[];
   onChange: (value: T) => void;
 };
 
+// iOS: the native menu picker next to the label. Android has its own row (select-row.android.tsx).
 export function SelectRow<T extends PickerItemValue>({
   label,
   value,

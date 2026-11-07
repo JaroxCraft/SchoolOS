@@ -1,14 +1,18 @@
-import { FieldGroup } from "@expo/ui";
+import { FieldGroup, Text } from "@expo/ui";
 import { router } from "expo-router";
 import { useState } from "react";
 
 import { EmptyState } from "@/components/empty-state";
 import { EntryRow } from "@/components/entry-row";
 import { FormList } from "@/components/form-list";
+import { ActionRow } from "@/components/rows";
 import { Screen } from "@/components/screen";
 import { SelectRow } from "@/components/select-row";
-import { useEntries, useSubjects } from "@/db/queries";
+import { useSubjectPicker } from "@/components/subject-picker";
+import { useEntries, useLessons, useSubjects, useTeachers } from "@/db/queries";
 import type { Entry, EntryType } from "@/db/schema";
+import { useInk } from "@/hooks/use-ink";
+import { useWasCompleted } from "@/hooks/use-recently-completed";
 import { today } from "@/lib/dates";
 import { ENTRY_TYPE_OPTIONS, isCheckable } from "@/lib/entry-types";
 import { NEW_ENTRY } from "@/lib/routes";
@@ -20,8 +24,23 @@ const GENERAL = -1;
 export default function AgendaScreen() {
   const subjects = useSubjects();
   const entries = useEntries();
+  const lessons = useLessons();
   const [typeFilter, setTypeFilter] = useState<EntryType | typeof ALL>(ALL);
   const [subjectFilter, setSubjectFilter] = useState(ALL_SUBJECTS);
+  const wasCompleted = useWasCompleted();
+  const ink = useInk();
+  const subjectPicker = useSubjectPicker({
+    label: "Fach",
+    value: subjectFilter,
+    subjects,
+    teachers: useTeachers(),
+    lessons,
+    extraChoices: [
+      { label: "Alle", value: ALL_SUBJECTS },
+      { label: "Allgemein", value: GENERAL },
+    ],
+    onChange: setSubjectFilter,
+  });
 
   const subjectById = (id: number | null) => subjects.find((subject) => subject.id === id);
 
@@ -45,7 +64,8 @@ export default function AgendaScreen() {
         (subjectFilter === GENERAL ? entry.subjectId === null : entry.subjectId === subjectFilter))
   );
 
-  const isDone = (entry: Entry) => isCheckable(entry.type) && entry.completed;
+  // Tasks (un)checked just now stay in their section until the screen is left
+  const isDone = (entry: Entry) => isCheckable(entry.type) && wasCompleted(entry);
   // Open homework and submissions stay upcoming even when overdue
   const isPast = (entry: Entry) => !isCheckable(entry.type) && entry.date < today();
 
@@ -61,7 +81,7 @@ export default function AgendaScreen() {
 
   return (
     <Screen title="Agenda" showAddButton>
-      <FormList>
+      <FormList floatingButton>
         <FieldGroup.Section title="Filter">
           <SelectRow
             label="Typ"
@@ -69,16 +89,7 @@ export default function AgendaScreen() {
             onChange={setTypeFilter}
             options={[{ label: "Alle", value: ALL }, ...ENTRY_TYPE_OPTIONS]}
           />
-          <SelectRow
-            label="Fach"
-            value={subjectFilter}
-            onChange={setSubjectFilter}
-            options={[
-              { label: "Alle", value: ALL_SUBJECTS },
-              { label: "Allgemein", value: GENERAL },
-              ...subjects.map((subject) => ({ label: subject.name, value: subject.id })),
-            ]}
-          />
+          {subjectPicker.row}
         </FieldGroup.Section>
 
         {sections
@@ -90,7 +101,21 @@ export default function AgendaScreen() {
               ))}
             </FieldGroup.Section>
           ))}
+
+        {visible.length === 0 && (
+          <FieldGroup.Section>
+            <Text textStyle={{ color: ink.secondary }}>Keine Einträge für diesen Filter</Text>
+            <ActionRow
+              label="Filter zurücksetzen"
+              onPress={() => {
+                setTypeFilter(ALL);
+                setSubjectFilter(ALL_SUBJECTS);
+              }}
+            />
+          </FieldGroup.Section>
+        )}
       </FormList>
+      {subjectPicker.sheet}
     </Screen>
   );
 }
