@@ -79,9 +79,15 @@ export async function deletePeriod(id: number) {
   await db.delete(periods).where(eq(periods.id, id));
 }
 
+// Returns the id of the new teacher
+export async function addTeacher(values: NewTeacher): Promise<number> {
+  const [added] = await db.insert(teachers).values(values).returning({ id: teachers.id });
+  return added.id;
+}
+
 export async function saveTeacher(id: number | null, values: NewTeacher) {
   if (id === null) {
-    await db.insert(teachers).values(values);
+    await addTeacher(values);
   } else {
     await db.update(teachers).set(values).where(eq(teachers.id, id));
   }

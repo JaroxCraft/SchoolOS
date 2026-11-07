@@ -1,17 +1,13 @@
-import { BottomSheet, FieldGroup, Icon, ListItem, Row, Text, TextInput } from "@expo/ui";
-import * as Haptics from "expo-haptics";
+import { ListItem, Row, Text } from "@expo/ui";
 import { useState } from "react";
-import { Platform } from "react-native";
 
+import type { ExtraChoice } from "@/components/search-picker";
+import { SearchPickerSheet } from "@/components/search-picker-sheet";
 import { SubjectDot } from "@/components/subject-dot";
 import type { Lesson, Subject, Teacher } from "@/db/schema";
 import { useInk } from "@/hooks/use-ink";
-import { useSymbol } from "@/hooks/use-symbol";
 import { NEUTRAL_COLOR } from "@/lib/subject-colors";
 import { joinDetails } from "@/lib/text";
-
-// Choices above the subjects, e.g. "Frei" in the timetable or "Allgemein" for entries
-export type ExtraChoice = { label: string; value: number };
 
 // The subjects with the most lessons first (the ones picked most often), then by name.
 export function sortSubjectsByUse(subjects: Subject[], lessons: Lesson[]): Subject[] {
@@ -21,32 +17,6 @@ export function sortSubjectsByUse(subjects: Subject[], lessons: Lesson[]): Subje
   }
   return [...subjects].sort(
     (a, b) => (counts.get(b.id) ?? 0) - (counts.get(a.id) ?? 0) || a.name.localeCompare(b.name)
-  );
-}
-
-function Checkmark() {
-  const ink = useInk();
-  const name = useSymbol("checkmark", "check");
-  if (!name) return null;
-  // The accent color marks the selection, like a checked row in the iOS settings
-  return <Icon name={name} size={17} color={ink.accent} />;
-}
-
-function SearchField({ onChange }: { onChange: (query: string) => void }) {
-  const ink = useInk();
-  const icon = useSymbol("magnifyingglass", "search");
-
-  return (
-    <Row alignment="center" spacing={8}>
-      {icon && <Icon name={icon} size={17} color={ink.secondary} />}
-      <TextInput
-        placeholder="Fach oder Lehrperson suchen"
-        placeholderTextColor={Platform.OS === "android" ? ink.tertiary : undefined}
-        autoCorrect={false}
-        returnKeyType="search"
-        onChangeText={onChange}
-      />
-    </Row>
   );
 }
 
@@ -62,82 +32,34 @@ type SubjectPickerSheetProps = {
   onChange: (value: number) => void;
 };
 
-// A large sheet with a search field (subject name, abbreviation or teacher) and all subjects as
-// a list with color, abbreviation and teacher, the most used first. Picking one closes it.
+// The subjects with color, abbreviation and teacher, the most used first, searchable by subject
+// name, abbreviation or teacher. Picking one closes the sheet.
 export function SubjectPickerSheet({
-  isPresented,
-  onDismiss,
-  title,
-  value,
   subjects,
   teachers,
   lessons,
-  extraChoices,
-  onChange,
+  ...props
 }: SubjectPickerSheetProps) {
-  const [query, setQuery] = useState("");
-  const search = query.trim().toLowerCase();
   const teacherOf = (subject: Subject) =>
     teachers.find((teacher) => teacher.id === subject.teacherId);
-  const matches = sortSubjectsByUse(subjects, lessons).filter((subject) => {
-    if (!search) return true;
-    const teacher = teacherOf(subject);
-    return [subject.name, subject.abbreviation, teacher?.name, teacher?.abbreviation].some((text) =>
-      text?.toLowerCase().includes(search)
-    );
-  });
-
-  const close = () => {
-    setQuery("");
-    onDismiss();
-  };
-
-  const choose = (next: number) => {
-    if (next !== value) {
-      Haptics.selectionAsync();
-      onChange(next);
-    }
-    close();
-  };
 
   return (
-    <BottomSheet
-      isPresented={isPresented}
-      onDismiss={close}
-      snapPoints={["full"]}
-      contentPadding={0}>
-      <FieldGroup>
-        <FieldGroup.Section title={title}>
-          <SearchField onChange={setQuery} />
-        </FieldGroup.Section>
-        {!search && (
-          <FieldGroup.Section>
-            {extraChoices.map((choice) => (
-              <ListItem
-                key={choice.value}
-                onPress={() => choose(choice.value)}
-                leading={<SubjectDot color={NEUTRAL_COLOR} />}
-                trailing={choice.value === value ? <Checkmark /> : undefined}>
-                {choice.label}
-              </ListItem>
-            ))}
-          </FieldGroup.Section>
-        )}
-        <FieldGroup.Section title="Fächer">
-          {matches.length === 0 && <Text>{`Nichts gefunden für «${query.trim()}»`}</Text>}
-          {matches.map((subject) => (
-            <ListItem
-              key={subject.id}
-              onPress={() => choose(subject.id)}
-              leading={<SubjectDot color={subject.color} />}
-              supportingText={joinDetails(subject.abbreviation, teacherOf(subject)?.name)}
-              trailing={subject.id === value ? <Checkmark /> : undefined}>
-              {subject.name}
-            </ListItem>
-          ))}
-        </FieldGroup.Section>
-      </FieldGroup>
-    </BottomSheet>
+    <SearchPickerSheet
+      {...props}
+      searchPlaceholder="Fach oder Lehrperson suchen"
+      items={sortSubjectsByUse(subjects, lessons)}
+      itemsTitle="Fächer"
+      getLabel={(subject) => subject.name}
+      getSearchText={(subject) => [
+        subject.name,
+        subject.abbreviation,
+        teacherOf(subject)?.name,
+        teacherOf(subject)?.abbreviation,
+      ]}
+      renderLeading={(subject) => <SubjectDot color={subject.color} />}
+      getSupportingText={(subject) => joinDetails(subject.abbreviation, teacherOf(subject)?.name)}
+      extraLeading={<SubjectDot color={NEUTRAL_COLOR} />}
+    />
   );
 }
 
