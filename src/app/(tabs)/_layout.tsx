@@ -1,9 +1,7 @@
-import { router } from "expo-router";
 import { NativeTabs } from "expo-router/native-tabs";
-import { Platform } from "react-native";
 
-import { NEW_ENTRY } from "@/lib/routes";
-
+// The tab bar only switches between the sections. A new entry is added with the "+" in the
+// navigation bar (iOS) or the floating button (Android), see <Screen>.
 export default function TabsLayout() {
   return (
     <NativeTabs>
@@ -22,19 +20,6 @@ export default function TabsLayout() {
       <NativeTabs.Trigger name="grades">
         <NativeTabs.Trigger.Icon sf="graduationcap" md="school" />
         <NativeTabs.Trigger.Label>Noten</NativeTabs.Trigger.Label>
-      </NativeTabs.Trigger>
-      {/* iOS: "+" on its own circle next to the tab bar (search placement from iOS 26.1, own
-          surface from iOS 27). It is disabled, so tapping it only opens a new entry.
-          Android uses the floating action button instead. */}
-      <NativeTabs.Trigger
-        name="add"
-        role="search"
-        prominent
-        disabled
-        hidden={Platform.OS !== "ios"}
-        accessibilityLabel="Neuer Eintrag"
-        listeners={{ tabPress: () => router.push(NEW_ENTRY) }}>
-        <NativeTabs.Trigger.Icon sf="plus" md="add" />
       </NativeTabs.Trigger>
     </NativeTabs>
   );

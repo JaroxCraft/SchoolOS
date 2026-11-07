@@ -23,6 +23,7 @@ import {
 } from "@/lib/entry-types";
 import { subjectLessonOn, upcomingSubjectLessons } from "@/lib/schedule";
 import { NEUTRAL_COLOR } from "@/lib/subject-colors";
+import { useDiscardGuard } from "@/hooks/use-discard-guard";
 import { useSaveButton } from "@/hooks/use-save-button";
 
 const NONE = 0;
@@ -141,6 +142,24 @@ export function EntryForm({
   const [nextLesson, lessonAfter] = upcoming(form.subjectId);
   const canSave = form.title.trim().length > 0;
 
+  // The form as it was opened, to tell whether anything was changed
+  const [initialForm] = useState(form);
+  const allowLeave = useDiscardGuard(
+    (
+      [
+        "type",
+        "title",
+        "description",
+        "subjectId",
+        "date",
+        "periodId",
+        "completed",
+        "studyStart",
+        "topic",
+      ] as const
+    ).some((field) => form[field] !== initialForm[field])
+  );
+
   const saveButton = useSaveButton();
   const subjectPicker = useSubjectPicker({
     label: "Fach",
@@ -164,13 +183,19 @@ export function EntryForm({
       studyStart: form.studyStart,
       topic: info.gradable ? form.topic.trim() || null : null,
     });
+    allowLeave();
     router.back();
   };
 
   const remove = () => {
     if (!entry) return;
-    confirmDelete("Eintrag löschen?", `«${entry.title}» wird gelöscht.`, () =>
-      deleteEntry(entry.id)
+    confirmDelete(
+      {
+        title: "Eintrag löschen?",
+        message: `«${entry.title}» wird gelöscht.`,
+        onDelete: () => deleteEntry(entry.id),
+      },
+      allowLeave
     );
   };
 

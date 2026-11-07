@@ -13,6 +13,7 @@ import { Platform } from "react-native";
 
 import { type Ink, useInk } from "@/hooks/use-ink";
 import { endEditing } from "@/lib/focused-fields";
+import { typography } from "@/lib/typography";
 
 // Tapping the list beside a text field (iOS also: scrolling it) ends the editing: the keyboard
 // closes and the cursor leaves the field. The rows and fields keep handling their own taps.
@@ -21,16 +22,23 @@ const DISMISS_ON_TAP =
     ? [onTapGesture(endEditing), scrollDismissesKeyboard("immediately")]
     : [clickable(endEditing, { indication: false })];
 
-type RowFactory = { asListItem?: (props: unknown, ink: Ink) => ReactElement };
+type RowFactory = {
+  asListItem?: (props: unknown, ink: Ink) => ReactElement;
+  // A wrapper without a look of its own on Android (RowActions): its row is used instead
+  unwrap?: true;
+};
 
 // Android: replaces row components (NavigationRow, EntryRow …) in the sections by the list items
-// they render, see RowComponent. Fragments and arrays are flattened like the sections do.
+// they render, see RowComponent. Fragments, arrays and RowActions are flattened like the sections
+// do.
 function expandRows(node: ReactNode, ink: Ink): ReactNode {
   return Children.map(node, (child) => {
     if (!isValidElement<{ children?: ReactNode }>(child)) return child;
-    if (child.type === Fragment) return expandRows(child.props.children, ink);
-    const factory = (child.type as RowFactory).asListItem;
-    return factory ? cloneElement(factory(child.props, ink), { key: child.key }) : child;
+    const type = child.type as RowFactory;
+    if (child.type === Fragment || type.unwrap) return expandRows(child.props.children, ink);
+    return type.asListItem
+      ? cloneElement(type.asListItem(child.props, ink), { key: child.key })
+      : child;
   });
 }
 
@@ -80,5 +88,5 @@ export function FormList({
 export function FooterText({ children }: { children: string }) {
   const ink = useInk();
 
-  return <Text textStyle={{ color: ink.secondary, fontSize: 13 }}>{children}</Text>;
+  return <Text {...typography("footnote", { color: ink.secondary })}>{children}</Text>;
 }
