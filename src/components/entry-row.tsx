@@ -1,16 +1,30 @@
-import { Text } from "@expo/ui";
+import { ListItem, Text } from "@expo/ui";
+import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
 
-import { NavigationRow, type RowComponent } from "@/components/rows";
+import { type RowAction, RowActions } from "@/components/row-actions";
+import type { RowComponent } from "@/components/rows";
 import { SubjectDot } from "@/components/subject-dot";
 import { TaskCheckbox } from "@/components/task-checkbox";
-import { setEntryCompleted } from "@/db/actions";
+import { deleteEntry, setEntryCompleted } from "@/db/actions";
 import type { Entry, Subject } from "@/db/schema";
 import { type Ink, useInk } from "@/hooks/use-ink";
 import { markToggled } from "@/hooks/use-recently-completed";
 import { formatDate, relativeDay, today } from "@/lib/dates";
 import { ENTRY_TYPE_INFO, isCheckable } from "@/lib/entry-types";
 import { NEUTRAL_COLOR } from "@/lib/subject-colors";
+import { typography } from "@/lib/typography";
+
+const DONE_GREEN = "#34C759";
+
+const openEntry = (entry: Entry) =>
+  router.push({ pathname: "/entry/[id]", params: { id: String(entry.id) } });
+
+// A task checked off or reopened stays in its place until the screen is left (useWasCompleted)
+function setCompleted(entry: Entry, completed: boolean) {
+  markToggled(entry.id, entry.completed);
+  setEntryCompleted(entry.id, completed);
+}
 
 type EntryRowProps = {
   entry: Entry;
@@ -19,7 +33,9 @@ type EntryRowProps = {
 
 // Homework and submissions get a checkbox, everything else the subject color. A task checked off
 // is dimmed and, like an unchecked one, stays in its place until the screen is left (see
-// useWasCompleted). Built without hooks, so <FormList> can use it as the list item itself.
+// useWasCompleted). Tapping the row opens the entry as a sheet, so it has no disclosure chevron:
+// the chevron promises a screen pushed in the same stack (Apple HIG, lists). Built without hooks,
+// so <FormList> can use it as the list item itself.
 function entryItem({ entry, subject }: EntryRowProps, ink: Ink) {
   const checkable = isCheckable(entry.type);
   const done = checkable && entry.completed;
@@ -30,41 +46,62 @@ function entryItem({ entry, subject }: EntryRowProps, ink: Ink) {
     `${formatDate(entry.date)}, ${relativeDay(entry.date)}`,
   ].join(" · ");
 
-  const toggle = (completed: boolean) => {
-    markToggled(entry.id, entry.completed);
-    setEntryCompleted(entry.id, completed);
-  };
-
-  return NavigationRow.asListItem(
-    {
-      onPress: () => router.push({ pathname: "/entry/[id]", params: { id: String(entry.id) } }),
-      leading: checkable ? (
-        <TaskCheckbox
-          value={entry.completed}
-          accessibilityLabel={entry.title}
-          color={subject?.color ?? NEUTRAL_COLOR}
-          onValueChange={toggle}
-        />
-      ) : (
-        <SubjectDot color={subject?.color ?? NEUTRAL_COLOR} />
-      ),
-      supportingText: (
-        <Text textStyle={{ color: overdue ? ink.danger : ink.secondary, fontSize: 13 }}>
+  return (
+    <ListItem
+      onPress={() => openEntry(entry)}
+      leading={
+        checkable ? (
+          <TaskCheckbox
+            value={entry.completed}
+            accessibilityLabel={entry.title}
+            color={subject?.color ?? NEUTRAL_COLOR}
+            onValueChange={(completed) => setCompleted(entry, completed)}
+          />
+        ) : (
+          <SubjectDot color={subject?.color ?? NEUTRAL_COLOR} />
+        )
+      }
+      supportingText={
+        <Text {...typography("footnote", { color: overdue ? ink.danger : ink.secondary })}>
           {details}
         </Text>
-      ),
-      children: done ? (
-        <Text textStyle={{ color: ink.secondary }}>{entry.title}</Text>
-      ) : (
-        entry.title
-      ),
-    },
-    ink
+      }>
+      {done ? <Text textStyle={{ color: ink.secondary }}>{entry.title}</Text> : entry.title}
+    </ListItem>
   );
 }
 
+// iOS (the rows are not expanded there, see <FormList>): swipe right checks a task off or reopens
+// it, swipe left deletes the entry, as in Reminders; a long press offers the same and "Bearbeiten".
 function EntryRowComponent(props: EntryRowProps) {
-  return entryItem(props, useInk());
+  const { entry } = props;
+  const toggle: RowAction | undefined = isCheckable(entry.type)
+    ? {
+        label: entry.completed ? "Offen" : "Erledigt",
+        icon: entry.completed ? "arrow.uturn.backward" : "checkmark",
+        tint: DONE_GREEN,
+        onPress: () => {
+          Haptics.selectionAsync();
+          setCompleted(entry, !entry.completed);
+        },
+      }
+    : undefined;
+  const remove: RowAction = {
+    label: "Löschen",
+    icon: "trash",
+    destructive: true,
+    onPress: () => deleteEntry(entry.id),
+  };
+  const edit: RowAction = { label: "Bearbeiten", icon: "pencil", onPress: () => openEntry(entry) };
+
+  return (
+    <RowActions
+      leading={toggle && [toggle]}
+      trailing={[remove]}
+      menu={[...(toggle ? [toggle] : []), edit, remove]}>
+      {entryItem(props, useInk())}
+    </RowActions>
+  );
 }
 
 export const EntryRow: RowComponent<EntryRowProps> = Object.assign(EntryRowComponent, {
