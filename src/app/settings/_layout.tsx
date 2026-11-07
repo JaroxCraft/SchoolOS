@@ -1,7 +1,8 @@
 import { AppStack } from "@/components/app-stack";
 
-// Screens opened directly (a setup step of the Übersicht) get the settings below them: back leads
-// to the settings, whose "Fertig" closes them, and swiping the sheet down closes everything.
+// The settings sheet. Its screens are pushed on top of the settings, whose "Fertig" closes the
+// sheet; swiping the sheet down closes it from any screen. A screen opened by a link gets the
+// settings below it, so back leads to them.
 export const unstable_settings = {
   anchor: "index",
 };
