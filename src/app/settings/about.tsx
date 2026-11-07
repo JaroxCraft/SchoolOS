@@ -13,6 +13,7 @@ import { clearDatabase, initDatabase } from "@/db/actions";
 import { useInk } from "@/hooks/use-ink";
 import { appInfoRows, appInfoText, GITHUB_URL, versionLabel } from "@/lib/app-info";
 import { confirm } from "@/lib/confirm";
+import { typography } from "@/lib/typography";
 
 // iOS: the home screen icon as rendered by Apple (Liquid Glass, light only, already shaped).
 // Android: the generated icon in the current appearance, rounded here.
@@ -86,10 +87,8 @@ export default function AboutScreen() {
             <Spacer flexible />
             <Column alignment="center" spacing={6} style={{ paddingVertical: 12 }}>
               <RNHostView matchContents>{appIcon}</RNHostView>
-              <Text textStyle={{ color: ink.label, fontSize: 22, fontWeight: "700" }}>
-                SchoolOS
-              </Text>
-              <Text textStyle={{ color: ink.secondary, fontSize: 13 }}>{versionLabel}</Text>
+              <Text {...typography("title2", { color: ink.label, bold: true })}>SchoolOS</Text>
+              <Text {...typography("footnote", { color: ink.secondary })}>{versionLabel}</Text>
             </Column>
             <Spacer flexible />
           </Row>

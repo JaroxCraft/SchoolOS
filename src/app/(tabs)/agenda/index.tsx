@@ -1,14 +1,15 @@
 import { FieldGroup, Text } from "@expo/ui";
-import { router } from "expo-router";
+import { router, Stack } from "expo-router";
 import { useState } from "react";
+import { Platform } from "react-native";
 
 import { EmptyState } from "@/components/empty-state";
 import { EntryRow } from "@/components/entry-row";
 import { FormList } from "@/components/form-list";
 import { ActionRow } from "@/components/rows";
 import { Screen } from "@/components/screen";
-import { SelectRow } from "@/components/select-row";
-import { useSubjectPicker } from "@/components/subject-picker";
+import { type SelectOption, SelectRow } from "@/components/select-row";
+import { sortSubjectsByUse, useSubjectPicker } from "@/components/subject-picker";
 import { useEntries, useLessons, useSubjects, useTeachers } from "@/db/queries";
 import type { Entry, EntryType } from "@/db/schema";
 import { useInk } from "@/hooks/use-ink";
@@ -79,18 +80,83 @@ export default function AgendaScreen() {
     { title: "Vergangen", items: past },
   ];
 
+  const typeOptions: SelectOption<EntryType | typeof ALL>[] = [
+    { label: "Alle Typen", value: ALL },
+    ...ENTRY_TYPE_OPTIONS,
+  ];
+  const subjectOptions = [
+    { label: "Alle Fächer", value: ALL_SUBJECTS },
+    { label: "Allgemein", value: GENERAL },
+    ...sortSubjectsByUse(subjects, lessons).map((subject) => ({
+      label: subject.name,
+      value: subject.id,
+    })),
+  ];
+  const filtered = typeFilter !== ALL || subjectFilter !== ALL_SUBJECTS;
+  const filterLabel = [
+    typeFilter !== ALL && typeOptions.find((option) => option.value === typeFilter)?.label,
+    subjectFilter !== ALL_SUBJECTS &&
+      subjectOptions.find((option) => option.value === subjectFilter)?.label,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+  const resetFilter = () => {
+    setTypeFilter(ALL);
+    setSubjectFilter(ALL_SUBJECTS);
+  };
+
+  // iOS: the filter is a menu in the navigation bar, like in Mail; its icon is filled while a
+  // filter is on. Android keeps the filter rows at the top of the list.
+  const filterMenu = Platform.OS === "ios" && (
+    <Stack.Toolbar.Menu
+      icon={
+        filtered ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle"
+      }
+      accessibilityLabel="Filter">
+      <Stack.Toolbar.Menu inline title="Typ">
+        {typeOptions.map((option) => (
+          <Stack.Toolbar.MenuAction
+            key={option.value}
+            isOn={typeFilter === option.value}
+            onPress={() => setTypeFilter(option.value)}>
+            {option.label}
+          </Stack.Toolbar.MenuAction>
+        ))}
+      </Stack.Toolbar.Menu>
+      <Stack.Toolbar.Menu title="Fach" icon="books.vertical">
+        {subjectOptions.map((option) => (
+          <Stack.Toolbar.MenuAction
+            key={option.value}
+            isOn={subjectFilter === option.value}
+            onPress={() => setSubjectFilter(option.value)}>
+            {option.label}
+          </Stack.Toolbar.MenuAction>
+        ))}
+      </Stack.Toolbar.Menu>
+    </Stack.Toolbar.Menu>
+  );
+
   return (
-    <Screen title="Agenda" showAddButton>
+    <Screen title="Agenda" showAddButton toolbarItems={filterMenu}>
       <FormList floatingButton>
-        <FieldGroup.Section title="Filter">
-          <SelectRow
-            label="Typ"
-            value={typeFilter}
-            onChange={setTypeFilter}
-            options={[{ label: "Alle", value: ALL }, ...ENTRY_TYPE_OPTIONS]}
-          />
-          {subjectPicker.row}
-        </FieldGroup.Section>
+        {Platform.OS === "android" && (
+          <FieldGroup.Section title="Filter">
+            <SelectRow
+              label="Typ"
+              value={typeFilter}
+              onChange={setTypeFilter}
+              options={[{ label: "Alle", value: ALL }, ...ENTRY_TYPE_OPTIONS]}
+            />
+            {subjectPicker.row}
+          </FieldGroup.Section>
+        )}
+
+        {/* iOS: what the menu filters by, and the way back to all entries */}
+        {Platform.OS === "ios" && filtered && visible.length > 0 && (
+          <FieldGroup.Section title={`Gefiltert: ${filterLabel}`}>
+            <ActionRow label="Alle Einträge zeigen" onPress={resetFilter} />
+          </FieldGroup.Section>
+        )}
 
         {sections
           .filter((section) => section.items.length > 0)
@@ -104,14 +170,12 @@ export default function AgendaScreen() {
 
         {visible.length === 0 && (
           <FieldGroup.Section>
-            <Text textStyle={{ color: ink.secondary }}>Keine Einträge für diesen Filter</Text>
-            <ActionRow
-              label="Filter zurücksetzen"
-              onPress={() => {
-                setTypeFilter(ALL);
-                setSubjectFilter(ALL_SUBJECTS);
-              }}
-            />
+            <Text textStyle={{ color: ink.secondary }}>
+              {filterLabel
+                ? `Keine Einträge für «${filterLabel}»`
+                : "Keine Einträge für diesen Filter"}
+            </Text>
+            <ActionRow label="Filter zurücksetzen" onPress={resetFilter} />
           </FieldGroup.Section>
         )}
       </FormList>

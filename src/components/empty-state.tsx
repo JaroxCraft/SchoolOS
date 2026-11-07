@@ -4,7 +4,7 @@ import { StyleSheet, Text, useColorScheme, View } from "react-native";
 
 import { colors } from "@/constants/colors";
 
-type EmptyStateProps = {
+export type EmptyStateProps = {
   // SF Symbol on iOS, Material Symbol on Android
   icon?: SymbolViewProps["name"];
   title: string;
@@ -13,7 +13,8 @@ type EmptyStateProps = {
   action?: { label: string; onPress: () => void };
 };
 
-// Centered placeholder for a screen without content, like ContentUnavailableView on iOS.
+// Centered placeholder for a screen without content (Android; iOS has the system's
+// ContentUnavailableView, empty-state.ios.tsx).
 export function EmptyState({ icon, title, message, action }: EmptyStateProps) {
   // Re-renders on light/dark changes, so Android resolves the native colors again
   useColorScheme();

@@ -5,9 +5,10 @@ import { useState } from "react";
 import { DestructiveButton } from "@/components/destructive-button";
 import { FormList } from "@/components/form-list";
 import { TextField } from "@/components/text-field";
-import { deleteTeacher, saveTeacher } from "@/db/actions";
+import { saveTeacher } from "@/db/actions";
 import type { Teacher } from "@/db/schema";
-import { confirmDelete } from "@/lib/confirm-delete";
+import { useDiscardGuard } from "@/hooks/use-discard-guard";
+import { confirmDelete, teacherDeletion } from "@/lib/confirm-delete";
 import { useSaveButton } from "@/hooks/use-save-button";
 
 type TeacherFormProps = {
@@ -21,6 +22,11 @@ export function TeacherForm({ teacher }: TeacherFormProps) {
 
   const canSave = name.trim().length > 0;
   const saveButton = useSaveButton();
+  const allowLeave = useDiscardGuard(
+    name !== (teacher?.name ?? "") ||
+      abbreviation !== (teacher?.abbreviation ?? "") ||
+      email !== (teacher?.email ?? "")
+  );
 
   const save = async () => {
     await saveTeacher(teacher?.id ?? null, {
@@ -28,16 +34,13 @@ export function TeacherForm({ teacher }: TeacherFormProps) {
       abbreviation: abbreviation.trim(),
       email: email.trim() || null,
     });
+    allowLeave();
     router.back();
   };
 
   const remove = () => {
     if (!teacher) return;
-    confirmDelete(
-      `${teacher.name} löschen?`,
-      "Die Fächer dieser Lehrperson bleiben bestehen, aber ohne Lehrperson.",
-      () => deleteTeacher(teacher.id)
-    );
+    confirmDelete(teacherDeletion(teacher), allowLeave);
   };
 
   return (
