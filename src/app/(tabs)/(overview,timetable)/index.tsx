@@ -3,6 +3,7 @@ import { router } from "expo-router";
 
 import { EntryRow } from "@/components/entry-row";
 import { FooterText, FormList } from "@/components/form-list";
+import { RowActions } from "@/components/row-actions";
 import { ActionRow, NavigationRow } from "@/components/rows";
 import { Screen } from "@/components/screen";
 import { SubjectDot } from "@/components/subject-dot";
@@ -23,7 +24,8 @@ const DONE_ICON = { sf: "checkmark", md: "check", color: "#34C759" } as const;
 type SetupProps = { periods: Period[]; subjects: Subject[]; lessons: Lesson[] };
 
 // Shown until the timetable has lessons: the three steps in the order they depend on each other,
-// each opening its settings screen, and importing the timetable of a classmate as a shortcut.
+// and importing the timetable of a classmate as a shortcut. A step is pushed onto this tab; each
+// leads on to the next with "Weiter", the last one comes back here with "Fertig".
 function Setup({ periods, subjects, lessons }: SetupProps) {
   const steps = [
     {
@@ -34,21 +36,21 @@ function Setup({ periods, subjects, lessons }: SetupProps) {
           ? `${periods.length} Lektionen, ${periods[0].startTime}–${periods.at(-1)!.endTime}`
           : "Wann deine Lektionen beginnen und enden",
       icon: SETUP_STEP_ICONS.periods,
-      href: "/settings/periods",
+      href: "/setup/periods",
     },
     {
       title: "Fächer erfassen",
       done: subjects.length > 0,
       detail: subjects.length > 0 ? `${subjects.length} Fächer` : "Mit Kürzel und Farbe",
       icon: SETUP_STEP_ICONS.subjects,
-      href: "/settings/subjects",
+      href: "/setup/subjects",
     },
     {
       title: "Stundenplan ausfüllen",
       done: false,
       detail: "Welches Fach du wann hast",
       icon: SETUP_STEP_ICONS.timetable,
-      href: "/settings/timetable",
+      href: "/setup/timetable",
     },
   ] as const;
 
@@ -125,21 +127,36 @@ export default function OverviewScreen() {
           {upcomingLessons.length === 0 && (
             <Text textStyle={{ color: ink.secondary }}>Keine Lektionen im Stundenplan</Text>
           )}
+          {/* iOS: a long press adds an entry for the subject right away */}
           {upcomingLessons.map(({ lesson, period }) => {
             const subject = subjectById(lesson.subjectId);
+            const openSubject = () =>
+              router.push({
+                pathname: "/subject/[subjectId]",
+                params: { subjectId: String(lesson.subjectId) },
+              });
             return (
-              <NavigationRow
+              <RowActions
                 key={lesson.id}
-                onPress={() =>
-                  router.push({
-                    pathname: "/subject/[subjectId]",
-                    params: { subjectId: String(lesson.subjectId) },
-                  })
-                }
-                leading={<SubjectDot color={subject?.color ?? ink.secondary} />}
-                supportingText={joinDetails(periodRange(period), lesson.room)}>
-                {`${periodNumber(periods, period.id)}. ${subject?.name ?? ""}`}
-              </NavigationRow>
+                menu={[
+                  {
+                    label: "Neuer Eintrag",
+                    icon: "plus",
+                    onPress: () =>
+                      router.push({
+                        pathname: "/entry/[id]",
+                        params: { id: "new", subjectId: String(lesson.subjectId) },
+                      }),
+                  },
+                  { label: "Fach anzeigen", icon: "book", onPress: openSubject },
+                ]}>
+                <NavigationRow
+                  onPress={openSubject}
+                  leading={<SubjectDot color={subject?.color ?? ink.secondary} />}
+                  supportingText={joinDetails(periodRange(period), lesson.room)}>
+                  {`${periodNumber(periods, period.id)}. ${subject?.name ?? ""}`}
+                </NavigationRow>
+              </RowActions>
             );
           })}
         </FieldGroup.Section>

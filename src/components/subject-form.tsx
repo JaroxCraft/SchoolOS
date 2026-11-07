@@ -1,18 +1,19 @@
-import { FieldGroup } from "@expo/ui";
+import { FieldGroup, ListItem, Text } from "@expo/ui";
 import { router, Stack } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 
 import { Platform } from "react-native";
 
 import { ColorField } from "@/components/color-field";
 import { DestructiveButton } from "@/components/destructive-button";
 import { FooterText, FormList } from "@/components/form-list";
-import { ActionRow } from "@/components/rows";
-import { SelectRow } from "@/components/select-row";
+import { NO_TEACHER, TeacherPickerSheet } from "@/components/teacher-picker";
 import { TextField } from "@/components/text-field";
-import { deleteSubject, saveSubject } from "@/db/actions";
+import { saveSubject } from "@/db/actions";
 import type { Subject, Teacher } from "@/db/schema";
-import { confirmDelete } from "@/lib/confirm-delete";
+import { useDiscardGuard } from "@/hooks/use-discard-guard";
+import { useInk } from "@/hooks/use-ink";
+import { confirmDelete, subjectDeletion } from "@/lib/confirm-delete";
 import { SUBJECT_COLORS } from "@/lib/subject-colors";
 import { useSaveButton } from "@/hooks/use-save-button";
 
@@ -21,8 +22,6 @@ type SubjectFormProps = {
   usedColors: string[];
   teachers: Teacher[];
 };
-
-const NO_TEACHER = 0;
 
 // New subjects get the first color that is not taken yet.
 function firstFreeColor(usedColors: string[]): string {
@@ -39,16 +38,18 @@ export function SubjectForm({ subject, usedColors, teachers }: SubjectFormProps)
   const [teacherId, setTeacherId] = useState(subject?.teacherId ?? NO_TEACHER);
   const [color, setColor] = useState(() => subject?.color ?? firstFreeColor(usedColors));
 
-  // A teacher created from here ("Neue Lehrperson") is selected when coming back
-  const knownTeachers = useRef(new Set(teachers.map((teacher) => teacher.id)));
-  useEffect(() => {
-    const added = teachers.filter((teacher) => !knownTeachers.current.has(teacher.id));
-    knownTeachers.current = new Set(teachers.map((teacher) => teacher.id));
-    if (added.length === 1) setTeacherId(added[0].id);
-  }, [teachers]);
+  const [teacherPickerOpen, setTeacherPickerOpen] = useState(false);
+  const ink = useInk();
 
   const canSave = name.trim().length > 0;
   const saveButton = useSaveButton();
+  // A new subject only counts as changed once something is typed or picked, not for its color
+  const allowLeave = useDiscardGuard(
+    name !== (subject?.name ?? "") ||
+      abbreviation !== (subject?.abbreviation ?? "") ||
+      teacherId !== (subject?.teacherId ?? NO_TEACHER) ||
+      (subject !== undefined && color !== subject.color)
+  );
 
   const save = async () => {
     const trimmedName = name.trim();
@@ -58,16 +59,13 @@ export function SubjectForm({ subject, usedColors, teachers }: SubjectFormProps)
       color,
       teacherId: teacherId === NO_TEACHER ? null : teacherId,
     });
+    allowLeave();
     router.back();
   };
 
   const remove = () => {
     if (!subject) return;
-    confirmDelete(
-      `${subject.name} löschen?`,
-      "Die Lektionen und Noten des Fachs werden gelöscht. Hausaufgaben und Termine bleiben und erscheinen unter «Allgemein».",
-      () => deleteSubject(subject.id)
-    );
+    confirmDelete(subjectDeletion(subject), allowLeave);
   };
 
   return (
@@ -119,21 +117,15 @@ export function SubjectForm({ subject, usedColors, teachers }: SubjectFormProps)
         </FieldGroup.Section>
 
         <FieldGroup.Section title="Lehrperson">
-          <SelectRow
-            label="Lehrperson"
-            value={teacherId}
-            onChange={setTeacherId}
-            options={[
-              { label: "Keine", value: NO_TEACHER },
-              ...teachers.map((teacher) => ({ label: teacher.name, value: teacher.id })),
-            ]}
-          />
-          <ActionRow
-            label="Neue Lehrperson"
-            onPress={() =>
-              router.push({ pathname: "/settings/teacher/[id]", params: { id: "new" } })
-            }
-          />
+          <ListItem
+            onPress={() => setTeacherPickerOpen(true)}
+            trailing={
+              <Text textStyle={{ color: ink.secondary }}>
+                {teachers.find((teacher) => teacher.id === teacherId)?.name ?? "Keine"}
+              </Text>
+            }>
+            Lehrperson
+          </ListItem>
         </FieldGroup.Section>
 
         {subject && (
@@ -142,6 +134,15 @@ export function SubjectForm({ subject, usedColors, teachers }: SubjectFormProps)
           </FieldGroup.Section>
         )}
       </FormList>
+
+      {/* Outside the form: inside it, the sheet would take up an empty row */}
+      <TeacherPickerSheet
+        isPresented={teacherPickerOpen}
+        onDismiss={() => setTeacherPickerOpen(false)}
+        teachers={teachers}
+        value={teacherId}
+        onChange={setTeacherId}
+      />
     </>
   );
 }
