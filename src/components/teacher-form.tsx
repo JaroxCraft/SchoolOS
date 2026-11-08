@@ -3,7 +3,7 @@ import { router, Stack } from "expo-router";
 import { useState } from "react";
 
 import { DestructiveButton } from "@/components/destructive-button";
-import { DiscardGuardHeader } from "@/components/discard-guard-header";
+import { DiscardGuard } from "@/components/discard-guard";
 import { FormList } from "@/components/form-list";
 import { TextField } from "@/components/text-field";
 import { saveTeacher } from "@/db/actions";
@@ -47,43 +47,44 @@ export function TeacherForm({ teacher }: TeacherFormProps) {
   return (
     <>
       <Stack.Title>{teacher ? teacher.name : "Neue Lehrperson"}</Stack.Title>
-      <DiscardGuardHeader dirty={dirty} />
       <Stack.Toolbar placement="right">
         {saveButton && <Stack.Toolbar.Button {...saveButton} disabled={!canSave} onPress={save} />}
       </Stack.Toolbar>
 
-      <FormList>
-        <FieldGroup.Section>
-          <TextField
-            placeholder="Name, z. B. Julian Riegger"
-            defaultValue={name}
-            autoFocus={!teacher}
-            autoCapitalize="words"
-            onChangeText={setName}
-          />
-          <TextField
-            placeholder="Kürzel, z. B. JRi"
-            defaultValue={abbreviation}
-            autoCapitalize="none"
-            maxLength={5}
-            onChangeText={setAbbreviation}
-          />
-          <TextField
-            placeholder="E-Mail (optional)"
-            defaultValue={email}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            autoCorrect={false}
-            onChangeText={setEmail}
-          />
-        </FieldGroup.Section>
-
-        {teacher && (
+      <DiscardGuard dirty={dirty}>
+        <FormList>
           <FieldGroup.Section>
-            <DestructiveButton label="Lehrperson löschen" onPress={remove} />
+            <TextField
+              placeholder="Name, z. B. Julian Riegger"
+              defaultValue={name}
+              autoFocus={!teacher}
+              autoCapitalize="words"
+              onChangeText={setName}
+            />
+            <TextField
+              placeholder="Kürzel, z. B. JRi"
+              defaultValue={abbreviation}
+              autoCapitalize="none"
+              maxLength={5}
+              onChangeText={setAbbreviation}
+            />
+            <TextField
+              placeholder="E-Mail (optional)"
+              defaultValue={email}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+              onChangeText={setEmail}
+            />
           </FieldGroup.Section>
-        )}
-      </FormList>
+
+          {teacher && (
+            <FieldGroup.Section>
+              <DestructiveButton label="Lehrperson löschen" onPress={remove} />
+            </FieldGroup.Section>
+          )}
+        </FormList>
+      </DiscardGuard>
     </>
   );
 }

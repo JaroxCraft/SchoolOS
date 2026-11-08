@@ -6,7 +6,7 @@ import { Platform } from "react-native";
 
 import { ColorField } from "@/components/color-field";
 import { DestructiveButton } from "@/components/destructive-button";
-import { DiscardGuardHeader } from "@/components/discard-guard-header";
+import { DiscardGuard } from "@/components/discard-guard";
 import { FooterText, FormList } from "@/components/form-list";
 import { NO_TEACHER, TeacherPickerSheet } from "@/components/teacher-picker";
 import { TextField } from "@/components/text-field";
@@ -72,70 +72,71 @@ export function SubjectForm({ subject, usedColors, teachers }: SubjectFormProps)
   return (
     <>
       <Stack.Title>{subject ? subject.name : "Neues Fach"}</Stack.Title>
-      <DiscardGuardHeader dirty={dirty} />
       <Stack.Toolbar placement="right">
         {saveButton && <Stack.Toolbar.Button {...saveButton} disabled={!canSave} onPress={save} />}
       </Stack.Toolbar>
 
-      <FormList>
-        <FieldGroup.Section>
-          <TextField
-            placeholder="Name, z. B. Mathematik"
-            defaultValue={name}
-            autoFocus={!subject}
-            autoCapitalize="words"
-            onChangeText={setName}
-          />
-          <TextField
-            placeholder={
-              name.trim() ? `Kürzel (sonst «${defaultAbbreviation(name)}»)` : "Kürzel, z. B. M"
-            }
-            defaultValue={abbreviation}
-            autoCapitalize="characters"
-            maxLength={5}
-            onChangeText={setAbbreviation}
-          />
-          <FieldGroup.SectionFooter>
-            <FooterText>Das Kürzel erscheint im Stundenplan.</FooterText>
-          </FieldGroup.SectionFooter>
-        </FieldGroup.Section>
-
-        {/* iOS: a row with the system color picker; Android: the color swatches */}
-        <FieldGroup.Section title={Platform.OS === "android" ? "Farbe" : undefined}>
-          <ColorField
-            value={color}
-            onChange={setColor}
-            usedColors={usedColors.filter((used) => used !== subject?.color)}
-          />
-          {Platform.OS === "android" ? (
-            <FieldGroup.SectionFooter>
-              <FooterText>Ein Punkt markiert Farben, die schon ein anderes Fach hat.</FooterText>
-            </FieldGroup.SectionFooter>
-          ) : (
-            <FieldGroup.SectionFooter>
-              <FooterText>Die Farbe erscheint im Stundenplan und bei den Einträgen.</FooterText>
-            </FieldGroup.SectionFooter>
-          )}
-        </FieldGroup.Section>
-
-        <FieldGroup.Section title="Lehrperson">
-          <ListItem
-            onPress={() => setTeacherPickerOpen(true)}
-            trailing={
-              <Text textStyle={{ color: ink.secondary }}>
-                {teachers.find((teacher) => teacher.id === teacherId)?.name ?? "Keine"}
-              </Text>
-            }>
-            Lehrperson
-          </ListItem>
-        </FieldGroup.Section>
-
-        {subject && (
+      <DiscardGuard dirty={dirty}>
+        <FormList>
           <FieldGroup.Section>
-            <DestructiveButton label="Fach löschen" onPress={remove} />
+            <TextField
+              placeholder="Name, z. B. Mathematik"
+              defaultValue={name}
+              autoFocus={!subject}
+              autoCapitalize="words"
+              onChangeText={setName}
+            />
+            <TextField
+              placeholder={
+                name.trim() ? `Kürzel (sonst «${defaultAbbreviation(name)}»)` : "Kürzel, z. B. M"
+              }
+              defaultValue={abbreviation}
+              autoCapitalize="characters"
+              maxLength={5}
+              onChangeText={setAbbreviation}
+            />
+            <FieldGroup.SectionFooter>
+              <FooterText>Das Kürzel erscheint im Stundenplan.</FooterText>
+            </FieldGroup.SectionFooter>
           </FieldGroup.Section>
-        )}
-      </FormList>
+
+          {/* iOS: a row with the system color picker; Android: the color swatches */}
+          <FieldGroup.Section title={Platform.OS === "android" ? "Farbe" : undefined}>
+            <ColorField
+              value={color}
+              onChange={setColor}
+              usedColors={usedColors.filter((used) => used !== subject?.color)}
+            />
+            {Platform.OS === "android" ? (
+              <FieldGroup.SectionFooter>
+                <FooterText>Ein Punkt markiert Farben, die schon ein anderes Fach hat.</FooterText>
+              </FieldGroup.SectionFooter>
+            ) : (
+              <FieldGroup.SectionFooter>
+                <FooterText>Die Farbe erscheint im Stundenplan und bei den Einträgen.</FooterText>
+              </FieldGroup.SectionFooter>
+            )}
+          </FieldGroup.Section>
+
+          <FieldGroup.Section title="Lehrperson">
+            <ListItem
+              onPress={() => setTeacherPickerOpen(true)}
+              trailing={
+                <Text textStyle={{ color: ink.secondary }}>
+                  {teachers.find((teacher) => teacher.id === teacherId)?.name ?? "Keine"}
+                </Text>
+              }>
+              Lehrperson
+            </ListItem>
+          </FieldGroup.Section>
+
+          {subject && (
+            <FieldGroup.Section>
+              <DestructiveButton label="Fach löschen" onPress={remove} />
+            </FieldGroup.Section>
+          )}
+        </FormList>
+      </DiscardGuard>
 
       {/* Outside the form: inside it, the sheet would take up an empty row */}
       <TeacherPickerSheet
