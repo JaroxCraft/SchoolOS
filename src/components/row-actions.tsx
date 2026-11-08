@@ -23,9 +23,10 @@ export type RowActionsProps = {
   children: ReactElement;
 };
 
-// Android: no swipe or long-press actions yet; the row is shown as it is. <FormGroup> unwraps this
-// component, so the row stays a direct list item of its section. iOS: row-actions.ios.tsx.
+// Android: no swipe actions (Material has no such pattern); <FormGroup> gives the row the `menu`
+// as a Material menu on a long press, and keeps the row a direct list item of its section. On its
+// own the row is shown as it is. iOS: row-actions.ios.tsx.
 export function RowActions({ children }: RowActionsProps) {
   return children;
 }
-RowActions.unwrap = true as const;
+RowActions.rowActions = true as const;

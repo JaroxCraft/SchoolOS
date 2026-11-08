@@ -16,8 +16,8 @@ type TeacherPickerSheetProps = {
 };
 
 // The teachers by name, searchable by name or abbreviation, with "Keine" on top. A missing
-// teacher is added right in the sheet ("Neue Lehrperson") and picked at once; on iOS a teacher is
-// changed right in the sheet too (swipe left or long press, "Bearbeiten").
+// teacher is added right in the sheet ("Neue Lehrperson") and picked at once; a teacher is
+// changed right in the sheet too ("Bearbeiten" in the row actions).
 export function TeacherPickerSheet({ teachers, ...props }: TeacherPickerSheetProps) {
   // The teacher the form changes; null for a new one
   const [editingId, setEditingId] = useState<number | null>(null);

@@ -1,8 +1,17 @@
-import { FieldGroup } from "@expo/ui";
-import { Column, LazyColumn, useMaterialColors } from "@expo/ui/jetpack-compose";
+import { FieldGroup, type ListItemProps } from "@expo/ui";
+import {
+  Box,
+  Column,
+  DropdownMenu,
+  DropdownMenuItem,
+  LazyColumn,
+  Text,
+  useMaterialColors,
+} from "@expo/ui/jetpack-compose";
 import {
   background,
   clickable,
+  combinedClickable,
   fillMaxSize,
   type ModifierConfig,
   padding,
@@ -14,9 +23,11 @@ import {
   isValidElement,
   type ReactElement,
   type ReactNode,
+  useState,
 } from "react";
 
 import type { FormGroupProps } from "@/components/form-group";
+import type { RowAction, RowActionsProps } from "@/components/row-actions";
 import { type Ink, useInk } from "@/hooks/use-ink";
 import { endEditing } from "@/lib/focused-fields";
 
@@ -32,27 +43,93 @@ type SectionElement = ReactElement<{ children?: ReactNode; modifiers?: ModifierC
 
 type RowFactory = {
   asListItem?: (props: unknown, ink: Ink) => ReactElement;
-  // A wrapper without a look of its own on Android (RowActions): its row is used instead
-  unwrap?: true;
+  // RowActions: its row gets the actions as a long-press menu
+  rowActions?: true;
 };
 
+// What the rows need from the list: the colors and which row's menu is open
+type Rows = {
+  ink: Ink;
+  openMenu: string | null;
+  setOpenMenu: (key: string | null) => void;
+};
+
+// A row with RowActions: a long press opens a Material menu at the row with the actions of the
+// iOS context menu, the destructive ones in red; a tap does what it did before. The menu hangs on
+// the row's trailing content (e.g. the chevron), so the row stays the section's own list item.
+function withMenu(item: ReactElement<ListItemProps>, menu: RowAction[], key: string, rows: Rows) {
+  const { ink, openMenu, setOpenMenu } = rows;
+  const { onPress, trailing, modifiers } = item.props;
+  const close = () => setOpenMenu(null);
+
+  return cloneElement(item, {
+    key,
+    onPress: undefined,
+    // Compose gives the long press its haptic
+    modifiers: [
+      ...(modifiers ?? []),
+      combinedClickable({ onClick: onPress, onLongClick: () => setOpenMenu(key) }),
+    ],
+    trailing: (
+      <DropdownMenu expanded={openMenu === key} onDismissRequest={close}>
+        <DropdownMenu.Trigger>
+          {typeof trailing === "string" ? <Text>{trailing}</Text> : (trailing ?? <Box />)}
+        </DropdownMenu.Trigger>
+        <DropdownMenu.Items>
+          {menu.map((action) => (
+            <DropdownMenuItem
+              key={action.label}
+              onClick={() => {
+                close();
+                action.onPress();
+              }}>
+              <DropdownMenuItem.Text>
+                <Text
+                  color={action.destructive ? ink.danger : ink.label}
+                  style={{ typography: "bodyLarge" }}>
+                  {action.label}
+                </Text>
+              </DropdownMenuItem.Text>
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenu.Items>
+      </DropdownMenu>
+    ),
+  });
+}
+
 // Replaces row components (NavigationRow, EntryRow …) in the sections by the list items they
-// render, see RowComponent. Fragments, arrays and RowActions are flattened like the sections do.
-function expandRows(node: ReactNode, ink: Ink): ReactNode {
+// render, see RowComponent, and gives rows with RowActions their menu. Fragments and arrays are
+// flattened like the sections do. `prefix` keeps the menu keys apart between the sections.
+function expandRows(node: ReactNode, rows: Rows, prefix: string): ReactNode {
   return Children.map(node, (child) => {
     if (!isValidElement<{ children?: ReactNode }>(child)) return child;
     const type = child.type as RowFactory;
-    if (child.type === Fragment || type.unwrap) return expandRows(child.props.children, ink);
-    return type.asListItem
-      ? cloneElement(type.asListItem(child.props, ink), { key: child.key })
-      : child;
+    if (child.type === Fragment) return expandRows(child.props.children, rows, prefix);
+    if (type.rowActions) {
+      const { menu, children } = child.props as RowActionsProps;
+      const key = `${prefix}/${String(child.key)}`;
+      const [item] = Children.toArray(expandRows(children, rows, key));
+      return isValidElement<ListItemProps>(item) && menu?.length
+        ? withMenu(item, menu, key, rows)
+        : item;
+    }
+    if (type.asListItem) {
+      // The list item may carry RowActions itself (EntryRow), keyed by this row
+      const key = `${prefix}/${String(child.key)}`;
+      const [item] = Children.toArray(
+        expandRows(type.asListItem(child.props, rows.ink), rows, key)
+      );
+      return isValidElement(item) ? cloneElement(item, { key: child.key }) : item;
+    }
+    return child;
   });
 }
 
 // The sections of the list, each with half the gap above and below inside its tappable area: the
 // list swallows taps between its items, so this way every tap beside a field lands on a section.
 // Rows outside a section are grouped into one, like FieldGroup does.
-function expandSections(node: ReactNode, ink: Ink): ReactElement[] {
+function expandSections(node: ReactNode, rows: Rows): ReactElement[] {
   const sections: ReactElement[] = [];
   let loose: ReactNode[] = [];
 
@@ -68,7 +145,7 @@ function expandSections(node: ReactNode, ink: Ink): ReactElement[] {
             padding(0, SECTION_GAP / 2, 0, SECTION_GAP / 2),
           ],
         },
-        expandRows(section.props.children, ink)
+        expandRows(section.props.children, rows, key)
       )
     );
   const flush = () => {
@@ -103,6 +180,8 @@ function expandSections(node: ReactNode, ink: Ink): ReactElement[] {
 export function FormGroup({ children, modifiers = [], floatingButton }: FormGroupProps) {
   const ink = useInk();
   const colors = useMaterialColors();
+  // The row whose long-press menu is open
+  const [openMenu, setOpenMenu] = useState<string | null>(null);
 
   return (
     <Column modifiers={[fillMaxSize(), background(colors.surface), DISMISS_ON_TAP, ...modifiers]}>
@@ -113,7 +192,7 @@ export function FormGroup({ children, modifiers = [], floatingButton }: FormGrou
           top: EDGE_PADDING - SECTION_GAP / 2,
           bottom: EDGE_PADDING - SECTION_GAP / 2,
         }}>
-        {expandSections(children, ink)}
+        {expandSections(children, { ink, openMenu, setOpenMenu })}
         {floatingButton && (
           // As much room as before, when the gap above it was the list's spacing
           <FieldGroup.Section key="floating-button" style={{ height: 64 + SECTION_GAP }}>

@@ -55,8 +55,8 @@ export type SearchPickerSheetProps<T extends { id: number }> = {
 
 // The sections of the list: the extra choices (hidden while searching) and the matching items,
 // returned as an array, so they are direct children of the sheet's <FieldGroup>. `choose` picks
-// a value and closes the sheet. With `onEdit`, every item can be changed by swiping it left or
-// from the menu of a long press (iOS).
+// a value and closes the sheet. With `onEdit`, every item can be changed from its row actions
+// (iOS: swipe left or long press; Android: long press).
 export function usePickerSections<T extends { id: number }>(
   {
     items,
@@ -108,7 +108,11 @@ export function usePickerSections<T extends { id: number }>(
       </FieldGroup.Section>
     ),
     (search || items.length > 0) && (
-      <FieldGroup.Section key="items" title={itemsTitle}>
+      <FieldGroup.Section
+        // Android draws a second line that appears or goes later (e.g. after "Bearbeiten") only
+        // in new rows, and its sections key their rows by position, so the section is rebuilt
+        key={`items:${matches.map((item) => (getSupportingText?.(item) ? 1 : 0)).join("")}`}
+        title={itemsTitle}>
         {matches.length === 0 && <Text>{`Nichts gefunden für «${query.trim()}»`}</Text>}
         {matches.map((item) => {
           const row = (
