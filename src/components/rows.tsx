@@ -72,19 +72,26 @@ type ActionRowProps = {
   onPress: () => void;
 };
 
-// Android: the whole row is tappable, its label in the given color.
-const coloredItem = (label: string, color: string, onPress: () => void) => (
-  <ListItem onPress={onPress}>
+// The whole row is tappable, its label in the given color, optionally an icon on the left.
+const coloredItem = (label: string, color: string, onPress: () => void, icon?: RowSymbol) => (
+  <ListItem onPress={onPress} leading={icon ? <RowIcon {...icon} /> : undefined}>
     <Text textStyle={{ color }}>{label}</Text>
   </ListItem>
 );
 
+type IconActionRowProps = ActionRowProps & { icon?: RowSymbol };
+
 // Runs an action right away: a text button in the accent color (system blue / Material primary).
-export const ActionRow: RowComponent<ActionRowProps> = Object.assign(
-  ({ label, onPress }: ActionRowProps) => <Button variant="text" label={label} onPress={onPress} />,
+// With an icon it lines up with the settings rows around it, still without a trailing accessory.
+export const ActionRow: RowComponent<IconActionRowProps> = Object.assign(
+  function ActionRowComponent({ label, onPress, icon }: IconActionRowProps) {
+    const ink = useInk();
+    if (icon) return coloredItem(label, ink.accent, onPress, icon);
+    return <Button variant="text" label={label} onPress={onPress} />;
+  },
   {
-    asListItem: ({ label, onPress }: ActionRowProps, ink: Ink) =>
-      coloredItem(label, ink.accent, onPress),
+    asListItem: ({ label, onPress, icon }: IconActionRowProps, ink: Ink) =>
+      coloredItem(label, ink.accent, onPress, icon),
   }
 );
 

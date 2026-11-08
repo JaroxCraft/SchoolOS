@@ -8,12 +8,13 @@ import { ActionRow, NavigationRow } from "@/components/rows";
 import { Screen } from "@/components/screen";
 import { SubjectDot } from "@/components/subject-dot";
 import { useEntries, useLessons, usePeriods, useSubjects } from "@/db/queries";
-import type { Lesson, Period, Subject } from "@/db/schema";
+import type { Period, Subject } from "@/db/schema";
 import { useInk } from "@/hooks/use-ink";
 import { useWasCompleted } from "@/hooks/use-recently-completed";
 import { formatDate, relativeDay, today } from "@/lib/dates";
 import { isCheckable } from "@/lib/entry-types";
 import { nextLessons, periodNumber, periodRange } from "@/lib/schedule";
+import { SCHOOL_ROUTES } from "@/lib/routes";
 import { SETUP_STEP_ICONS } from "@/lib/setup";
 import { joinDetails } from "@/lib/text";
 import { pickAndImport } from "@/lib/transfer-file";
@@ -21,36 +22,36 @@ import { pickAndImport } from "@/lib/transfer-file";
 const UPCOMING_EVENTS = 5;
 const DONE_ICON = { sf: "checkmark", md: "check", color: "#34C759" } as const;
 
-type SetupProps = { periods: Period[]; subjects: Subject[]; lessons: Lesson[] };
+type SetupProps = { periods: Period[]; subjects: Subject[] };
 
 // Shown until the timetable has lessons: the three steps in the order they depend on each other,
 // and importing the timetable of a classmate as a shortcut. A step is pushed onto this tab; each
 // leads on to the next with "Weiter", the last one comes back here with "Fertig".
-function Setup({ periods, subjects, lessons }: SetupProps) {
+function Setup({ periods, subjects }: SetupProps) {
   const steps = [
     {
-      title: "Lektionenraster prüfen",
+      title: "Lektionenraster erfassen",
       done: periods.length > 0,
       detail:
         periods.length > 0
           ? `${periods.length} Lektionen, ${periods[0].startTime}–${periods.at(-1)!.endTime}`
           : "Wann deine Lektionen beginnen und enden",
       icon: SETUP_STEP_ICONS.periods,
-      href: "/setup/periods",
+      href: SCHOOL_ROUTES.setup.periods,
     },
     {
       title: "Fächer erfassen",
       done: subjects.length > 0,
       detail: subjects.length > 0 ? `${subjects.length} Fächer` : "Mit Kürzel und Farbe",
       icon: SETUP_STEP_ICONS.subjects,
-      href: "/setup/subjects",
+      href: SCHOOL_ROUTES.setup.subjects,
     },
     {
       title: "Stundenplan ausfüllen",
       done: false,
       detail: "Welches Fach du wann hast",
       icon: SETUP_STEP_ICONS.timetable,
-      href: "/setup/timetable",
+      href: SCHOOL_ROUTES.setup.timetable,
     },
   ] as const;
 
@@ -99,7 +100,7 @@ export default function OverviewScreen() {
   if (lessons.length === 0) {
     return (
       <Screen title="Übersicht" showAddButton>
-        <Setup periods={periods} subjects={subjects} lessons={lessons} />
+        <Setup periods={periods} subjects={subjects} />
       </Screen>
     );
   }
@@ -127,7 +128,7 @@ export default function OverviewScreen() {
           {upcomingLessons.length === 0 && (
             <Text textStyle={{ color: ink.secondary }}>Keine Lektionen im Stundenplan</Text>
           )}
-          {/* iOS: a long press adds an entry for the subject right away */}
+          {/* A long press offers a new entry for the subject and the subject itself */}
           {upcomingLessons.map(({ lesson, period }) => {
             const subject = subjectById(lesson.subjectId);
             const openSubject = () =>

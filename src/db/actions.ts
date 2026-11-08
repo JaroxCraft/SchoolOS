@@ -2,11 +2,10 @@ import { and, eq } from "drizzle-orm";
 
 import { db } from "@/db/client";
 import {
+  DATA_TABLES,
   entries,
-  grades,
   lessons,
   periods,
-  semesters,
   settings,
   subjects,
   teachers,
@@ -17,50 +16,21 @@ type NewTeacher = typeof teachers.$inferInsert;
 type NewSubject = typeof subjects.$inferInsert;
 type NewEntry = typeof entries.$inferInsert;
 
-// Deletes all data, children before the rows they reference.
-export async function clearDatabase() {
-  for (const table of [
-    grades,
-    entries,
-    lessons,
-    subjects,
-    teachers,
-    periods,
-    semesters,
-    settings,
-  ]) {
-    await db.delete(table);
-  }
+// Deletes all data, children before the rows they reference, and creates the settings row again
+// like on a new installation. One transaction: an interrupted reset leaves the data untouched.
+export function resetDatabase() {
+  db.transaction((tx) => {
+    for (const table of [...DATA_TABLES, settings]) {
+      tx.delete(table).run();
+    }
+    tx.insert(settings).values({ id: 1 }).run();
+  });
 }
 
-// Period grid of the Oberstufe Uznach, the starting point of every new installation
-const DEFAULT_PERIODS = [
-  ["07:25", "08:15"],
-  ["08:15", "09:05"],
-  ["09:05", "09:55"],
-  ["10:15", "11:05"],
-  ["11:05", "11:55"],
-  ["11:55", "12:45"],
-  ["12:45", "13:35"],
-  ["13:40", "14:30"],
-  ["14:30", "15:20"],
-  ["15:35", "16:25"],
-  ["16:25", "17:15"],
-] as const;
-
-// Creates the settings row on the first launch (or after clearing the database)
-// and fills in the default period grid along with it.
+// Creates the settings row on the first launch. The period grid is left empty: schools differ,
+// the setup asks for it first.
 export async function initDatabase() {
-  const created = await db
-    .insert(settings)
-    .values({ id: 1 })
-    .onConflictDoNothing()
-    .returning({ id: settings.id });
-  if (created.length === 0) return;
-
-  await db
-    .insert(periods)
-    .values(DEFAULT_PERIODS.map(([startTime, endTime]) => ({ startTime, endTime })));
+  await db.insert(settings).values({ id: 1 }).onConflictDoNothing();
 }
 
 export async function updateSettings(values: Partial<Omit<Settings, "id">>) {
@@ -73,6 +43,15 @@ export async function addPeriod(startTime: string, endTime: string) {
 
 export async function updatePeriod(id: number, startTime: string, endTime: string) {
   await db.update(periods).set({ startTime, endTime }).where(eq(periods.id, id));
+}
+
+// Saves several edited periods at once, all or nothing.
+export async function updatePeriods(changes: { id: number; startTime: string; endTime: string }[]) {
+  db.transaction((tx) => {
+    for (const { id, startTime, endTime } of changes) {
+      tx.update(periods).set({ startTime, endTime }).where(eq(periods.id, id)).run();
+    }
+  });
 }
 
 export async function deletePeriod(id: number) {
@@ -120,10 +99,14 @@ export async function setLesson(
   subjectId: number | null,
   room: string | null
 ) {
-  await db.delete(lessons).where(and(eq(lessons.weekday, weekday), eq(lessons.periodId, periodId)));
-  if (subjectId !== null) {
-    await db.insert(lessons).values({ weekday, periodId, subjectId, room });
-  }
+  db.transaction((tx) => {
+    tx.delete(lessons)
+      .where(and(eq(lessons.weekday, weekday), eq(lessons.periodId, periodId)))
+      .run();
+    if (subjectId !== null) {
+      tx.insert(lessons).values({ weekday, periodId, subjectId, room }).run();
+    }
+  });
 }
 
 export async function setLessonRoom(id: number, room: string | null) {
