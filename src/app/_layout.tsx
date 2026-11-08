@@ -1,5 +1,6 @@
 import { Stack, ThemeProvider } from "expo-router";
 import { useEffect } from "react";
+import { Platform } from "react-native";
 
 import { AppStack } from "@/components/app-stack";
 import { ConfirmDialog } from "@/components/confirm-dialog";
@@ -33,7 +34,11 @@ export default function RootLayout() {
       <AppStack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="settings" options={{ presentation: "modal", headerShown: false }} />
-        <Stack.Screen name="entry/[id]" options={{ presentation: "modal" }} />
+        {/* iOS: the entry draws its own navigation bar (SheetForm), so the "+" can zoom into it */}
+        <Stack.Screen
+          name="entry/[id]"
+          options={{ presentation: "modal", headerShown: Platform.OS !== "ios" }}
+        />
       </AppStack>
       <ConfirmDialog />
     </ThemeProvider>
