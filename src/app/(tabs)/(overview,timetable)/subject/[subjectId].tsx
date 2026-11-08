@@ -9,6 +9,7 @@ import { ActionRow } from "@/components/rows";
 import { useEntries, useLessons, usePeriods, useSubjects, useTeachers } from "@/db/queries";
 import { weekdayName } from "@/lib/dates";
 import { isCheckable } from "@/lib/entry-types";
+import { openEntry } from "@/lib/routes";
 import { periodNumber } from "@/lib/schedule";
 import { joinDetails } from "@/lib/text";
 import { useInk } from "@/hooks/use-ink";
@@ -90,12 +91,7 @@ export default function SubjectScreen() {
           ))}
           <ActionRow
             label="Eintrag hinzufügen"
-            onPress={() =>
-              router.push({
-                pathname: "/entry/[id]",
-                params: { id: "new", subjectId: String(subject.id) },
-              })
-            }
+            onPress={() => openEntry({ id: "new", subjectId: subject.id })}
           />
         </FieldGroup.Section>
       </FormList>

@@ -5,7 +5,7 @@ import { colors } from "@/constants/colors";
 import type { Lesson, Period, Subject, Teacher } from "@/db/schema";
 import type { Now } from "@/hooks/use-now";
 import { minutesToTime } from "@/lib/dates";
-import { SCHOOL_ROUTES } from "@/lib/routes";
+import { openEntry, SCHOOL_ROUTES } from "@/lib/routes";
 import { lessonBlocks, type LessonBlock, minutesOf } from "@/lib/timeline";
 import { joinDetails } from "@/lib/text";
 
@@ -211,12 +211,7 @@ function LessonCard({ block, subject, teacher, compact, top, height, state }: Le
         <Link.Menu title={`${subject.name} · ${periodsLabel}`}>
           <Link.MenuAction
             icon="plus"
-            onPress={() =>
-              router.push({
-                pathname: "/entry/[id]",
-                params: { id: "new", subjectId: String(subject.id) },
-              })
-            }>
+            onPress={() => openEntry({ id: "new", subjectId: subject.id })}>
             Neuer Eintrag
           </Link.MenuAction>
           <Link.MenuAction icon="pencil" onPress={() => router.push(SCHOOL_ROUTES.setup.timetable)}>

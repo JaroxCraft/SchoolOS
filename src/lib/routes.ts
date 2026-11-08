@@ -1,6 +1,21 @@
-import { useRoute } from "expo-router";
+import { router, useRoute } from "expo-router";
+
+import { isSheetClosing } from "@/lib/sheet-transition";
 
 export const NEW_ENTRY = { pathname: "/entry/[id]", params: { id: "new" } } as const;
+
+// Opens an entry, or a new one (optionally for a subject), as a sheet. Ignored while the last
+// zoomed entry still shrinks back into the "+": presenting then makes it jump (isSheetClosing).
+export function openEntry({ id, subjectId }: { id: number | "new"; subjectId?: number }) {
+  if (isSheetClosing()) return;
+  router.push({
+    pathname: "/entry/[id]",
+    params:
+      subjectId === undefined
+        ? { id: String(id) }
+        : { id: String(id), subjectId: String(subjectId) },
+  });
+}
 
 // The screens that set up the school (period grid, subjects, timetable and the subject form) exist
 // in two stacks: in the settings sheet, and pushed onto the overview or timetable tab for the

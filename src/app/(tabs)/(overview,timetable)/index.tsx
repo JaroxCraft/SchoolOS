@@ -15,7 +15,7 @@ import { useWasCompleted } from "@/hooks/use-recently-completed";
 import { formatDate, relativeDay } from "@/lib/dates";
 import { isCheckable } from "@/lib/entry-types";
 import { nextLessons, periodNumber, periodRange } from "@/lib/schedule";
-import { SCHOOL_ROUTES } from "@/lib/routes";
+import { openEntry, SCHOOL_ROUTES } from "@/lib/routes";
 import { SETUP_STEP_ICONS } from "@/lib/setup";
 import { joinDetails } from "@/lib/text";
 import { pickAndImport } from "@/lib/transfer-file";
@@ -145,11 +145,7 @@ export default function OverviewScreen() {
                   {
                     label: "Neuer Eintrag",
                     icon: "plus",
-                    onPress: () =>
-                      router.push({
-                        pathname: "/entry/[id]",
-                        params: { id: "new", subjectId: String(lesson.subjectId) },
-                      }),
+                    onPress: () => openEntry({ id: "new", subjectId: lesson.subjectId }),
                   },
                   { label: "Fach anzeigen", icon: "book", onPress: openSubject },
                 ]}>

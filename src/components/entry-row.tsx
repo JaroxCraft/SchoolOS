@@ -1,6 +1,5 @@
 import { ListItem, Text } from "@expo/ui";
 import * as Haptics from "expo-haptics";
-import { router } from "expo-router";
 
 import { type RowAction, RowActions } from "@/components/row-actions";
 import type { RowComponent } from "@/components/rows";
@@ -12,13 +11,11 @@ import { type Ink, useInk } from "@/hooks/use-ink";
 import { markToggled } from "@/hooks/use-recently-completed";
 import { formatDate, relativeDay } from "@/lib/dates";
 import { ENTRY_TYPE_INFO, isCheckable } from "@/lib/entry-types";
+import { openEntry } from "@/lib/routes";
 import { NEUTRAL_COLOR } from "@/lib/subject-colors";
 import { typography } from "@/lib/typography";
 
 const DONE_GREEN = "#34C759";
-
-const openEntry = (entry: Entry) =>
-  router.push({ pathname: "/entry/[id]", params: { id: String(entry.id) } });
 
 // A task checked off or reopened stays in its place until the screen is left (useWasCompleted)
 function setCompleted(entry: Entry, completed: boolean) {
@@ -50,7 +47,7 @@ function entryItem({ entry, subject, today }: EntryRowProps, ink: Ink) {
 
   return (
     <ListItem
-      onPress={() => openEntry(entry)}
+      onPress={() => openEntry({ id: entry.id })}
       leading={
         checkable ? (
           <TaskCheckbox
@@ -96,7 +93,11 @@ function entryRow(props: EntryRowProps, ink: Ink) {
     destructive: true,
     onPress: () => deleteEntry(entry.id),
   };
-  const edit: RowAction = { label: "Bearbeiten", icon: "pencil", onPress: () => openEntry(entry) };
+  const edit: RowAction = {
+    label: "Bearbeiten",
+    icon: "pencil",
+    onPress: () => openEntry({ id: entry.id }),
+  };
 
   return (
     <RowActions

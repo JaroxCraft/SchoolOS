@@ -1,5 +1,5 @@
 import { FieldGroup, Text } from "@expo/ui";
-import { router, Stack } from "expo-router";
+import { Stack } from "expo-router";
 import { useState } from "react";
 import { Platform } from "react-native";
 
@@ -16,7 +16,7 @@ import { useInk } from "@/hooks/use-ink";
 import { useNow } from "@/hooks/use-now";
 import { useWasCompleted } from "@/hooks/use-recently-completed";
 import { ENTRY_TYPE_OPTIONS, isCheckable } from "@/lib/entry-types";
-import { NEW_ENTRY } from "@/lib/routes";
+import { openEntry } from "@/lib/routes";
 
 const ALL = "all";
 const ALL_SUBJECTS = 0;
@@ -66,7 +66,7 @@ export default function AgendaScreen() {
           icon={{ ios: "checklist", android: "checklist" }}
           title="Keine Termine"
           message="Hausaufgaben, Prüfungen, Präsentationen und Abgaben erscheinen hier."
-          action={{ label: "Eintrag erfassen", onPress: () => router.push(NEW_ENTRY) }}
+          action={{ label: "Eintrag erfassen", onPress: () => openEntry({ id: "new" }) }}
         />
       </Screen>
     );
