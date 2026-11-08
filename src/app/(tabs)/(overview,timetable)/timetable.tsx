@@ -11,6 +11,7 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
+import { useReducedMotion } from "react-native-reanimated";
 
 import { EmptyState } from "@/components/empty-state";
 import {
@@ -46,6 +47,7 @@ export default function TimetableScreen() {
   const lessons = useLessons();
   const now = useNow();
   const pager = useRef<ScrollViewInstance>(null);
+  const reducedMotion = useReducedMotion();
 
   // This week; at the weekend already the coming one
   const todayWeekday = isoWeekday(now.date);
@@ -92,7 +94,7 @@ export default function TimetableScreen() {
       setMode("day");
       return;
     }
-    scrollToDay(weekday, true);
+    scrollToDay(weekday, !reducedMotion);
   };
 
   const selectPage = (page: number) => {

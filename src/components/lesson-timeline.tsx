@@ -32,6 +32,9 @@ type LessonTimelineProps = {
   now: Now;
 };
 
+// Spoken after the lesson, since the outline and dimming only show it
+const STATE_LABELS = { past: "vorbei", current: "jetzt", upcoming: undefined } as const;
+
 // The timetable as a time axis, like the day and week views of Calendar: every lesson is a card as
 // tall as it lasts, a double lesson one card across the break, breaks and free periods are space.
 // On today the current lesson is outlined, past ones are dimmed and a red line marks the time.
@@ -167,7 +170,13 @@ function LessonCard({ block, subject, teacher, compact, top, height, state }: Le
           <Pressable
             style={styles.fill}
             accessibilityRole="button"
-            accessibilityLabel={joinDetails(subject.name, periodsLabel, time, block.room)}>
+            accessibilityLabel={joinDetails(
+              subject.name,
+              periodsLabel,
+              time,
+              block.room,
+              STATE_LABELS[state]
+            )}>
             {({ pressed }) => (
               <View
                 style={[

@@ -89,6 +89,8 @@ function WeekDay({ weekday, selected, isToday, onSelect }: WeekDayProps) {
   return (
     <Pressable
       style={styles.day}
+      // 40 pt tall (circle and padding); the hit slop makes the tap target 44 pt without moving it
+      hitSlop={{ top: 2, bottom: 2 }}
       accessibilityRole="tab"
       accessibilityState={{ selected }}
       accessibilityLabel={`${weekdayName(weekday)}${isToday ? ", heute" : ""}`}

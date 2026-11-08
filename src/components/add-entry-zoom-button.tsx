@@ -33,6 +33,7 @@ export function AddEntryZoomButton() {
 }
 
 const styles = StyleSheet.create({
-  // The size of a bar button
-  button: { width: 36, height: 36, alignItems: "center", justifyContent: "center" },
+  // The size of a bar button on iOS 26, and the minimum tap target (Apple HIG: 44 × 44 pt). Not a
+  // hitSlop: the bar item hosting this view only takes touches inside its own bounds.
+  button: { width: 44, height: 44, alignItems: "center", justifyContent: "center" },
 });

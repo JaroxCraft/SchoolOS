@@ -64,7 +64,7 @@ export default function AgendaScreen() {
       <Screen title="Agenda" showAddButton>
         <EmptyState
           icon={{ ios: "checklist", android: "checklist" }}
-          title="Keine Termine"
+          title="Keine Einträge"
           message="Hausaufgaben, Prüfungen, Präsentationen und Abgaben erscheinen hier."
           action={{ label: "Eintrag erfassen", onPress: () => openEntry({ id: "new" }) }}
         />
