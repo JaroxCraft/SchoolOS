@@ -1,6 +1,9 @@
-import { BottomSheet, FieldGroup, Text } from "@expo/ui";
+import { FieldGroup, Text } from "@expo/ui";
 import {
+  BottomSheet,
   Button,
+  Group,
+  Host,
   NavigationDestination,
   NavigationLink,
   NavigationStack,
@@ -10,8 +13,12 @@ import {
 } from "@expo/ui/swift-ui";
 import {
   disabled,
+  frame,
   navigationBarTitleDisplayMode,
   navigationTitle,
+  presentationDetents,
+  type PresentationDetent,
+  presentationDragIndicator,
   searchable,
 } from "@expo/ui/swift-ui/modifiers";
 import { useState } from "react";
@@ -25,83 +32,105 @@ const CREATE = "create";
 // iOS: a sheet like the pickers of the system apps. It opens at half height with the grabber on
 // top, so it can be pulled up or swiped down to close; the xmark at the top left closes it too.
 // The title sits in the navigation bar, the system search field below it. "Neue …" pushes the
-// form inside the sheet, with "Hinzufügen" at the top right.
+// form inside the sheet, with "Hinzufügen" at the top right, and pulls the sheet up to full
+// height, where it stays when the keyboard closes. The SwiftUI sheet is used instead of the
+// universal BottomSheet, which does not offer to choose the height.
 export function SearchPickerSheet<T extends { id: number }>(props: SearchPickerSheetProps<T>) {
   const ink = useInk();
   const [query, setQuery] = useState("");
   const [path, setPath] = useState<string[]>([]);
+  // Follows the grabber, so pulling the sheet up for the form is a change even after the user
+  // pulled it down again
+  const [detent, setDetent] = useState<PresentationDetent>("medium");
   const searchText = useNativeState("");
   const { create } = props;
 
   const close = () => {
     setQuery("");
     setPath([]);
+    setDetent("medium");
     searchText.set("");
     props.onDismiss();
   };
   const { sections, choose } = usePickerSections(props, query, close);
 
   return (
-    <BottomSheet
-      isPresented={props.isPresented}
-      onDismiss={close}
-      snapPoints={["half", "full"]}
-      contentPadding={0}>
-      <NavigationStack
-        path={path}
-        onPathChange={(next) => {
-          if (next.includes(CREATE) && !path.includes(CREATE)) create?.start();
-          setPath(next);
+    // Takes no room or touches of its own; the sheet is presented above everything
+    <Host style={{ position: "absolute" }} pointerEvents="none">
+      <BottomSheet
+        isPresented={props.isPresented}
+        onIsPresentedChange={(presented) => {
+          if (!presented) close();
         }}>
-        <Toolbar>
-          {/* Not a FormGroup: its tap gesture would take the taps of the NavigationLink below. The
-              system search field ends its own editing. */}
-          <FieldGroup
-            modifiers={[
-              navigationTitle(props.title),
-              navigationBarTitleDisplayMode("inline"),
-              searchable(searchText, { prompt: props.searchPlaceholder, onChange: setQuery }),
-            ]}>
-            {create && !query.trim() && (
-              <FieldGroup.Section>
-                <NavigationLink value={CREATE}>
-                  <Text textStyle={{ color: ink.accent }}>{create.label}</Text>
-                </NavigationLink>
-              </FieldGroup.Section>
-            )}
-            {sections}
-          </FieldGroup>
-          <Toolbar.Content>
-            <ToolbarItem placement="cancellationAction">
-              {/* Label and icon are needed: without them the button is empty before iOS 26 */}
-              <Button role="close" label="Schliessen" systemImage="xmark" onPress={close} />
-            </ToolbarItem>
-          </Toolbar.Content>
-        </Toolbar>
-
-        {create && (
-          <NavigationDestination value={CREATE}>
+        <Group
+          modifiers={[
+            frame({ maxWidth: Infinity, alignment: "topLeading" }),
+            presentationDragIndicator("visible"),
+            presentationDetents(["medium", "large"], {
+              selection: detent,
+              onSelectionChange: setDetent,
+            }),
+          ]}>
+          <NavigationStack
+            path={path}
+            onPathChange={(next) => {
+              if (next.includes(CREATE) && !path.includes(CREATE)) {
+                create?.start();
+                setDetent("large");
+              }
+              setPath(next);
+            }}>
             <Toolbar>
-              <FormGroup
+              {/* Not a FormGroup: its tap gesture would take the taps of the NavigationLink below. The
+              system search field ends its own editing. */}
+              <FieldGroup
                 modifiers={[
-                  navigationTitle(create.label),
+                  navigationTitle(props.title),
                   navigationBarTitleDisplayMode("inline"),
+                  searchable(searchText, { prompt: props.searchPlaceholder, onChange: setQuery }),
                 ]}>
-                <FieldGroup.Section>{create.fields}</FieldGroup.Section>
-              </FormGroup>
+                {create && !query.trim() && (
+                  <FieldGroup.Section>
+                    <NavigationLink value={CREATE}>
+                      <Text textStyle={{ color: ink.accent }}>{create.label}</Text>
+                    </NavigationLink>
+                  </FieldGroup.Section>
+                )}
+                {sections}
+              </FieldGroup>
               <Toolbar.Content>
-                <ToolbarItem placement="confirmationAction">
-                  <Button
-                    label="Hinzufügen"
-                    modifiers={[disabled(!create.canSave)]}
-                    onPress={async () => choose(await create.save())}
-                  />
+                <ToolbarItem placement="cancellationAction">
+                  {/* Label and icon are needed: without them the button is empty before iOS 26 */}
+                  <Button role="close" label="Schliessen" systemImage="xmark" onPress={close} />
                 </ToolbarItem>
               </Toolbar.Content>
             </Toolbar>
-          </NavigationDestination>
-        )}
-      </NavigationStack>
-    </BottomSheet>
+
+            {create && (
+              <NavigationDestination value={CREATE}>
+                <Toolbar>
+                  <FormGroup
+                    modifiers={[
+                      navigationTitle(create.label),
+                      navigationBarTitleDisplayMode("inline"),
+                    ]}>
+                    <FieldGroup.Section>{create.fields}</FieldGroup.Section>
+                  </FormGroup>
+                  <Toolbar.Content>
+                    <ToolbarItem placement="confirmationAction">
+                      <Button
+                        label="Hinzufügen"
+                        modifiers={[disabled(!create.canSave)]}
+                        onPress={async () => choose(await create.save())}
+                      />
+                    </ToolbarItem>
+                  </Toolbar.Content>
+                </Toolbar>
+              </NavigationDestination>
+            )}
+          </NavigationStack>
+        </Group>
+      </BottomSheet>
+    </Host>
   );
 }
