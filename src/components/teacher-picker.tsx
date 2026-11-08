@@ -2,7 +2,7 @@ import { useState } from "react";
 
 import { SearchPickerSheet } from "@/components/search-picker-sheet";
 import { TextField } from "@/components/text-field";
-import { addTeacher } from "@/db/actions";
+import { addTeacher, saveTeacher } from "@/db/actions";
 import type { Teacher } from "@/db/schema";
 
 export const NO_TEACHER = 0;
@@ -16,12 +16,15 @@ type TeacherPickerSheetProps = {
 };
 
 // The teachers by name, searchable by name or abbreviation, with "Keine" on top. A missing
-// teacher is added right in the sheet ("Neue Lehrperson") and picked at once.
+// teacher is added right in the sheet ("Neue Lehrperson") and picked at once; on iOS a teacher is
+// changed right in the sheet too (swipe left or long press, "Bearbeiten").
 export function TeacherPickerSheet({ teachers, ...props }: TeacherPickerSheetProps) {
+  // The teacher the form changes; null for a new one
+  const [editingId, setEditingId] = useState<number | null>(null);
   const [name, setName] = useState("");
   const [abbreviation, setAbbreviation] = useState("");
   const [email, setEmail] = useState("");
-  // Remounts the fields for each new teacher, so they start as empty as the values above
+  // Remounts the fields each time the form opens, so they show the values above
   const [draft, setDraft] = useState(0);
 
   return (
@@ -35,32 +38,41 @@ export function TeacherPickerSheet({ teachers, ...props }: TeacherPickerSheetPro
       getSearchText={(teacher) => [teacher.name, teacher.abbreviation]}
       getSupportingText={(teacher) => teacher.abbreviation || undefined}
       extraChoices={[{ label: "Keine", value: NO_TEACHER }]}
-      create={{
+      form={{
         label: "Neue Lehrperson",
+        editLabel: "Lehrperson bearbeiten",
         canSave: name.trim().length > 0,
-        start: () => {
-          setName("");
-          setAbbreviation("");
-          setEmail("");
+        start: (teacher) => {
+          setEditingId(teacher?.id ?? null);
+          setName(teacher?.name ?? "");
+          setAbbreviation(teacher?.abbreviation ?? "");
+          setEmail(teacher?.email ?? "");
           setDraft((count) => count + 1);
         },
-        save: () =>
-          addTeacher({
+        save: async () => {
+          const values = {
             name: name.trim(),
             abbreviation: abbreviation.trim(),
             email: email.trim() || null,
-          }),
+          };
+          if (editingId === null) return addTeacher(values);
+          await saveTeacher(editingId, values);
+          return editingId;
+        },
         fields: [
           <TextField
             key={`name-${draft}`}
             placeholder="Name, z. B. Julian Riegger"
-            autoFocus
+            defaultValue={name}
+            // A new teacher starts with the name; a change starts where the user taps
+            autoFocus={editingId === null}
             autoCapitalize="words"
             onChangeText={setName}
           />,
           <TextField
             key={`abbreviation-${draft}`}
             placeholder="Kürzel, z. B. JRi"
+            defaultValue={abbreviation}
             autoCapitalize="none"
             maxLength={5}
             onChangeText={setAbbreviation}
@@ -68,6 +80,7 @@ export function TeacherPickerSheet({ teachers, ...props }: TeacherPickerSheetPro
           <TextField
             key={`email-${draft}`}
             placeholder="E-Mail (optional)"
+            defaultValue={email}
             keyboardType="email-address"
             autoCapitalize="none"
             autoCorrect={false}

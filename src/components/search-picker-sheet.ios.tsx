@@ -27,14 +27,15 @@ import { NavigationRow } from "@/components/rows";
 import { type SearchPickerSheetProps, usePickerSections } from "@/components/search-picker";
 import { useInk } from "@/hooks/use-ink";
 
-const CREATE = "create";
+const FORM = "form";
 
 // iOS: a sheet like the pickers of the system apps. It opens at half height with the grabber on
 // top, so it can be pulled up or swiped down to close; the xmark at the top left closes it too.
 // The title sits in the navigation bar, the system search field below it. "Neue …" pushes the
-// form inside the sheet, with "Hinzufügen" at the top right, and pulls the sheet up to full
-// height, where it stays when the keyboard closes. The SwiftUI sheet is used instead of the
-// universal BottomSheet, which does not offer to choose the height.
+// form inside the sheet, with "Hinzufügen" at the top right; "Bearbeiten" of an item (swipe left
+// or long press) pushes it filled in, with "Sichern". The form pulls the sheet up to full height,
+// where it stays when the keyboard closes. The SwiftUI sheet is used instead of the universal
+// BottomSheet, which does not offer to choose the height.
 export function SearchPickerSheet<T extends { id: number }>(props: SearchPickerSheetProps<T>) {
   const ink = useInk();
   const [query, setQuery] = useState("");
@@ -42,8 +43,10 @@ export function SearchPickerSheet<T extends { id: number }>(props: SearchPickerS
   // Follows the grabber, so pulling the sheet up for the form is a change even after the user
   // pulled it down again
   const [detent, setDetent] = useState<PresentationDetent>("medium");
+  // Whether the form changes an item instead of adding one
+  const [editing, setEditing] = useState(false);
   const searchText = useNativeState("");
-  const { create } = props;
+  const { form } = props;
 
   const close = () => {
     setQuery("");
@@ -52,7 +55,21 @@ export function SearchPickerSheet<T extends { id: number }>(props: SearchPickerS
     searchText.set("");
     props.onDismiss();
   };
-  const { sections, choose } = usePickerSections(props, query, close);
+  // Not a NavigationLink, which pushes before React can prepare the form: this fills the form,
+  // pushes it and pulls the sheet up in one update, so the push, the sheet and the keyboard move
+  // together
+  const openForm = (item?: T) => {
+    form?.start(item);
+    setEditing(item !== undefined);
+    setDetent("large");
+    setPath([FORM]);
+  };
+  const { sections, choose } = usePickerSections(
+    props,
+    query,
+    close,
+    form?.editLabel ? openForm : undefined
+  );
 
   return (
     // Takes no room or touches of its own; the sheet is presented above everything
@@ -81,18 +98,10 @@ export function SearchPickerSheet<T extends { id: number }>(props: SearchPickerS
                   navigationBarTitleDisplayMode("inline"),
                   searchable(searchText, { prompt: props.searchPlaceholder, onChange: setQuery }),
                 ]}>
-                {create && !query.trim() && (
+                {form && !query.trim() && (
                   <FieldGroup.Section>
-                    {/* Not a NavigationLink, which pushes before React can prepare the form: this
-                        clears the form, pushes it and pulls the sheet up in one update, so the
-                        push, the sheet and the keyboard move together */}
-                    <NavigationRow
-                      onPress={() => {
-                        create.start();
-                        setDetent("large");
-                        setPath([CREATE]);
-                      }}>
-                      <Text textStyle={{ color: ink.accent }}>{create.label}</Text>
+                    <NavigationRow onPress={() => openForm()}>
+                      <Text textStyle={{ color: ink.accent }}>{form.label}</Text>
                     </NavigationRow>
                   </FieldGroup.Section>
                 )}
@@ -106,22 +115,27 @@ export function SearchPickerSheet<T extends { id: number }>(props: SearchPickerS
               </Toolbar.Content>
             </Toolbar>
 
-            {create && (
-              <NavigationDestination value={CREATE}>
+            {form && (
+              <NavigationDestination value={FORM}>
                 <Toolbar>
                   <FormGroup
                     modifiers={[
-                      navigationTitle(create.label),
+                      navigationTitle(editing ? (form.editLabel ?? form.label) : form.label),
                       navigationBarTitleDisplayMode("inline"),
                     ]}>
-                    <FieldGroup.Section>{create.fields}</FieldGroup.Section>
+                    <FieldGroup.Section>{form.fields}</FieldGroup.Section>
                   </FormGroup>
                   <Toolbar.Content>
                     <ToolbarItem placement="confirmationAction">
                       <Button
-                        label="Hinzufügen"
-                        modifiers={[disabled(!create.canSave)]}
-                        onPress={async () => choose(await create.save())}
+                        label={editing ? "Sichern" : "Hinzufügen"}
+                        modifiers={[disabled(!form.canSave)]}
+                        onPress={async () => {
+                          const id = await form.save();
+                          // A changed item stays as it was picked; the list shows the change
+                          if (editing) setPath([]);
+                          else choose(id);
+                        }}
                       />
                     </ToolbarItem>
                   </Toolbar.Content>

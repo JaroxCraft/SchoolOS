@@ -2,25 +2,33 @@ import { FieldGroup, Icon, ListItem, Text } from "@expo/ui";
 import * as Haptics from "expo-haptics";
 import type { ReactNode } from "react";
 
+import { RowActions } from "@/components/row-actions";
 import { useInk } from "@/hooks/use-ink";
 import { useSymbol } from "@/hooks/use-symbol";
 
 // Choices above the items, e.g. "Frei" in the timetable or "Allgemein" for entries
 export type ExtraChoice = { label: string; value: number };
 
-// Creating a new item right in the sheet, e.g. "Neue Lehrperson". The form is pushed inside the
-// sheet (iOS) or takes the place of the list (Android); the new item is picked and the sheet closes.
-export type PickerCreate = {
+// A form right in the sheet, to add an item ("Neue Lehrperson") or to change one. It is pushed
+// inside the sheet (iOS) or takes the place of the list (Android). A new item is picked and the
+// sheet closes; after a change the list is shown again.
+export type PickerForm<T> = {
+  // Title of the form for a new item, and of the row that opens it
   label: string;
+  // Title of the form for an existing item. Without it, items cannot be changed in the sheet.
+  editLabel?: string;
   // The rows of the form
   fields: ReactNode;
   canSave: boolean;
-  // Clears the form for a new item; called each time the form is opened, so a draft that was
-  // left with back or "Abbrechen" is not saved later
-  start: () => void;
-  // Saves the new item and returns its id
+  // Fills the form: empty for a new item, with the values of `item` to change it. Called each
+  // time the form is opened, so a draft that was left with back or "Abbrechen" is not saved later.
+  start: (item?: T) => void;
+  // Saves the form and returns the id of the item
   save: () => Promise<number>;
 };
+
+// systemGray, the color of the swipe buttons that change a row, as in Mail
+const EDIT_GRAY = "#8E8E93";
 
 // A sheet listing items (subjects, teachers) to pick one, with a search field. The chosen one is
 // marked with a checkmark; picking one closes the sheet. See search-picker-sheet(.ios).tsx.
@@ -40,14 +48,15 @@ export type SearchPickerSheetProps<T extends { id: number }> = {
   extraChoices?: ExtraChoice[];
   // Shown in front of the extra choices, e.g. the neutral subject color
   extraLeading?: ReactNode;
-  create?: PickerCreate;
+  form?: PickerForm<T>;
   value: number;
   onChange: (value: number) => void;
 };
 
 // The sections of the list: the extra choices (hidden while searching) and the matching items,
 // returned as an array, so they are direct children of the sheet's <FieldGroup>. `choose` picks
-// a value and closes the sheet.
+// a value and closes the sheet. With `onEdit`, every item can be changed by swiping it left or
+// from the menu of a long press (iOS).
 export function usePickerSections<T extends { id: number }>(
   {
     items,
@@ -62,7 +71,8 @@ export function usePickerSections<T extends { id: number }>(
     onChange,
   }: SearchPickerSheetProps<T>,
   query: string,
-  close: () => void
+  close: () => void,
+  onEdit?: (item: T) => void
 ) {
   const ink = useInk();
   const check = useSymbol("checkmark", "check");
@@ -100,16 +110,30 @@ export function usePickerSections<T extends { id: number }>(
     (search || items.length > 0) && (
       <FieldGroup.Section key="items" title={itemsTitle}>
         {matches.length === 0 && <Text>{`Nichts gefunden für «${query.trim()}»`}</Text>}
-        {matches.map((item) => (
-          <ListItem
-            key={item.id}
-            onPress={() => choose(item.id)}
-            leading={renderLeading?.(item)}
-            supportingText={getSupportingText?.(item)}
-            trailing={checkmark(item.id === value)}>
-            {getLabel(item)}
-          </ListItem>
-        ))}
+        {matches.map((item) => {
+          const row = (
+            <ListItem
+              key={item.id}
+              onPress={() => choose(item.id)}
+              leading={renderLeading?.(item)}
+              supportingText={getSupportingText?.(item)}
+              trailing={checkmark(item.id === value)}>
+              {getLabel(item)}
+            </ListItem>
+          );
+          if (!onEdit) return row;
+          const edit = {
+            label: "Bearbeiten",
+            icon: "pencil",
+            tint: EDIT_GRAY,
+            onPress: () => onEdit(item),
+          } as const;
+          return (
+            <RowActions key={item.id} trailing={[edit]} menu={[edit]}>
+              {row}
+            </RowActions>
+          );
+        })}
       </FieldGroup.Section>
     ),
   ];

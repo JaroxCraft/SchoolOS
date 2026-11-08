@@ -17,7 +17,8 @@ import { useSymbol } from "@/hooks/use-symbol";
 // Android: a Material bottom sheet that opens at half height with the drag handle on top, so it
 // can be pulled up or swiped down to close (also: tapping the scrim, the back gesture). "Neue …"
 // expands it to full height and shows the form in place of the list, like the pushed form in the
-// iOS sheet (search-picker-sheet.ios.tsx). The Compose sheet is used instead of the universal
+// iOS sheet (search-picker-sheet.ios.tsx). Items cannot be changed here yet: Android lists have
+// no swipe or long-press actions so far. The Compose sheet is used instead of the universal
 // BottomSheet, which does not offer to expand it.
 export function SearchPickerSheet<T extends { id: number }>(props: SearchPickerSheetProps<T>) {
   const ink = useInk();
@@ -29,7 +30,7 @@ export function SearchPickerSheet<T extends { id: number }>(props: SearchPickerS
   if (props.isPresented && !mounted) setMounted(true);
   const [query, setQuery] = useState("");
   const [creating, setCreating] = useState(false);
-  const { create } = props;
+  const { form } = props;
 
   useEffect(() => {
     if (props.isPresented) return;
@@ -60,15 +61,15 @@ export function SearchPickerSheet<T extends { id: number }>(props: SearchPickerS
         // The list paints the Material surface; the sheet's own surfaceContainerLow would frame it
         // in a second color above and below
         containerColor={colors.surface}>
-        {create && creating ? (
+        {form && creating ? (
           <FormGroup>
-            <FieldGroup.Section title={create.label}>{create.fields}</FieldGroup.Section>
+            <FieldGroup.Section title={form.label}>{form.fields}</FieldGroup.Section>
             <FieldGroup.Section>
               <Button
                 variant="text"
                 label="Hinzufügen"
-                disabled={!create.canSave}
-                onPress={async () => choose(await create.save())}
+                disabled={!form.canSave}
+                onPress={async () => choose(await form.save())}
               />
               <Button variant="text" label="Abbrechen" onPress={() => setCreating(false)} />
             </FieldGroup.Section>
@@ -86,15 +87,15 @@ export function SearchPickerSheet<T extends { id: number }>(props: SearchPickerS
                 />
               </Row>
             </FieldGroup.Section>
-            {create && !query.trim() && (
+            {form && !query.trim() && (
               <FieldGroup.Section>
                 <ListItem
                   onPress={() => {
-                    create.start();
+                    form.start();
                     setCreating(true);
                     sheet.current?.expand();
                   }}>
-                  <Text textStyle={{ color: ink.accent }}>{create.label}</Text>
+                  <Text textStyle={{ color: ink.accent }}>{form.label}</Text>
                 </ListItem>
               </FieldGroup.Section>
             )}
