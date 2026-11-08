@@ -1,4 +1,5 @@
 import { Stack, ThemeProvider } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import { Platform } from "react-native";
 
@@ -12,14 +13,18 @@ import { useNavigationTheme } from "@/hooks/use-navigation-theme";
 // Opened by a link straight into a sheet (e.g. an entry), the tabs are still beneath it
 export const unstable_settings = { anchor: "(tabs)" };
 
+// The splash stays until the database is ready, instead of an empty screen in between
+SplashScreen.preventAutoHideAsync();
+
 export default function RootLayout() {
   const theme = useNavigationTheme();
   const { success, error } = useDatabaseMigrations();
 
   useEffect(() => {
+    if (success || error) SplashScreen.hide();
     if (!success) return;
     initDatabase();
-  }, [success]);
+  }, [success, error]);
 
   if (error) {
     return (
