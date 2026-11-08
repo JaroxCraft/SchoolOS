@@ -17,9 +17,10 @@ import type { Lesson, Period, Subject } from "@/db/schema";
 import { type Ink, useInk } from "@/hooks/use-ink";
 import { isoWeekday, SCHOOL_WEEKDAYS, today, weekdayName, weekdayShort } from "@/lib/dates";
 import { endEditing } from "@/lib/focused-fields";
-import { useStepButton } from "@/hooks/use-step-button";
+import { useStepButton } from "@/hooks/use-header-button";
 import { useSchoolRoutes } from "@/lib/routes";
 import { lessonAt, periodNumber, periodRange } from "@/lib/schedule";
+import { typography } from "@/lib/typography";
 
 const FREE = 0;
 
@@ -75,7 +76,7 @@ function lessonRows({ period, number, lesson, subject, onPress, onClear, ink }: 
       supportingText={
         Platform.OS === "android" && roomField ? (
           <Column spacing={4}>
-            <Text textStyle={{ color: ink.secondary, fontSize: 14 }}>{periodRange(period)}</Text>
+            <Text {...typography("footnote", { color: ink.secondary })}>{periodRange(period)}</Text>
             {roomField}
           </Column>
         ) : (

@@ -13,17 +13,22 @@ import {
 } from "react-native";
 
 import { EmptyState } from "@/components/empty-state";
-import { GUTTER_WIDTH, LessonTimeline, type TimelineDay } from "@/components/lesson-timeline";
+import {
+  COLUMN_GAP,
+  GUTTER_WIDTH,
+  LessonTimeline,
+  type TimelineDay,
+} from "@/components/lesson-timeline";
 import { Screen } from "@/components/screen";
 import { SegmentedControl } from "@/components/segmented-control";
 import { WeekStrip } from "@/components/week-strip";
 import { useLessons, usePeriods, useSubjects, useTeachers } from "@/db/queries";
 import { useNow } from "@/hooks/use-now";
 import { addDays, isoWeekday, SCHOOL_WEEKDAYS } from "@/lib/dates";
+import { SCHOOL_ROUTES } from "@/lib/routes";
 import { visiblePeriods } from "@/lib/timeline";
 
 const PADDING = 16;
-const COLUMN_GAP = 4;
 // Points per minute: a 50-minute lesson is 80 pt tall in the day view, 55 pt in the week view
 const DAY_SCALE = 1.6;
 const WEEK_SCALE = 1.1;
@@ -60,10 +65,10 @@ export default function TimetableScreen() {
         <EmptyState
           icon={{ ios: "calendar", android: "calendar_view_week" }}
           title="Kein Stundenplan"
-          message="Teile deinen Fächern die Lektionen der Woche zu, oder importiere den Stundenplan aus deiner Klasse."
+          message="Teile deinen Fächern die Lektionen der Woche zu."
           action={{
             label: "Stundenplan ausfüllen",
-            onPress: () => router.push("/setup/timetable"),
+            onPress: () => router.push(SCHOOL_ROUTES.setup.timetable),
           }}
         />
       </Screen>
