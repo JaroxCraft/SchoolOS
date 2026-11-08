@@ -10,45 +10,60 @@ import {
   importData,
   parseTransferFile,
   TransferError,
+  type TransferFile,
   type TransferKind,
 } from "@/db/transfer";
 import { confirm, showMessage } from "@/lib/confirm";
 import { today } from "@/lib/dates";
 
-const FILE_NAMES: Record<TransferKind, string> = {
-  timetable: "SchoolOS-Stundenplan.json",
-  backup: `SchoolOS-Backup-${today()}.json`,
-};
+// Built when sharing, so a backup made after midnight carries the new date
+function fileName(kind: TransferKind) {
+  return kind === "timetable" ? "SchoolOS-Stundenplan.json" : `SchoolOS-Backup-${today()}.json`;
+}
 
 // Writes the export to a file in the cache and opens the system share sheet with it, so it can
-// be sent to classmates (AirDrop, messengers) or saved to Files / Drive.
+// be sent to classmates (AirDrop, messengers) or saved to Files / Drive. Closing the share sheet
+// resolves normally; only a failing write or share sheet ends up in the catch.
 export async function shareExport(kind: TransferKind) {
-  const file = new File(Paths.cache, FILE_NAMES[kind]);
-  if (file.exists) file.delete();
-  file.create();
-  await file.write(JSON.stringify(exportData(kind), null, 2));
+  try {
+    const file = new File(Paths.cache, fileName(kind));
+    if (file.exists) file.delete();
+    file.create();
+    await file.write(JSON.stringify(exportData(kind), null, 2));
 
-  await Sharing.shareAsync(file.uri, {
-    mimeType: "application/json",
-    UTI: "public.json",
-    dialogTitle: kind === "timetable" ? "Stundenplan teilen" : "Backup sichern",
-  });
+    await Sharing.shareAsync(file.uri, {
+      mimeType: "application/json",
+      UTI: "public.json",
+      dialogTitle: kind === "timetable" ? "Stundenplan teilen" : "Backup sichern",
+    });
+  } catch {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    showMessage("Teilen ist fehlgeschlagen", "Versuche es noch einmal.");
+  }
 }
 
 // Lets the user pick an export file, shows what it contains and replaces the data after
 // confirming. onDone runs after a successful import.
 export async function pickAndImport(onDone?: () => void) {
-  // Messengers often send JSON files without their type, so every file can be picked
-  // Android reads the picked file through its content:// URI: the copy in the cache lies outside
-  // the folders the app may read in Expo Go ("Missing 'READ' permission").
-  const result = await DocumentPicker.getDocumentAsync({
-    copyToCacheDirectory: Platform.OS === "ios",
-  });
-  if (result.canceled) return;
-
-  let file;
+  let text;
   try {
-    file = parseTransferFile(await new File(result.assets[0].uri).text());
+    // Messengers often send JSON files without their type, so every file can be picked
+    // Android reads the picked file through its content:// URI: the copy in the cache lies outside
+    // the folders the app may read in Expo Go ("Missing 'READ' permission").
+    const result = await DocumentPicker.getDocumentAsync({
+      copyToCacheDirectory: Platform.OS === "ios",
+    });
+    if (result.canceled) return;
+    text = await new File(result.assets[0].uri).text();
+  } catch {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    showMessage("Die Datei konnte nicht geöffnet werden", "Versuche es noch einmal.");
+    return;
+  }
+
+  let file: TransferFile;
+  try {
+    file = parseTransferFile(text);
   } catch (error) {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     showMessage(
@@ -76,14 +91,16 @@ export async function pickAndImport(onDone?: () => void) {
   );
 }
 
-function runImport(file: Parameters<typeof importData>[0], onDone?: () => void) {
+function runImport(file: TransferFile, onDone?: () => void) {
   try {
     importData(file);
-  } catch {
+  } catch (error) {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     showMessage(
       "Import nicht möglich",
-      "Die Datei passt nicht zusammen, zum Beispiel weil eine Lektion auf ein fehlendes Fach verweist. Es wurde nichts geändert."
+      error instanceof TransferError
+        ? error.message
+        : "Die Datei konnte nicht importiert werden. Es wurde nichts geändert."
     );
     return;
   }
