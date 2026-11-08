@@ -17,6 +17,7 @@ import { useInk } from "@/hooks/use-ink";
 import { confirmDelete, subjectDeletion } from "@/lib/confirm-delete";
 import { SUBJECT_COLORS } from "@/lib/subject-colors";
 import { useSaveButton } from "@/hooks/use-header-button";
+import { useSaving } from "@/hooks/use-saving";
 
 type SubjectFormProps = {
   subject: Subject | undefined;
@@ -55,17 +56,19 @@ export function SubjectForm({ subject, allColors, usedColors, teachers }: Subjec
     (subject !== undefined && color !== subject.color);
   const allowLeave = useDiscardGuard(dirty);
 
-  const save = async () => {
-    const trimmedName = name.trim();
-    await saveSubject(subject?.id ?? null, {
-      name: trimmedName,
-      abbreviation: abbreviation.trim() || defaultAbbreviation(trimmedName),
-      color,
-      teacherId: teacherId === NO_TEACHER ? null : teacherId,
+  const { saving, run } = useSaving({ closesOnSuccess: true });
+  const save = () =>
+    run(async () => {
+      const trimmedName = name.trim();
+      await saveSubject(subject?.id ?? null, {
+        name: trimmedName,
+        abbreviation: abbreviation.trim() || defaultAbbreviation(trimmedName),
+        color,
+        teacherId: teacherId === NO_TEACHER ? null : teacherId,
+      });
+      allowLeave();
+      router.back();
     });
-    allowLeave();
-    router.back();
-  };
 
   const remove = () => {
     if (!subject) return;
@@ -76,7 +79,9 @@ export function SubjectForm({ subject, allColors, usedColors, teachers }: Subjec
     <>
       <Stack.Title>{subject ? subject.name : "Neues Fach"}</Stack.Title>
       <Stack.Toolbar placement="right">
-        {saveButton && <Stack.Toolbar.Button {...saveButton} disabled={!canSave} onPress={save} />}
+        {saveButton && (
+          <Stack.Toolbar.Button {...saveButton} disabled={!canSave || saving} onPress={save} />
+        )}
       </Stack.Toolbar>
 
       <DiscardGuard dirty={dirty}>

@@ -26,6 +26,7 @@ import { FormGroup } from "@/components/form-group";
 import { NavigationRow } from "@/components/rows";
 import { type SearchPickerSheetProps, usePickerSections } from "@/components/search-picker";
 import { useInk } from "@/hooks/use-ink";
+import { useSaving } from "@/hooks/use-saving";
 import { showMessage } from "@/lib/confirm";
 
 const FORM = "form";
@@ -47,7 +48,7 @@ export function SearchPickerSheet<T extends { id: number }>(props: SearchPickerS
   // Whether the form changes an item instead of adding one
   const [editing, setEditing] = useState(false);
   // While the form saves, so a second tap cannot add the item twice
-  const [saving, setSaving] = useState(false);
+  const { saving, run } = useSaving();
   const searchText = useNativeState("");
   const { form } = props;
 
@@ -135,23 +136,22 @@ export function SearchPickerSheet<T extends { id: number }>(props: SearchPickerS
                         // An icon in the bar, as the ✓ of Music; the label is for VoiceOver
                         systemImage="checkmark"
                         modifiers={[disabled(!form.canSave || saving)]}
-                        onPress={async () => {
-                          setSaving(true);
-                          try {
-                            const id = await form.save();
-                            // A changed item stays as it was picked; the list shows the change
-                            if (editing) setPath([]);
-                            else choose(id);
-                          } catch {
-                            // Shared by the subject and teacher pickers, so the message names no kind of item
-                            showMessage(
-                              "Nicht gesichert",
-                              "Die Eingaben konnten nicht gesichert werden. Versuche es nochmals."
-                            );
-                          } finally {
-                            setSaving(false);
-                          }
-                        }}
+                        onPress={() =>
+                          run(async () => {
+                            try {
+                              const id = await form.save();
+                              // A changed item stays as it was picked; the list shows the change
+                              if (editing) setPath([]);
+                              else choose(id);
+                            } catch {
+                              // Shared by the subject and teacher pickers, so the message names no kind of item
+                              showMessage(
+                                "Nicht gesichert",
+                                "Die Eingaben konnten nicht gesichert werden. Versuche es nochmals."
+                              );
+                            }
+                          })
+                        }
                       />
                     </ToolbarItem>
                   </Toolbar.Content>

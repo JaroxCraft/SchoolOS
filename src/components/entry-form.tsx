@@ -23,6 +23,7 @@ import {
 import { subjectLessonOn, upcomingSubjectLessons } from "@/lib/schedule";
 import { NEUTRAL_COLOR } from "@/lib/subject-colors";
 import { useDiscardGuard } from "@/hooks/use-discard-guard";
+import { useSaving } from "@/hooks/use-saving";
 
 const NONE = 0;
 
@@ -157,6 +158,7 @@ export function EntryForm({
       ] as const
     ).some((field) => form[field] !== initialForm[field])
   );
+  const { saving, run } = useSaving({ closesOnSuccess: true });
 
   const subjectPicker = useSubjectPicker({
     label: "Fach",
@@ -168,21 +170,22 @@ export function EntryForm({
     onChange: (subjectId) => change({ subjectId }),
   });
 
-  const save = async () => {
-    await saveEntry(entry?.id ?? null, {
-      type: form.type,
-      title: form.title.trim(),
-      description: form.description.trim() || null,
-      subjectId: form.subjectId === NONE ? null : form.subjectId,
-      date: form.date,
-      periodId: form.periodId === NONE ? null : form.periodId,
-      completed: isCheckable(form.type) && form.completed,
-      studyStart: form.studyStart,
-      topic: info.gradable ? form.topic.trim() || null : null,
+  const save = () =>
+    run(async () => {
+      await saveEntry(entry?.id ?? null, {
+        type: form.type,
+        title: form.title.trim(),
+        description: form.description.trim() || null,
+        subjectId: form.subjectId === NONE ? null : form.subjectId,
+        date: form.date,
+        periodId: form.periodId === NONE ? null : form.periodId,
+        completed: isCheckable(form.type) && form.completed,
+        studyStart: form.studyStart,
+        topic: info.gradable ? form.topic.trim() || null : null,
+      });
+      allowLeave();
+      router.back();
     });
-    allowLeave();
-    router.back();
-  };
 
   const remove = () => {
     if (!entry) return;
@@ -198,7 +201,10 @@ export function EntryForm({
 
   return (
     <>
-      <SheetForm title={entry ? info.label : "Neuer Eintrag"} canSave={canSave} onSave={save}>
+      <SheetForm
+        title={entry ? info.label : "Neuer Eintrag"}
+        canSave={canSave && !saving}
+        onSave={save}>
         <FieldGroup.Section>
           <SelectRow
             label="Typ"

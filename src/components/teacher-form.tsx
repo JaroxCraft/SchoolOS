@@ -11,6 +11,7 @@ import type { Teacher } from "@/db/schema";
 import { useDiscardGuard } from "@/hooks/use-discard-guard";
 import { confirmDelete, teacherDeletion } from "@/lib/confirm-delete";
 import { useSaveButton } from "@/hooks/use-header-button";
+import { useSaving } from "@/hooks/use-saving";
 
 type TeacherFormProps = {
   teacher: Teacher | undefined;
@@ -29,15 +30,17 @@ export function TeacherForm({ teacher }: TeacherFormProps) {
     email !== (teacher?.email ?? "");
   const allowLeave = useDiscardGuard(dirty);
 
-  const save = async () => {
-    await saveTeacher(teacher?.id ?? null, {
-      name: name.trim(),
-      abbreviation: abbreviation.trim(),
-      email: email.trim() || null,
+  const { saving, run } = useSaving({ closesOnSuccess: true });
+  const save = () =>
+    run(async () => {
+      await saveTeacher(teacher?.id ?? null, {
+        name: name.trim(),
+        abbreviation: abbreviation.trim(),
+        email: email.trim() || null,
+      });
+      allowLeave();
+      router.back();
     });
-    allowLeave();
-    router.back();
-  };
 
   const remove = () => {
     if (!teacher) return;
@@ -48,7 +51,9 @@ export function TeacherForm({ teacher }: TeacherFormProps) {
     <>
       <Stack.Title>{teacher ? teacher.name : "Neue Lehrperson"}</Stack.Title>
       <Stack.Toolbar placement="right">
-        {saveButton && <Stack.Toolbar.Button {...saveButton} disabled={!canSave} onPress={save} />}
+        {saveButton && (
+          <Stack.Toolbar.Button {...saveButton} disabled={!canSave || saving} onPress={save} />
+        )}
       </Stack.Toolbar>
 
       <DiscardGuard dirty={dirty}>

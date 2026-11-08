@@ -12,6 +12,7 @@ import { FormGroup } from "@/components/form-group";
 import { type SearchPickerSheetProps, usePickerSections } from "@/components/search-picker";
 import { TextField } from "@/components/text-field";
 import { useInk } from "@/hooks/use-ink";
+import { useSaving } from "@/hooks/use-saving";
 import { showMessage } from "@/lib/confirm";
 import { useSymbol } from "@/hooks/use-symbol";
 
@@ -32,7 +33,7 @@ export function SearchPickerSheet<T extends { id: number }>(props: SearchPickerS
   // The form in place of the list, for a new item or to change one
   const [formMode, setFormMode] = useState<"new" | "edit" | null>(null);
   // While the form saves, so a second tap cannot add the item twice
-  const [saving, setSaving] = useState(false);
+  const { saving, run } = useSaving();
   const { form } = props;
 
   useEffect(() => {
@@ -85,23 +86,22 @@ export function SearchPickerSheet<T extends { id: number }>(props: SearchPickerS
                 variant="text"
                 label={formMode === "edit" ? "Sichern" : "Hinzufügen"}
                 disabled={!form.canSave || saving}
-                onPress={async () => {
-                  setSaving(true);
-                  try {
-                    const id = await form.save();
-                    // A changed item stays as it was picked; the list shows the change
-                    if (formMode === "edit") setFormMode(null);
-                    else choose(id);
-                  } catch {
-                    // Shared by the subject and teacher pickers, so the message names no kind of item
-                    showMessage(
-                      "Nicht gesichert",
-                      "Die Eingaben konnten nicht gesichert werden. Versuche es nochmals."
-                    );
-                  } finally {
-                    setSaving(false);
-                  }
-                }}
+                onPress={() =>
+                  run(async () => {
+                    try {
+                      const id = await form.save();
+                      // A changed item stays as it was picked; the list shows the change
+                      if (formMode === "edit") setFormMode(null);
+                      else choose(id);
+                    } catch {
+                      // Shared by the subject and teacher pickers, so the message names no kind of item
+                      showMessage(
+                        "Nicht gesichert",
+                        "Die Eingaben konnten nicht gesichert werden. Versuche es nochmals."
+                      );
+                    }
+                  })
+                }
               />
               <Button variant="text" label="Abbrechen" onPress={() => setFormMode(null)} />
             </FieldGroup.Section>
