@@ -7,6 +7,9 @@ import { useSaveButton } from "@/hooks/use-header-button";
 export type SheetFormProps = {
   title: string;
   canSave: boolean;
+  // Unsaved changes: iOS then blocks swiping the sheet down, so the discard question can be asked.
+  // Android asks via useDiscardGuard before leaving and ignores it.
+  dirty: boolean;
   onSave: () => void;
   // The sections of the form
   children: ReactNode;

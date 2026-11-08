@@ -143,21 +143,20 @@ export function EntryForm({
 
   // The form as it was opened, to tell whether anything was changed
   const [initialForm] = useState(form);
-  const allowLeave = useDiscardGuard(
-    (
-      [
-        "type",
-        "title",
-        "description",
-        "subjectId",
-        "date",
-        "periodId",
-        "completed",
-        "studyStart",
-        "topic",
-      ] as const
-    ).some((field) => form[field] !== initialForm[field])
-  );
+  const dirty = (
+    [
+      "type",
+      "title",
+      "description",
+      "subjectId",
+      "date",
+      "periodId",
+      "completed",
+      "studyStart",
+      "topic",
+    ] as const
+  ).some((field) => form[field] !== initialForm[field]);
+  const allowLeave = useDiscardGuard(dirty);
   const { saving, run } = useSaving({ closesOnSuccess: true });
 
   const subjectPicker = useSubjectPicker({
@@ -204,6 +203,7 @@ export function EntryForm({
       <SheetForm
         title={entry ? info.label : "Neuer Eintrag"}
         canSave={canSave && !saving}
+        dirty={dirty}
         onSave={save}>
         <FieldGroup.Section>
           <SelectRow

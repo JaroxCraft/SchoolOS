@@ -4,9 +4,9 @@ import {
   navigationBarTitleDisplayMode,
   navigationTitle,
 } from "@expo/ui/swift-ui/modifiers";
-import { router, useNavigation, useRoute } from "expo-router";
+import { router, Stack, useNavigation, useRoute } from "expo-router";
 import type { NativeStackNavigationProp } from "expo-router/native-stack";
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 
 import { FormGroup } from "@/components/form-group";
 import type { SheetFormProps } from "@/components/sheet-form";
@@ -29,10 +29,16 @@ const ZOOM_SOURCE_PARAM = "__internal_expo_router_zoom_transition_source_id";
 // #4731, not released yet). So × and ✓ take a tap at any time, but carry it out once the sheet is
 // fully presented; and the "+" waits while the sheet shrinks back (isSheetClosing). A sheet opened
 // without the zoom (e.g. an entry from a list) slides down instead and holds back nothing.
-export function SheetForm({ title, canSave, onSave, children }: SheetFormProps) {
+//
+// While the form has changes, swiping it down is off (gestureEnabled), so useDiscardGuard can ask
+// first: usePreventRemove does not catch the dismissal of a zoomed sheet, which expo-router only
+// blocks when gestureEnabled is false.
+export function SheetForm({ title, canSave, dirty, onSave, children }: SheetFormProps) {
   const navigation = useNavigation<NativeStackNavigationProp<Record<string, object | undefined>>>();
   const params = useRoute().params as Record<string, unknown> | undefined;
   const zoomed = !!params?.[ZOOM_SOURCE_PARAM];
+  // Memoized, so the option is only set when it changes (as in DiscardGuard)
+  const options = useMemo(() => ({ gestureEnabled: !dirty }), [dirty]);
   const presented = useRef(false);
   // A tap on × or ✓ during the presentation, carried out at its end
   const pending = useRef<(() => void) | null>(null);
@@ -78,32 +84,36 @@ export function SheetForm({ title, canSave, onSave, children }: SheetFormProps) 
   };
 
   return (
-    <Host style={{ flex: 1 }}>
-      <NavigationStack>
-        <Toolbar>
-          <FormGroup modifiers={[navigationTitle(title), navigationBarTitleDisplayMode("inline")]}>
-            {children}
-          </FormGroup>
-          <Toolbar.Content>
-            <ToolbarItem placement="cancellationAction">
-              <Button
-                role="close"
-                label="Abbrechen"
-                systemImage="xmark"
-                onPress={() => whenPresented(() => router.back())}
-              />
-            </ToolbarItem>
-            <ToolbarItem placement="confirmationAction">
-              <Button
-                label="Sichern"
-                systemImage="checkmark"
-                modifiers={[disabled(!canSave)]}
-                onPress={() => whenPresented(onSave)}
-              />
-            </ToolbarItem>
-          </Toolbar.Content>
-        </Toolbar>
-      </NavigationStack>
-    </Host>
+    <>
+      <Stack.Screen options={options} />
+      <Host style={{ flex: 1 }}>
+        <NavigationStack>
+          <Toolbar>
+            <FormGroup
+              modifiers={[navigationTitle(title), navigationBarTitleDisplayMode("inline")]}>
+              {children}
+            </FormGroup>
+            <Toolbar.Content>
+              <ToolbarItem placement="cancellationAction">
+                <Button
+                  role="close"
+                  label="Abbrechen"
+                  systemImage="xmark"
+                  onPress={() => whenPresented(() => router.back())}
+                />
+              </ToolbarItem>
+              <ToolbarItem placement="confirmationAction">
+                <Button
+                  label="Sichern"
+                  systemImage="checkmark"
+                  modifiers={[disabled(!canSave)]}
+                  onPress={() => whenPresented(onSave)}
+                />
+              </ToolbarItem>
+            </Toolbar.Content>
+          </Toolbar>
+        </NavigationStack>
+      </Host>
+    </>
   );
 }
