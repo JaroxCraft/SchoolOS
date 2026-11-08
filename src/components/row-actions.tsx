@@ -23,7 +23,7 @@ export type RowActionsProps = {
   children: ReactElement;
 };
 
-// Android: no swipe or long-press actions yet; the row is shown as it is. <FormList> unwraps this
+// Android: no swipe or long-press actions yet; the row is shown as it is. <FormGroup> unwraps this
 // component, so the row stays a direct list item of its section. iOS: row-actions.ios.tsx.
 export function RowActions({ children }: RowActionsProps) {
   return children;

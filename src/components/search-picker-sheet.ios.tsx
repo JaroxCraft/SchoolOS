@@ -16,6 +16,7 @@ import {
 } from "@expo/ui/swift-ui/modifiers";
 import { useState } from "react";
 
+import { FormGroup } from "@/components/form-group";
 import { type SearchPickerSheetProps, usePickerSections } from "@/components/search-picker";
 import { useInk } from "@/hooks/use-ink";
 
@@ -53,7 +54,7 @@ export function SearchPickerSheet<T extends { id: number }>(props: SearchPickerS
           setPath(next);
         }}>
         <Toolbar>
-          <FieldGroup
+          <FormGroup
             modifiers={[
               navigationTitle(props.title),
               navigationBarTitleDisplayMode("inline"),
@@ -67,7 +68,7 @@ export function SearchPickerSheet<T extends { id: number }>(props: SearchPickerS
               </FieldGroup.Section>
             )}
             {sections}
-          </FieldGroup>
+          </FormGroup>
           <Toolbar.Content>
             <ToolbarItem placement="cancellationAction">
               {/* Label and icon are needed: without them the button is empty before iOS 26 */}
@@ -79,13 +80,13 @@ export function SearchPickerSheet<T extends { id: number }>(props: SearchPickerS
         {create && (
           <NavigationDestination value={CREATE}>
             <Toolbar>
-              <FieldGroup
+              <FormGroup
                 modifiers={[
                   navigationTitle(create.label),
                   navigationBarTitleDisplayMode("inline"),
                 ]}>
                 <FieldGroup.Section>{create.fields}</FieldGroup.Section>
-              </FieldGroup>
+              </FormGroup>
               <Toolbar.Content>
                 <ToolbarItem placement="confirmationAction">
                   <Button

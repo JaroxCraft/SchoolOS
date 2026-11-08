@@ -1,16 +1,16 @@
-import { Button, FieldGroup, Icon, ListItem, Row, Text, TextInput } from "@expo/ui";
+import { Button, FieldGroup, Icon, ListItem, Row, Text } from "@expo/ui";
 import {
-  Column,
   Host,
   ModalBottomSheet,
   type ModalBottomSheetRef,
   useMaterialColors,
 } from "@expo/ui/jetpack-compose";
-import { fillMaxHeight } from "@expo/ui/jetpack-compose/modifiers";
 import { useEffect, useRef, useState } from "react";
 import { StyleSheet } from "react-native";
 
+import { FormGroup } from "@/components/form-group";
 import { type SearchPickerSheetProps, usePickerSections } from "@/components/search-picker";
+import { TextField } from "@/components/text-field";
 import { useInk } from "@/hooks/use-ink";
 import { useSymbol } from "@/hooks/use-symbol";
 
@@ -60,50 +60,47 @@ export function SearchPickerSheet<T extends { id: number }>(props: SearchPickerS
         // The list paints the Material surface; the sheet's own surfaceContainerLow would frame it
         // in a second color above and below
         containerColor={colors.surface}>
-        <Column modifiers={[fillMaxHeight()]}>
-          {create && creating ? (
-            <FieldGroup>
-              <FieldGroup.Section title={create.label}>{create.fields}</FieldGroup.Section>
-              <FieldGroup.Section>
-                <Button
-                  variant="text"
-                  label="Hinzufügen"
-                  disabled={!create.canSave}
-                  onPress={async () => choose(await create.save())}
+        {create && creating ? (
+          <FormGroup>
+            <FieldGroup.Section title={create.label}>{create.fields}</FieldGroup.Section>
+            <FieldGroup.Section>
+              <Button
+                variant="text"
+                label="Hinzufügen"
+                disabled={!create.canSave}
+                onPress={async () => choose(await create.save())}
+              />
+              <Button variant="text" label="Abbrechen" onPress={() => setCreating(false)} />
+            </FieldGroup.Section>
+          </FormGroup>
+        ) : (
+          <FormGroup>
+            <FieldGroup.Section title={props.title}>
+              <Row alignment="center" spacing={8}>
+                {searchIcon && <Icon name={searchIcon} size={17} color={ink.secondary} />}
+                <TextField
+                  placeholder={props.searchPlaceholder}
+                  autoCorrect={false}
+                  returnKeyType="search"
+                  onChangeText={setQuery}
                 />
-                <Button variant="text" label="Abbrechen" onPress={() => setCreating(false)} />
+              </Row>
+            </FieldGroup.Section>
+            {create && !query.trim() && (
+              <FieldGroup.Section>
+                <ListItem
+                  onPress={() => {
+                    create.start();
+                    setCreating(true);
+                    sheet.current?.expand();
+                  }}>
+                  <Text textStyle={{ color: ink.accent }}>{create.label}</Text>
+                </ListItem>
               </FieldGroup.Section>
-            </FieldGroup>
-          ) : (
-            <FieldGroup>
-              <FieldGroup.Section title={props.title}>
-                <Row alignment="center" spacing={8}>
-                  {searchIcon && <Icon name={searchIcon} size={17} color={ink.secondary} />}
-                  <TextInput
-                    placeholder={props.searchPlaceholder}
-                    placeholderTextColor={ink.tertiary}
-                    autoCorrect={false}
-                    returnKeyType="search"
-                    onChangeText={setQuery}
-                  />
-                </Row>
-              </FieldGroup.Section>
-              {create && !query.trim() && (
-                <FieldGroup.Section>
-                  <ListItem
-                    onPress={() => {
-                      create.start();
-                      setCreating(true);
-                      sheet.current?.expand();
-                    }}>
-                    <Text textStyle={{ color: ink.accent }}>{create.label}</Text>
-                  </ListItem>
-                </FieldGroup.Section>
-              )}
-              {sections}
-            </FieldGroup>
-          )}
-        </Column>
+            )}
+            {sections}
+          </FormGroup>
+        )}
       </ModalBottomSheet>
     </Host>
   );
