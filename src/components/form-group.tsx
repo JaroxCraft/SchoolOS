@@ -14,7 +14,8 @@ export type FormGroupProps = {
 };
 
 // Tapping the list beside a text field or scrolling it ends the editing: the keyboard closes and
-// the cursor leaves the field. The rows and fields keep handling their own taps.
+// the cursor leaves the field. Buttons and fields keep handling their own taps, but a
+// NavigationLink does not get them any more: put it in a plain FieldGroup.
 const DISMISS_ON_TAP = [onTapGesture(endEditing), scrollDismissesKeyboard("immediately")];
 
 // iOS: the native grouped list (SwiftUI Form), for a list inside an existing host such as a sheet.
