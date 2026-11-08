@@ -1,7 +1,7 @@
 import { asc, eq } from "drizzle-orm";
 import { getTableConfig, type SQLiteTable } from "drizzle-orm/sqlite-core";
 import { addDatabaseChangeListener } from "expo-sqlite";
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 
 import { db } from "@/db/client";
 import {
@@ -24,52 +24,104 @@ const DEFAULT_SETTINGS: Settings = {
   noLessonSummaryTime: "10:00",
 };
 
-// Reads the table synchronously on the first render and again whenever it changes. The database
-// is opened synchronously, so screens get their data right away and never show an empty state
-// while loading.
-function useTable<T>(table: SQLiteTable, read: () => T): T {
-  const [data, setData] = useState(read);
+// The rows of one table, shared by every screen that shows it.
+type TableStore<T> = {
+  subscribe: (listener: () => void) => () => void;
+  getSnapshot: () => T;
+};
 
-  useEffect(() => {
-    const { name } = getTableConfig(table);
-    const listener = addDatabaseChangeListener(({ tableName }) => {
-      if (tableName === name) setData(read());
-    });
-    return () => listener.remove();
-  }, [table, read]);
+// Stores by table name, marked stale by the change listener below
+const invalidators = new Map<string, () => void>();
 
-  return data;
+// Reads the table synchronously on first use, so screens get their data right away and never show
+// an empty state while loading (the database is opened synchronously). After a change it is read
+// again only once someone asks for it, and only once for all screens that show it.
+function tableStore<T>(table: SQLiteTable, read: () => T): TableStore<T> {
+  const listeners = new Set<() => void>();
+  let snapshot: T;
+  let stale = true;
+
+  invalidators.set(getTableConfig(table).name, () => {
+    stale = true;
+    listeners.forEach((listener) => listener());
+  });
+
+  return {
+    subscribe: (listener) => {
+      listeners.add(listener);
+      return () => {
+        listeners.delete(listener);
+      };
+    },
+    getSnapshot: () => {
+      if (stale) {
+        snapshot = read();
+        stale = false;
+      }
+      return snapshot;
+    },
+  };
+}
+
+// SQLite reports every changed row on its own, so saving a timetable or importing a backup sends
+// dozens of events. They are collected and each changed table is read again once, after the
+// events of this batch have arrived, instead of once per row and screen.
+const changedTables = new Set<string>();
+addDatabaseChangeListener(({ tableName }) => {
+  if (!invalidators.has(tableName)) return;
+  if (changedTables.size === 0) {
+    setTimeout(() => {
+      const tables = [...changedTables];
+      changedTables.clear();
+      tables.forEach((name) => invalidators.get(name)?.());
+    }, 0);
+  }
+  changedTables.add(tableName);
+});
+
+function useTable<T>(store: TableStore<T>): T {
+  return useSyncExternalStore(store.subscribe, store.getSnapshot);
 }
 
 // Periods are sorted by start time, which periodNumber relies on
-const readPeriods = () => db.select().from(periods).orderBy(asc(periods.startTime)).all();
-const readSubjects = () => db.select().from(subjects).orderBy(asc(subjects.name)).all();
-const readTeachers = () => db.select().from(teachers).orderBy(asc(teachers.name)).all();
-const readLessons = () => db.select().from(lessons).all();
-const readEntries = () => db.select().from(entries).orderBy(asc(entries.date)).all();
-const readSettings = () =>
-  db.select().from(settings).where(eq(settings.id, 1)).get() ?? DEFAULT_SETTINGS;
+const periodsStore = tableStore(periods, () =>
+  db.select().from(periods).orderBy(asc(periods.startTime)).all()
+);
+const subjectsStore = tableStore(subjects, () =>
+  db.select().from(subjects).orderBy(asc(subjects.name)).all()
+);
+const teachersStore = tableStore(teachers, () =>
+  db.select().from(teachers).orderBy(asc(teachers.name)).all()
+);
+const lessonsStore = tableStore(lessons, () => db.select().from(lessons).all());
+const entriesStore = tableStore(entries, () =>
+  db.select().from(entries).orderBy(asc(entries.date)).all()
+);
+const settingsStore = tableStore(
+  settings,
+  () => db.select().from(settings).where(eq(settings.id, 1)).get() ?? DEFAULT_SETTINGS
+);
 
 export function usePeriods() {
-  return useTable(periods, readPeriods);
+  return useTable(periodsStore);
 }
 
 export function useSubjects() {
-  return useTable(subjects, readSubjects);
+  return useTable(subjectsStore);
 }
 
 export function useTeachers() {
-  return useTable(teachers, readTeachers);
+  return useTable(teachersStore);
 }
 
 export function useLessons() {
-  return useTable(lessons, readLessons);
+  return useTable(lessonsStore);
 }
 
 export function useEntries() {
-  return useTable(entries, readEntries);
+  return useTable(entriesStore);
 }
 
 export function useSettings(): Settings {
-  return useTable(settings, readSettings);
+  return useTable(settingsStore);
 }
