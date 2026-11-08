@@ -1,6 +1,8 @@
+import { type Column, getTableColumns } from "drizzle-orm";
+
 import { db } from "@/db/client";
 import {
-  ENTRY_TYPES,
+  DATA_TABLES,
   entries,
   grades,
   lessons,
@@ -45,20 +47,43 @@ export type TransferFile = { app: "SchoolOS"; format: number; exportedAt: string
   ({ kind: "timetable" } & TimetableData) | ({ kind: "backup" } & TimetableData & PersonalData)
 );
 
-export function exportData(kind: TransferKind): TransferFile {
-  const timetable: TimetableData = {
-    periods: db.select().from(periods).all(),
-    teachers: db.select().from(teachers).all(),
-    subjects: db.select().from(subjects).all(),
-    lessons: db.select().from(lessons).all(),
-  };
-  const header = { app: "SchoolOS", format: TRANSFER_FORMAT, exportedAt: new Date().toISOString() };
+type Table =
+  | typeof periods
+  | typeof teachers
+  | typeof subjects
+  | typeof lessons
+  | typeof semesters
+  | typeof entries
+  | typeof grades
+  | typeof settings;
 
-  if (kind === "timetable") return { ...header, kind, ...timetable } as TransferFile;
+export function exportData(kind: TransferKind): TransferFile {
+  const header = { app: "SchoolOS", format: TRANSFER_FORMAT, exportedAt: new Date().toISOString() };
+  const allLessons = db.select().from(lessons).all();
+  const allSubjects = db.select().from(subjects).all();
+  const allTeachers = db.select().from(teachers).all();
+
+  if (kind === "timetable") {
+    // Classmates get the subjects of the timetable only, not the ones someone keeps for grades
+    const usedSubjectIds = new Set(allLessons.map((lesson) => lesson.subjectId));
+    const sharedSubjects = allSubjects.filter((subject) => usedSubjectIds.has(subject.id));
+    const usedTeacherIds = new Set(sharedSubjects.map((subject) => subject.teacherId));
+    return {
+      ...header,
+      kind,
+      periods: db.select().from(periods).all(),
+      teachers: allTeachers.filter((teacher) => usedTeacherIds.has(teacher.id)),
+      subjects: sharedSubjects,
+      lessons: allLessons,
+    } as TransferFile;
+  }
   return {
     ...header,
     kind,
-    ...timetable,
+    periods: db.select().from(periods).all(),
+    teachers: allTeachers,
+    subjects: allSubjects,
+    lessons: allLessons,
     entries: db.select().from(entries).all(),
     grades: db.select().from(grades).all(),
     semesters: db.select().from(semesters).all(),
@@ -66,38 +91,89 @@ export function exportData(kind: TransferKind): TransferFile {
   } as TransferFile;
 }
 
-// Thrown for files that are not a SchoolOS export; the message is shown to the user.
+// Thrown for files that are not a valid SchoolOS export; the message is shown to the user.
 export class TransferError extends Error {}
+
+const fail = (message: string): never => {
+  throw new TransferError(message);
+};
 
 const isObject = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 
-type FieldType = "number" | "string" | "boolean";
+const TIME = /^(?:[01]\d|2[0-3]):[0-5]\d$/;
+const COLOR = /^#[0-9A-Fa-f]{6}$/;
 
-// Checks that every row has the fields of its table with the right types; optional fields may
-// also be null or missing.
-function checkRows(
-  value: unknown,
-  name: string,
-  required: Record<string, FieldType>,
-  optional: Record<string, FieldType> = {}
-) {
-  if (!Array.isArray(value)) throw new TransferError(`Die Datei enthält keine ${name}.`);
-  for (const row of value) {
+// A real calendar day as "YYYY-MM-DD"; Date.UTC rolls "2026-02-30" over, so it would not match.
+function isDate(value: string) {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!match) return false;
+  const date = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])));
+  return date.toISOString().startsWith(value);
+}
+
+// Checks a row against the columns of its table: required columns need a value of the right
+// type, nullable ones may also be null or missing. `name` says which row it is ("Lektion 4").
+function checkRow(row: unknown, table: Table, name: string) {
+  if (!isObject(row)) fail(`${name} ist ungültig.`);
+  const fields = row as Record<string, unknown>;
+  for (const [key, column] of Object.entries(getTableColumns(table)) as [string, Column][]) {
+    const value = fields[key];
+    if (!column.notNull && (value === null || value === undefined)) continue;
     const valid =
-      isObject(row) &&
-      Object.entries(required).every(([key, type]) => typeof row[key] === type) &&
-      Object.entries(optional).every(
-        ([key, type]) => row[key] === null || row[key] === undefined || typeof row[key] === type
-      );
-    if (!valid) throw new TransferError(`Die ${name} in der Datei sind unvollständig.`);
+      typeof value === column.dataType &&
+      (column.columnType !== "SQLiteInteger" || Number.isInteger(value));
+    if (!valid) fail(`${name}: Die Angabe «${key}» fehlt oder ist ungültig.`);
+    if (column.enumValues && !column.enumValues.includes(value as string)) {
+      fail(`${name}: «${String(value)}» ist keine gültige Angabe für «${key}».`);
+    }
   }
 }
 
-const TIME = /^(?:[01]\d|2[0-3]):[0-5]\d$/;
-const DATE = /^\d{4}-\d{2}-\d{2}$/;
+// Checks the rows of a table and that no id appears twice; returns the ids for the references.
+function checkRows<T extends { id: number }>(
+  value: unknown,
+  table: Table,
+  plural: string,
+  label: string,
+  check: (row: T, name: string) => void = () => {}
+): Set<number> {
+  if (!Array.isArray(value)) fail(`Die Datei enthält keine ${plural}.`);
+  const ids = new Set<number>();
+  (value as unknown[]).forEach((row, index) => {
+    const name = `${label} ${index + 1}`;
+    checkRow(row, table, name);
+    const { id } = row as T;
+    if (ids.has(id)) fail(`${name}: Die ID ${id} kommt in der Datei mehrfach vor.`);
+    ids.add(id);
+    check(row as T, name);
+  });
+  return ids;
+}
 
-// Parses and validates the text of an export file.
+function checkTime(name: string, what: string, value: string) {
+  if (!TIME.test(value)) fail(`${name}: ${what} «${value}» ist keine gültige Uhrzeit.`);
+}
+
+function checkDate(name: string, what: string, value: string | null | undefined) {
+  if (value !== null && value !== undefined && !isDate(value)) {
+    fail(`${name}: ${what} «${value}» ist kein gültiges Datum.`);
+  }
+}
+
+// `what` names the referenced row, e.g. "Das Fach"
+function checkReference(
+  name: string,
+  what: string,
+  ids: Set<number>,
+  id: number | null | undefined
+) {
+  if (id !== null && id !== undefined && !ids.has(id)) {
+    fail(`${name}: ${what} mit der ID ${id} fehlt in der Datei.`);
+  }
+}
+
+// Parses and validates the text of an export file, so the import cannot fail on its content.
 export function parseTransferFile(text: string): TransferFile {
   let data: unknown;
   try {
@@ -112,84 +188,91 @@ export function parseTransferFile(text: string): TransferFile {
     throw new TransferError("Die Dateiversion ist ungültig.");
   }
   if (data.format > TRANSFER_FORMAT) {
-    throw new TransferError("Die Datei stammt aus einer neueren Version von SchoolOS.");
+    throw new TransferError(
+      "Die Datei stammt aus einer neueren Version von SchoolOS. Aktualisiere SchoolOS, um sie zu importieren."
+    );
   }
   if (data.kind !== "timetable" && data.kind !== "backup") {
     throw new TransferError("Die Datei ist keine SchoolOS-Datei.");
   }
 
-  checkRows(data.periods, "Lektionen", { id: "number", startTime: "string", endTime: "string" });
-  checkRows(
-    data.teachers,
-    "Lehrpersonen",
-    { id: "number", name: "string", abbreviation: "string" },
-    { email: "string" }
+  const periodIds = checkRows<Period>(
+    data.periods,
+    periods,
+    "Lektionen",
+    "Lektionszeit",
+    (period, name) => {
+      checkTime(name, "Beginn", period.startTime);
+      checkTime(name, "Ende", period.endTime);
+      // "HH:MM" compares like the time it stands for
+      if (period.startTime >= period.endTime) {
+        fail(`${name}: Beginn ${period.startTime} liegt nicht vor dem Ende ${period.endTime}.`);
+      }
+    }
   );
-  checkRows(
+  const teacherIds = checkRows<Teacher>(data.teachers, teachers, "Lehrpersonen", "Lehrperson");
+  const subjectIds = checkRows<Subject>(
     data.subjects,
+    subjects,
     "Fächer",
-    { id: "number", name: "string", abbreviation: "string", color: "string" },
-    { teacherId: "number" }
+    "Fach",
+    (subject, name) => {
+      if (!COLOR.test(subject.color)) {
+        fail(`${name}: Die Farbe «${subject.color}» ist ungültig.`);
+      }
+      checkReference(name, "Die Lehrperson", teacherIds, subject.teacherId);
+    }
   );
-  checkRows(
+  checkRows<Lesson>(
     data.lessons,
+    lessons,
     "Lektionen im Stundenplan",
-    { id: "number", weekday: "number", periodId: "number", subjectId: "number" },
-    { room: "string" }
+    "Lektion",
+    (lesson, name) => {
+      if (lesson.weekday < 1 || lesson.weekday > 5) {
+        fail(`${name}: Wochentag ${lesson.weekday} gibt es nicht.`);
+      }
+      checkReference(name, "Das Fach", subjectIds, lesson.subjectId);
+      checkReference(name, "Die Lektionszeit", periodIds, lesson.periodId);
+    }
   );
-  const periodRows = data.periods as Period[];
-  if (periodRows.some((period) => !TIME.test(period.startTime) || !TIME.test(period.endTime))) {
-    throw new TransferError("Die Zeiten der Lektionen in der Datei sind ungültig.");
-  }
 
   if (data.kind === "backup") {
-    checkRows(
+    const entryIds = checkRows<Entry>(
       data.entries,
+      entries,
       "Einträge",
-      { id: "number", type: "string", title: "string", date: "string", completed: "boolean" },
-      {
-        description: "string",
-        periodId: "number",
-        subjectId: "number",
-        studyStart: "string",
-        topic: "string",
+      "Eintrag",
+      (entry, name) => {
+        checkDate(name, "Das Datum", entry.date);
+        checkDate(name, "Der Lernbeginn", entry.studyStart);
+        checkReference(name, "Das Fach", subjectIds, entry.subjectId);
+        checkReference(name, "Die Lektionszeit", periodIds, entry.periodId);
       }
     );
-    checkRows(
-      data.grades,
-      "Noten",
-      { id: "number", value: "number", weight: "number", date: "string", subjectId: "number" },
-      { note: "string", entryId: "number" }
-    );
-    checkRows(data.semesters, "Semester", {
-      id: "number",
-      name: "string",
-      startDate: "string",
-      endDate: "string",
+    checkRows<Grade>(data.grades, grades, "Noten", "Note", (grade, name) => {
+      if (grade.value < 1 || grade.value > 6) {
+        fail(`${name}: Die Note ${grade.value} liegt nicht zwischen 1 und 6.`);
+      }
+      checkDate(name, "Das Datum", grade.date);
+      checkReference(name, "Das Fach", subjectIds, grade.subjectId);
+      checkReference(name, "Der Eintrag", entryIds, grade.entryId);
     });
-    checkRows([data.settings], "Einstellungen", {
-      examLeadDays: "number",
-      presentationLeadDays: "number",
-      submissionLeadDays: "number",
-      notificationsEnabled: "boolean",
-      secondReminderTime: "string",
-      noLessonSummaryTime: "string",
+    checkRows<Semester>(data.semesters, semesters, "Semester", "Semester", (semester, name) => {
+      checkDate(name, "Der Beginn", semester.startDate);
+      checkDate(name, "Das Ende", semester.endDate);
     });
-    const entryRows = data.entries as Entry[];
-    if (
-      entryRows.some(
-        (entry) =>
-          !(ENTRY_TYPES as readonly string[]).includes(entry.type) || !DATE.test(entry.date)
-      )
-    ) {
-      throw new TransferError("Die Einträge in der Datei sind ungültig.");
-    }
+    if (!isObject(data.settings)) fail("Die Datei enthält keine Einstellungen.");
+    checkRow(data.settings, settings, "Einstellungen");
+    const fileSettings = data.settings as Settings;
+    checkTime("Einstellungen", "Die zweite Erinnerung", fileSettings.secondReminderTime);
+    checkTime("Einstellungen", "Die Übersicht", fileSettings.noLessonSummaryTime);
   }
 
   return data as unknown as TransferFile;
 }
 
-// "11 Lektionen, 14 Fächer, 8 Lehrpersonen und 35 Lektionen im Stundenplan"
+// "11 Lektionen pro Tag, 14 Fächer, 8 Lehrpersonen und 35 Lektionen im Stundenplan"
 export function describeTransferFile(file: TransferFile): string {
   const parts = [
     `${file.periods.length} Lektionen pro Tag`,
@@ -201,145 +284,99 @@ export function describeTransferFile(file: TransferFile): string {
   return `${parts.slice(0, -1).join(", ")} und ${parts.at(-1)}`;
 }
 
+// The values of a row for its table: fields the table does not have are dropped, missing
+// nullable ones become null.
+function columnValues<T extends Table>(table: T, row: object): T["$inferInsert"] {
+  return Object.fromEntries(
+    Object.keys(getTableColumns(table)).map((key) => [
+      key,
+      (row as Record<string, unknown>)[key] ?? null,
+    ])
+  ) as T["$inferInsert"];
+}
+
 // Replaces the data with the content of the file in one transaction, so a failing import leaves
-// everything as it was. A timetable file keeps the entries: they are moved to the imported
-// subjects and periods with the same name and start time, the others become "Allgemein".
+// everything as it was. A timetable file keeps entries, grades and semesters: entries and grades
+// move to the imported subject and period with the same name and start time. Old subjects that
+// are not in the file but still have grades stay (without lessons), so no grade is lost; other
+// entries lose their subject or period ("Allgemein").
 export function importData(file: TransferFile) {
   db.transaction((tx) => {
-    const insert = <T extends Record<string, unknown>>(
-      table: Parameters<typeof tx.insert>[0],
-      rows: T[]
-    ) => {
-      if (rows.length > 0) tx.insert(table).values(rows).run();
+    const insert = <T extends Table>(table: T, rows: object[]) => {
+      if (rows.length === 0) return;
+      tx.insert(table)
+        .values(rows.map((row) => columnValues(table, row)) as T["$inferInsert"][])
+        .run();
     };
 
+    if (file.kind === "backup") {
+      for (const table of DATA_TABLES) {
+        tx.delete(table).run();
+      }
+      insert(periods, file.periods);
+      insert(teachers, file.teachers);
+      insert(subjects, file.subjects);
+      insert(lessons, file.lessons);
+      insert(semesters, file.semesters);
+      insert(entries, file.entries);
+      insert(grades, file.grades);
+      const { id: _id, ...values } = columnValues(settings, file.settings);
+      tx.update(settings).set(values).run();
+      return;
+    }
+
     // Matched before the old rows are deleted
-    const subjectNames = new Map(
-      tx
-        .select()
-        .from(subjects)
-        .all()
-        .map((subject) => [subject.id, subject.name])
-    );
-    const periodStarts = new Map(
+    const oldEntries = tx.select().from(entries).all();
+    const oldGrades = tx.select().from(grades).all();
+    const gradedSubjectIds = new Set(oldGrades.map((grade) => grade.subjectId));
+    const importedSubjectIds = new Map(file.subjects.map((subject) => [subject.name, subject.id]));
+    const importedPeriodIds = new Map(file.periods.map((period) => [period.startTime, period.id]));
+
+    // Old subject id → id after the import. Kept subjects get ids after the imported ones and
+    // lose their teacher, since all old teachers are replaced.
+    const subjectIds = new Map<number, number>();
+    const keptSubjects: Subject[] = [];
+    let nextSubjectId = Math.max(0, ...file.subjects.map((subject) => subject.id)) + 1;
+    for (const subject of tx.select().from(subjects).all()) {
+      const importedId = importedSubjectIds.get(subject.name);
+      if (importedId !== undefined) {
+        subjectIds.set(subject.id, importedId);
+      } else if (gradedSubjectIds.has(subject.id)) {
+        keptSubjects.push({ ...subject, id: nextSubjectId, teacherId: null });
+        subjectIds.set(subject.id, nextSubjectId++);
+      }
+    }
+    const periodIds = new Map(
       tx
         .select()
         .from(periods)
         .all()
-        .map((period) => [period.id, period.startTime])
+        .flatMap((period) => {
+          const importedId = importedPeriodIds.get(period.startTime);
+          return importedId === undefined ? [] : [[period.id, importedId] as const];
+        })
     );
-    const keptEntries =
-      file.kind === "timetable"
-        ? tx
-            .select()
-            .from(entries)
-            .all()
-            .map((entry) => ({
-              ...entry,
-              subjectId:
-                file.subjects.find((subject) => subject.name === subjectNames.get(entry.subjectId!))
-                  ?.id ?? null,
-              periodId:
-                file.periods.find(
-                  (period) => period.startTime === periodStarts.get(entry.periodId!)
-                )?.id ?? null,
-            }))
-        : [];
-    const keptGrades = file.kind === "timetable" ? tx.select().from(grades).all() : [];
-    const keptSemesters = file.kind === "timetable" ? tx.select().from(semesters).all() : [];
 
-    // Children before the rows they reference
-    for (const table of [grades, entries, lessons, subjects, teachers, periods, semesters]) {
+    // Semesters do not depend on the timetable and stay
+    for (const table of DATA_TABLES.filter((table) => table !== semesters)) {
       tx.delete(table).run();
     }
-
+    insert(periods, file.periods);
+    insert(teachers, file.teachers);
+    insert(subjects, [...file.subjects, ...keptSubjects]);
+    insert(lessons, file.lessons);
     insert(
-      periods,
-      file.periods.map(({ id, startTime, endTime }) => ({ id, startTime, endTime }))
-    );
-    insert(
-      teachers,
-      file.teachers.map(({ id, name, abbreviation, email }) => ({
-        id,
-        name,
-        abbreviation,
-        email: email ?? null,
+      entries,
+      oldEntries.map((entry) => ({
+        ...entry,
+        subjectId: entry.subjectId === null ? null : (subjectIds.get(entry.subjectId) ?? null),
+        periodId: entry.periodId === null ? null : (periodIds.get(entry.periodId) ?? null),
       }))
     );
-    const teacherIds = new Set(file.teachers.map((teacher) => teacher.id));
+    // Every graded subject is either matched or kept
     insert(
-      subjects,
-      file.subjects.map(({ id, name, abbreviation, color, teacherId }) => ({
-        id,
-        name,
-        abbreviation,
-        color,
-        teacherId: teacherId !== null && teacherIds.has(teacherId) ? teacherId : null,
-      }))
+      grades,
+      oldGrades.map((grade) => ({ ...grade, subjectId: subjectIds.get(grade.subjectId)! }))
     );
-    insert(
-      lessons,
-      file.lessons.map(({ id, weekday, periodId, subjectId, room }) => ({
-        id,
-        weekday,
-        periodId,
-        subjectId,
-        room: room ?? null,
-      }))
-    );
-
-    if (file.kind === "backup") {
-      insert(semesters, file.semesters);
-      insert(
-        entries,
-        file.entries.map((entry) => ({
-          ...entry,
-          description: entry.description ?? null,
-          periodId: entry.periodId ?? null,
-          subjectId: entry.subjectId ?? null,
-          studyStart: entry.studyStart ?? null,
-          topic: entry.topic ?? null,
-        }))
-      );
-      insert(
-        grades,
-        file.grades.map((grade) => ({
-          ...grade,
-          note: grade.note ?? null,
-          entryId: grade.entryId ?? null,
-        }))
-      );
-      const { id: _id, ...values } = file.settings;
-      tx.update(settings).set(values).run();
-    } else {
-      insert(semesters, keptSemesters);
-      insert(entries, keptEntries);
-      // Grades of subjects that are not in the file go with their subject
-      const subjectByName = new Map(file.subjects.map((subject) => [subject.name, subject.id]));
-      const unmatchedGrades = keptGrades.filter(
-        (grade) => !subjectByName.has(subjectNames.get(grade.subjectId) ?? "")
-      );
-      let generalSubjectId: number | undefined;
-      if (unmatchedGrades.length > 0) {
-        generalSubjectId = Math.max(0, ...file.subjects.map(({ id }) => id)) + 1;
-        insert(subjects, [
-          {
-            id: generalSubjectId,
-            name: "Allgemein",
-            abbreviation: "Allg.",
-            color: "#8E8E93",
-            teacherId: null,
-          },
-        ]);
-      }
-      insert(
-        grades,
-        keptGrades.map((grade) => ({
-          ...grade,
-          subjectId:
-            subjectByName.get(subjectNames.get(grade.subjectId) ?? "") ?? generalSubjectId!,
-        }))
-      );
-    }
   });
 }
