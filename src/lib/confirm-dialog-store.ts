@@ -6,7 +6,8 @@ export type ConfirmOptions = {
   // Label of the button that carries out the action, e.g. "Löschen"
   confirmLabel: string;
   onConfirm: () => void;
-  // Shows the confirm label in red on iOS (default true)
+  // An action the user started that deletes or discards data: an action sheet on iOS instead of
+  // an alert (default true); Android shows the same dialog either way
   destructive?: boolean;
   // A plain message with a single button, without "Abbrechen"
   messageOnly?: boolean;

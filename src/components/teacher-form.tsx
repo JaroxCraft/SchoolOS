@@ -2,15 +2,15 @@ import { FieldGroup } from "@expo/ui";
 import { router, Stack } from "expo-router";
 import { useState } from "react";
 
-import { DestructiveButton } from "@/components/destructive-button";
 import { DiscardGuard } from "@/components/discard-guard";
 import { FormList } from "@/components/form-list";
+import { DestructiveRow } from "@/components/rows";
 import { TextField } from "@/components/text-field";
 import { saveTeacher } from "@/db/actions";
 import type { Teacher } from "@/db/schema";
 import { useDiscardGuard } from "@/hooks/use-discard-guard";
 import { confirmDelete, teacherDeletion } from "@/lib/confirm-delete";
-import { useSaveButton } from "@/hooks/use-save-button";
+import { useSaveButton } from "@/hooks/use-header-button";
 
 type TeacherFormProps = {
   teacher: Teacher | undefined;
@@ -80,7 +80,7 @@ export function TeacherForm({ teacher }: TeacherFormProps) {
 
           {teacher && (
             <FieldGroup.Section>
-              <DestructiveButton label="Lehrperson löschen" onPress={remove} />
+              <DestructiveRow label="Lehrperson löschen" onPress={remove} />
             </FieldGroup.Section>
           )}
         </FormList>
