@@ -3,7 +3,7 @@ import { router, Stack } from "expo-router";
 import { useState } from "react";
 
 import { DestructiveButton } from "@/components/destructive-button";
-import { DiscardCancelButton } from "@/components/discard-cancel-button";
+import { DiscardGuardHeader } from "@/components/discard-guard-header";
 import { FormList } from "@/components/form-list";
 import { TextField } from "@/components/text-field";
 import { saveTeacher } from "@/db/actions";
@@ -47,7 +47,7 @@ export function TeacherForm({ teacher }: TeacherFormProps) {
   return (
     <>
       <Stack.Title>{teacher ? teacher.name : "Neue Lehrperson"}</Stack.Title>
-      <DiscardCancelButton dirty={dirty} />
+      <DiscardGuardHeader dirty={dirty} />
       <Stack.Toolbar placement="right">
         {saveButton && <Stack.Toolbar.Button {...saveButton} disabled={!canSave} onPress={save} />}
       </Stack.Toolbar>
