@@ -6,7 +6,7 @@ import { Platform } from "react-native";
 
 import { ColorField } from "@/components/color-field";
 import { DestructiveButton } from "@/components/destructive-button";
-import { DiscardCancelButton } from "@/components/discard-cancel-button";
+import { DiscardGuardHeader } from "@/components/discard-guard-header";
 import { FooterText, FormList } from "@/components/form-list";
 import { NO_TEACHER, TeacherPickerSheet } from "@/components/teacher-picker";
 import { TextField } from "@/components/text-field";
@@ -72,7 +72,7 @@ export function SubjectForm({ subject, usedColors, teachers }: SubjectFormProps)
   return (
     <>
       <Stack.Title>{subject ? subject.name : "Neues Fach"}</Stack.Title>
-      <DiscardCancelButton dirty={dirty} />
+      <DiscardGuardHeader dirty={dirty} />
       <Stack.Toolbar placement="right">
         {saveButton && <Stack.Toolbar.Button {...saveButton} disabled={!canSave} onPress={save} />}
       </Stack.Toolbar>
