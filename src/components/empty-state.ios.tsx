@@ -1,12 +1,19 @@
 import { Button, ContentUnavailableView, Host } from "@expo/ui/swift-ui";
 import { buttonStyle } from "@expo/ui/swift-ui/modifiers";
 import type { SFSymbol } from "expo-symbols";
+import { Platform } from "react-native";
 
-import type { EmptyStateProps } from "@/components/empty-state";
+import { type EmptyStateProps, EmptyStateView } from "@/components/empty-state-view";
+
+// ContentUnavailableView draws nothing before iOS 17, while the app runs from iOS 16.4
+const HAS_CONTENT_UNAVAILABLE_VIEW = parseInt(String(Platform.Version), 10) >= 17;
 
 // iOS: the system's ContentUnavailableView, the placeholder of the Apple apps for a screen
-// without content, with the next step as a prominent button.
-export function EmptyState({ icon, title, message, action }: EmptyStateProps) {
+// without content, with the next step as a prominent button. iOS 16 gets the React Native one.
+export function EmptyState(props: EmptyStateProps) {
+  if (!HAS_CONTENT_UNAVAILABLE_VIEW) return <EmptyStateView {...props} />;
+
+  const { icon, title, message, action } = props;
   const systemImage = (typeof icon === "object" ? icon.ios : icon) as SFSymbol | undefined;
 
   return (
