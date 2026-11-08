@@ -5,8 +5,3 @@ import { type ConfirmOptions, showConfirmDialog } from "@/lib/confirm-dialog-sto
 export function confirm(options: ConfirmOptions) {
   showConfirmDialog(options);
 }
-
-// A message with a single "OK" button, e.g. why an import failed.
-export function showMessage(title: string, message: string) {
-  confirm({ title, message, confirmLabel: "OK", onConfirm: () => {}, messageOnly: true });
-}

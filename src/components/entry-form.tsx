@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Platform } from "react-native";
 
 import { DateField } from "@/components/date-field";
-import { DestructiveButton } from "@/components/destructive-button";
+import { DestructiveRow } from "@/components/rows";
 import { FormList } from "@/components/form-list";
 import { SelectRow } from "@/components/select-row";
 import { useSubjectPicker } from "@/components/subject-picker";
@@ -24,7 +24,7 @@ import {
 import { subjectLessonOn, upcomingSubjectLessons } from "@/lib/schedule";
 import { NEUTRAL_COLOR } from "@/lib/subject-colors";
 import { useDiscardGuard } from "@/hooks/use-discard-guard";
-import { useSaveButton } from "@/hooks/use-save-button";
+import { useSaveButton } from "@/hooks/use-header-button";
 
 const NONE = 0;
 
@@ -312,7 +312,7 @@ export function EntryForm({
 
         {entry && (
           <FieldGroup.Section>
-            <DestructiveButton label="Eintrag löschen" onPress={remove} />
+            <DestructiveRow label="Eintrag löschen" onPress={remove} />
           </FieldGroup.Section>
         )}
       </FormList>

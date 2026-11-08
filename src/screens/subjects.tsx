@@ -6,7 +6,7 @@ import { RowActions } from "@/components/row-actions";
 import { ActionRow, NavigationRow } from "@/components/rows";
 import { SubjectDot } from "@/components/subject-dot";
 import { useSubjects, useTeachers } from "@/db/queries";
-import { useStepButton } from "@/hooks/use-step-button";
+import { useStepButton } from "@/hooks/use-header-button";
 import { confirmRowDelete, subjectDeletion } from "@/lib/confirm-delete";
 import { useSchoolRoutes } from "@/lib/routes";
 import { joinDetails } from "@/lib/text";

@@ -37,8 +37,3 @@ export function confirm({
     { text: confirmLabel, onPress: onConfirm },
   ]);
 }
-
-// A message with a single "OK" button, e.g. why an import failed.
-export function showMessage(title: string, message: string) {
-  confirm({ title, message, confirmLabel: "OK", onConfirm: () => {}, messageOnly: true });
-}
