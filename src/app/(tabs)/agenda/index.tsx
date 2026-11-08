@@ -13,8 +13,8 @@ import { sortSubjectsByUse, useSubjectPicker } from "@/components/subject-picker
 import { useEntries, useLessons, useSubjects, useTeachers } from "@/db/queries";
 import type { Entry, EntryType } from "@/db/schema";
 import { useInk } from "@/hooks/use-ink";
+import { useNow } from "@/hooks/use-now";
 import { useWasCompleted } from "@/hooks/use-recently-completed";
-import { today } from "@/lib/dates";
 import { ENTRY_TYPE_OPTIONS, isCheckable } from "@/lib/entry-types";
 import { NEW_ENTRY } from "@/lib/routes";
 
@@ -34,6 +34,7 @@ export default function AgendaScreen() {
   }
   const wasCompleted = useWasCompleted();
   const ink = useInk();
+  const now = useNow();
 
   // The choices above the types and subjects, used by the iOS menu and the Android rows alike.
   // iOS names what "Alle" covers, since its menu lists types and subjects together; the Android
@@ -81,7 +82,7 @@ export default function AgendaScreen() {
   // Tasks (un)checked just now stay in their section until the screen is left
   const isDone = (entry: Entry) => isCheckable(entry.type) && wasCompleted(entry);
   // Open homework and submissions stay upcoming even when overdue
-  const isPast = (entry: Entry) => !isCheckable(entry.type) && entry.date < today();
+  const isPast = (entry: Entry) => !isCheckable(entry.type) && entry.date < now.date;
 
   const upcoming = visible.filter((entry) => !isDone(entry) && !isPast(entry));
   const done = visible.filter(isDone).reverse();
@@ -171,7 +172,12 @@ export default function AgendaScreen() {
           .map((section) => (
             <FieldGroup.Section key={section.title} title={section.title}>
               {section.items.map((entry) => (
-                <EntryRow key={entry.id} entry={entry} subject={subjectById(entry.subjectId)} />
+                <EntryRow
+                  key={entry.id}
+                  entry={entry}
+                  subject={subjectById(entry.subjectId)}
+                  today={now.date}
+                />
               ))}
             </FieldGroup.Section>
           ))}

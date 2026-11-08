@@ -56,7 +56,15 @@ export default function TimetableScreen() {
   }));
 
   const [mode, setMode] = useState<Mode>("day");
-  const [selected, setSelected] = useState(todayWeekday <= 5 ? todayWeekday : 1);
+  const todaySelection = todayWeekday <= 5 ? todayWeekday : 1;
+  const [selected, setSelected] = useState(todaySelection);
+  // A new day began while the screen waited in its tab: it opens on today again, as when it was
+  // opened. The pager is keyed by the date, so it scrolls there on its first layout.
+  const [selectedOn, setSelectedOn] = useState(now.date);
+  if (selectedOn !== now.date) {
+    setSelectedOn(now.date);
+    setSelected(todaySelection);
+  }
 
   const shown = visiblePeriods(lessons, periods);
   if (shown.length === 0) {
@@ -153,6 +161,7 @@ export default function TimetableScreen() {
 
         {mode === "day" ? (
           <ScrollView
+            key={now.date}
             ref={pager}
             horizontal
             pagingEnabled

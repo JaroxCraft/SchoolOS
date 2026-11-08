@@ -72,8 +72,8 @@ export function formatDate(value: string): string {
   return `${WEEKDAYS_SHORT[date.getDay()]}, ${date.getDate()}. ${MONTHS_SHORT[date.getMonth()]}`;
 }
 
-// "heute", "morgen", "in 3 Tagen", "gestern", "vor 4 Tagen"
-export function relativeDay(value: string, from = today()): string {
+// "heute", "morgen", "in 3 Tagen", "gestern", "vor 4 Tagen", counted from `from` (today)
+export function relativeDay(value: string, from: string): string {
   const days = daysBetween(from, value);
   if (days === 0) return "heute";
   if (days === 1) return "morgen";
@@ -81,8 +81,9 @@ export function relativeDay(value: string, from = today()): string {
   return days > 0 ? `in ${days} Tagen` : `vor ${-days} Tagen`;
 }
 
-export function currentTime(): string {
-  return dateToTime(new Date());
+// "07:05" for 425 minutes since midnight
+export function minutesToTime(minutes: number): string {
+  return `${pad(Math.floor(minutes / 60))}:${pad(minutes % 60)}`;
 }
 
 export function timeToDate(value: string): Date {

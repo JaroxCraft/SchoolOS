@@ -10,7 +10,7 @@ import { deleteEntry, setEntryCompleted } from "@/db/actions";
 import type { Entry, Subject } from "@/db/schema";
 import { type Ink, useInk } from "@/hooks/use-ink";
 import { markToggled } from "@/hooks/use-recently-completed";
-import { formatDate, relativeDay, today } from "@/lib/dates";
+import { formatDate, relativeDay } from "@/lib/dates";
 import { ENTRY_TYPE_INFO, isCheckable } from "@/lib/entry-types";
 import { NEUTRAL_COLOR } from "@/lib/subject-colors";
 import { typography } from "@/lib/typography";
@@ -29,6 +29,8 @@ function setCompleted(entry: Entry, completed: boolean) {
 type EntryRowProps = {
   entry: Entry;
   subject: Subject | undefined;
+  // From useNow of the screen, for "overdue" and "morgen"; the row has no hooks (asListItem)
+  today: string;
 };
 
 // Homework and submissions get a checkbox, everything else the subject color. A task checked off
@@ -36,14 +38,14 @@ type EntryRowProps = {
 // useWasCompleted). Tapping the row opens the entry as a sheet, so it has no disclosure chevron:
 // the chevron promises a screen pushed in the same stack (Apple HIG, lists). Built without hooks,
 // so <FormList> can use it as the list item itself.
-function entryItem({ entry, subject }: EntryRowProps, ink: Ink) {
+function entryItem({ entry, subject, today }: EntryRowProps, ink: Ink) {
   const checkable = isCheckable(entry.type);
   const done = checkable && entry.completed;
-  const overdue = checkable && !entry.completed && entry.date < today();
+  const overdue = checkable && !entry.completed && entry.date < today;
   const details = [
     ENTRY_TYPE_INFO[entry.type].label,
     subject?.name ?? "Allgemein",
-    `${formatDate(entry.date)}, ${relativeDay(entry.date)}`,
+    `${formatDate(entry.date)}, ${relativeDay(entry.date, today)}`,
   ].join(" · ");
 
   return (

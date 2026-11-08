@@ -3,6 +3,8 @@ import { Pressable, StyleSheet, Text, useColorScheme, View } from "react-native"
 
 import { colors } from "@/constants/colors";
 import type { Lesson, Period, Subject, Teacher } from "@/db/schema";
+import type { Now } from "@/hooks/use-now";
+import { minutesToTime } from "@/lib/dates";
 import { SCHOOL_ROUTES } from "@/lib/routes";
 import { lessonBlocks, type LessonBlock, minutesOf } from "@/lib/timeline";
 import { joinDetails } from "@/lib/text";
@@ -27,11 +29,8 @@ type LessonTimelineProps = {
   scale: number;
   width: number;
   compact: boolean;
-  now: { date: string; minutes: number };
+  now: Now;
 };
-
-const timeOf = (minutes: number) =>
-  `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
 
 // The timetable as a time axis, like the day and week views of Calendar: every lesson is a card as
 // tall as it lasts, a double lesson one card across the break, breaks and free periods are space.
@@ -145,7 +144,7 @@ type LessonCardProps = {
 // A lesson as a card in the subject color. Tapping it opens the subject in this tab; a long press
 // (iOS) offers a new entry for the subject or editing the timetable.
 function LessonCard({ block, subject, teacher, compact, top, height, state }: LessonCardProps) {
-  const time = `${timeOf(block.start)}–${timeOf(block.end)}`;
+  const time = `${minutesToTime(block.start)}–${minutesToTime(block.end)}`;
   const details = compact
     ? block.room
     : joinDetails(time, block.room, teacher?.abbreviation || undefined);

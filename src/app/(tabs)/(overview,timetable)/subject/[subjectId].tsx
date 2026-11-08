@@ -7,11 +7,12 @@ import { FormList } from "@/components/form-list";
 import { LabeledRow } from "@/components/labeled-row";
 import { ActionRow } from "@/components/rows";
 import { useEntries, useLessons, usePeriods, useSubjects, useTeachers } from "@/db/queries";
-import { today, weekdayName } from "@/lib/dates";
+import { weekdayName } from "@/lib/dates";
 import { isCheckable } from "@/lib/entry-types";
 import { periodNumber } from "@/lib/schedule";
 import { joinDetails } from "@/lib/text";
 import { useInk } from "@/hooks/use-ink";
+import { useNow } from "@/hooks/use-now";
 import { useWasCompleted } from "@/hooks/use-recently-completed";
 
 export default function SubjectScreen() {
@@ -29,10 +30,11 @@ export default function SubjectScreen() {
         periodNumber(periods, a.periodId) - periodNumber(periods, b.periodId)
     );
   const wasCompleted = useWasCompleted();
+  const now = useNow();
   const openEntries = useEntries().filter(
     (entry) =>
       entry.subjectId === id &&
-      (isCheckable(entry.type) ? !wasCompleted(entry) : entry.date >= today())
+      (isCheckable(entry.type) ? !wasCompleted(entry) : entry.date >= now.date)
   );
 
   if (!subject) {
@@ -84,7 +86,7 @@ export default function SubjectScreen() {
 
         <FieldGroup.Section title="Offene Einträge">
           {openEntries.map((entry) => (
-            <EntryRow key={entry.id} entry={entry} subject={subject} />
+            <EntryRow key={entry.id} entry={entry} subject={subject} today={now.date} />
           ))}
           <ActionRow
             label="Eintrag hinzufügen"

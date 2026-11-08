@@ -1,5 +1,6 @@
 import type { Lesson, LessonSlot, Period } from "@/db/schema";
-import { addDays, currentTime, isoWeekday, today } from "@/lib/dates";
+import type { Now } from "@/hooks/use-now";
+import { addDays, isoWeekday, minutesToTime, today } from "@/lib/dates";
 
 export type LessonOccurrence = {
   date: string;
@@ -67,16 +68,17 @@ export function subjectLessonOn(
   )[0];
 }
 
-// The remaining lessons of today, or all lessons of the next school day after school.
-export function nextLessons(lessons: Lesson[], periods: Period[]): LessonOccurrence[] {
-  const now = currentTime();
-  const remaining = lessonsOn(today(), lessons, periods).filter(
-    ({ period }) => period.endTime > now
+// The remaining lessons of today, or all lessons of the next school day after school. Takes the
+// time from useNow, so the screen shows the next lessons again as the day goes on.
+export function nextLessons(lessons: Lesson[], periods: Period[], now: Now): LessonOccurrence[] {
+  const time = minutesToTime(now.minutes);
+  const remaining = lessonsOn(now.date, lessons, periods).filter(
+    ({ period }) => period.endTime > time
   );
   if (remaining.length > 0) return remaining;
 
   for (let offset = 1; offset <= 7; offset++) {
-    const upcoming = lessonsOn(addDays(today(), offset), lessons, periods);
+    const upcoming = lessonsOn(addDays(now.date, offset), lessons, periods);
     if (upcoming.length > 0) return upcoming;
   }
   return [];
