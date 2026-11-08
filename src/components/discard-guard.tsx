@@ -2,6 +2,8 @@ import { router, Stack } from "expo-router";
 import { type ReactNode, useMemo } from "react";
 import { PanResponder, Platform, StyleSheet, View } from "react-native";
 
+import { CANCEL_BUTTON } from "@/hooks/use-header-button";
+
 // A swipe to the right this far, mostly sideways, counts as the swipe back
 const SWIPE_DISTANCE = 12;
 
@@ -14,7 +16,7 @@ type DiscardGuardProps = {
 // iOS: asks "Änderungen verwerfen?" (useDiscardGuard) as soon as the user tries to leave a pushed
 // form with unsaved changes, while the form stays where it is. The native back button and swipe
 // would take the screen away first and bring it back with the question afterwards. So while there
-// are changes, "Abbrechen", which asks first, takes the place of the back button, and the native
+// are changes, × "Abbrechen", which asks first, takes the place of the back button, and the native
 // swipe is off: a swipe to the right over the form asks right away instead. Android asks before
 // leaving with its own back arrow and gesture, so it only shows the form.
 export function DiscardGuard({ dirty, children }: DiscardGuardProps) {
@@ -43,7 +45,7 @@ export function DiscardGuard({ dirty, children }: DiscardGuardProps) {
         <>
           <Stack.Screen.BackButton hidden />
           <Stack.Toolbar placement="left">
-            <Stack.Toolbar.Button onPress={() => router.back()}>Abbrechen</Stack.Toolbar.Button>
+            <Stack.Toolbar.Button {...CANCEL_BUTTON} onPress={() => router.back()} />
           </Stack.Toolbar>
         </>
       )}
