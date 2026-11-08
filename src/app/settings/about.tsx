@@ -93,7 +93,7 @@ export default function AboutScreen() {
 
         <FieldGroup.Section title="Links">
           <LinkRow
-            icon={{ sf: "chevron.left.forwardslash.chevron.right", md: "code", color: "#1C1C1E" }}
+            icon={{ sf: "chevron.left.forwardslash.chevron.right", md: "code", color: "#8E8E93" }}
             url={GITHUB_URL}
             supportingText="GitHub">
             Quellcode

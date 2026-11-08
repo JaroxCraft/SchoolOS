@@ -42,7 +42,7 @@ export function Screen({ title, showAddButton, toolbarItems, children }: ScreenP
       <Stack.Toolbar placement="right">
         {toolbarItems}
         {showAddButton && Platform.OS === "ios" && (
-          <Stack.Toolbar.View>
+          <Stack.Toolbar.View separateBackground>
             <AddEntryZoomButton />
           </Stack.Toolbar.View>
         )}
