@@ -1,12 +1,11 @@
 import { FieldGroup } from "@expo/ui";
-import { router, Stack } from "expo-router";
+import { router } from "expo-router";
 import { useState } from "react";
-import { Platform } from "react-native";
 
 import { DateField } from "@/components/date-field";
 import { DestructiveRow } from "@/components/rows";
-import { FormList } from "@/components/form-list";
 import { SelectRow } from "@/components/select-row";
+import { SheetForm } from "@/components/sheet-form";
 import { useSubjectPicker } from "@/components/subject-picker";
 import { TaskCheckbox } from "@/components/task-checkbox";
 import { TextField } from "@/components/text-field";
@@ -24,7 +23,6 @@ import {
 import { subjectLessonOn, upcomingSubjectLessons } from "@/lib/schedule";
 import { NEUTRAL_COLOR } from "@/lib/subject-colors";
 import { useDiscardGuard } from "@/hooks/use-discard-guard";
-import { CANCEL_BUTTON, useSaveButton } from "@/hooks/use-header-button";
 
 const NONE = 0;
 
@@ -160,7 +158,6 @@ export function EntryForm({
     ).some((field) => form[field] !== initialForm[field])
   );
 
-  const saveButton = useSaveButton();
   const subjectPicker = useSubjectPicker({
     label: "Fach",
     value: form.subjectId,
@@ -201,18 +198,7 @@ export function EntryForm({
 
   return (
     <>
-      <Stack.Title>{entry ? info.label : "Neuer Eintrag"}</Stack.Title>
-      {/* Android shows the back arrow instead */}
-      {Platform.OS === "ios" && (
-        <Stack.Toolbar placement="left">
-          <Stack.Toolbar.Button {...CANCEL_BUTTON} onPress={() => router.back()} />
-        </Stack.Toolbar>
-      )}
-      <Stack.Toolbar placement="right">
-        {saveButton && <Stack.Toolbar.Button {...saveButton} disabled={!canSave} onPress={save} />}
-      </Stack.Toolbar>
-
-      <FormList>
+      <SheetForm title={entry ? info.label : "Neuer Eintrag"} canSave={canSave} onSave={save}>
         <FieldGroup.Section>
           <SelectRow
             label="Typ"
@@ -315,7 +301,7 @@ export function EntryForm({
             <DestructiveRow label="Eintrag löschen" onPress={remove} />
           </FieldGroup.Section>
         )}
-      </FormList>
+      </SheetForm>
       {subjectPicker.sheet}
     </>
   );
