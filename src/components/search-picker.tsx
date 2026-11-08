@@ -15,6 +15,9 @@ export type PickerCreate = {
   // The rows of the form
   fields: ReactNode;
   canSave: boolean;
+  // Clears the form for a new item; called each time the form is opened, so a draft that was
+  // left with back or "Abbrechen" is not saved later
+  start: () => void;
   // Saves the new item and returns its id
   save: () => Promise<number>;
 };
