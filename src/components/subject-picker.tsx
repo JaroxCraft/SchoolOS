@@ -4,13 +4,13 @@ import { useState } from "react";
 import type { ExtraChoice } from "@/components/search-picker";
 import { SearchPickerSheet } from "@/components/search-picker-sheet";
 import { SubjectDot } from "@/components/subject-dot";
-import type { Lesson, Subject, Teacher } from "@/db/schema";
+import type { LessonSlot, Subject, Teacher } from "@/db/schema";
 import { useInk } from "@/hooks/use-ink";
 import { NEUTRAL_COLOR } from "@/lib/subject-colors";
 import { joinDetails } from "@/lib/text";
 
 // The subjects with the most lessons first (the ones picked most often), then by name.
-export function sortSubjectsByUse(subjects: Subject[], lessons: Lesson[]): Subject[] {
+export function sortSubjectsByUse(subjects: Subject[], lessons: LessonSlot[]): Subject[] {
   const counts = new Map<number, number>();
   for (const lesson of lessons) {
     counts.set(lesson.subjectId, (counts.get(lesson.subjectId) ?? 0) + 1);
@@ -27,7 +27,7 @@ type SubjectPickerSheetProps = {
   value: number;
   subjects: Subject[];
   teachers: Teacher[];
-  lessons: Lesson[];
+  lessons: LessonSlot[];
   extraChoices: ExtraChoice[];
   onChange: (value: number) => void;
 };

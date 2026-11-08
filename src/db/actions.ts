@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 
 import { db } from "@/db/client";
 import {
@@ -9,6 +9,8 @@ import {
   settings,
   subjects,
   teachers,
+  type LessonSlot,
+  type PeriodDraft,
   type Settings,
 } from "@/db/schema";
 
@@ -37,25 +39,22 @@ export async function updateSettings(values: Partial<Omit<Settings, "id">>) {
   await db.update(settings).set(values).where(eq(settings.id, 1));
 }
 
-export async function addPeriod(startTime: string, endTime: string) {
-  await db.insert(periods).values({ startTime, endTime });
-}
-
-export async function updatePeriod(id: number, startTime: string, endTime: string) {
-  await db.update(periods).set({ startTime, endTime }).where(eq(periods.id, id));
-}
-
-// Saves several edited periods at once, all or nothing.
-export async function updatePeriods(changes: { id: number; startTime: string; endTime: string }[]) {
+// Saves the edited period grid all at once, all or nothing: periods missing from it are deleted
+// with their lessons, periods without an id are added.
+export function savePeriods(grid: PeriodDraft[]) {
   db.transaction((tx) => {
-    for (const { id, startTime, endTime } of changes) {
-      tx.update(periods).set({ startTime, endTime }).where(eq(periods.id, id)).run();
+    const kept = new Set(grid.map((period) => period.id));
+    for (const { id } of tx.select({ id: periods.id }).from(periods).all()) {
+      if (!kept.has(id)) tx.delete(periods).where(eq(periods.id, id)).run();
+    }
+    for (const { id, startTime, endTime } of grid) {
+      if (id === null) {
+        tx.insert(periods).values({ startTime, endTime }).run();
+      } else {
+        tx.update(periods).set({ startTime, endTime }).where(eq(periods.id, id)).run();
+      }
     }
   });
-}
-
-export async function deletePeriod(id: number) {
-  await db.delete(periods).where(eq(periods.id, id));
 }
 
 // Returns the id of the new teacher
@@ -92,25 +91,13 @@ export async function deleteSubject(id: number) {
   await db.delete(subjects).where(eq(subjects.id, id));
 }
 
-// Sets the lesson for a weekday and period; subjectId null makes the slot free.
-export async function setLesson(
-  weekday: number,
-  periodId: number,
-  subjectId: number | null,
-  room: string | null
-) {
+// Replaces the whole timetable with the edited one, all or nothing. Nothing references a lesson,
+// so new ids do no harm.
+export function saveLessons(timetable: LessonSlot[]) {
   db.transaction((tx) => {
-    tx.delete(lessons)
-      .where(and(eq(lessons.weekday, weekday), eq(lessons.periodId, periodId)))
-      .run();
-    if (subjectId !== null) {
-      tx.insert(lessons).values({ weekday, periodId, subjectId, room }).run();
-    }
+    tx.delete(lessons).run();
+    if (timetable.length > 0) tx.insert(lessons).values(timetable).run();
   });
-}
-
-export async function setLessonRoom(id: number, room: string | null) {
-  await db.update(lessons).set({ room }).where(eq(lessons.id, id));
 }
 
 export async function saveEntry(id: number | null, values: NewEntry) {

@@ -92,6 +92,10 @@ export type Period = typeof periods.$inferSelect;
 export type Teacher = typeof teachers.$inferSelect;
 export type Subject = typeof subjects.$inferSelect;
 export type Lesson = typeof lessons.$inferSelect;
+// A lesson of the timetable while it is edited, saved together with the others
+export type LessonSlot = Omit<Lesson, "id">;
+// A period of the grid while it is edited; id null for a period added in the editor
+export type PeriodDraft = Omit<Period, "id"> & { id: number | null };
 export type Semester = typeof semesters.$inferSelect;
 export type Entry = typeof entries.$inferSelect;
 export type Grade = typeof grades.$inferSelect;

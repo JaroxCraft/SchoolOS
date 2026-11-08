@@ -1,4 +1,4 @@
-import type { Lesson, Period } from "@/db/schema";
+import type { Lesson, LessonSlot, Period } from "@/db/schema";
 import { addDays, currentTime, isoWeekday, today } from "@/lib/dates";
 
 export type LessonOccurrence = {
@@ -17,8 +17,12 @@ export function periodRange(period: Period): string {
   return `${period.startTime}–${period.endTime}`;
 }
 
-// The lesson in a slot of the timetable; each slot holds at most one.
-export function lessonAt(lessons: Lesson[], weekday: number, periodId: number): Lesson | undefined {
+// The lesson in a slot of the timetable (saved or being edited); each slot holds at most one.
+export function lessonAt<T extends LessonSlot>(
+  lessons: T[],
+  weekday: number,
+  periodId: number
+): T | undefined {
   return lessons.find((lesson) => lesson.weekday === weekday && lesson.periodId === periodId);
 }
 
