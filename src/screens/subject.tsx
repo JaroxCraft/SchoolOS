@@ -14,7 +14,10 @@ export default function SubjectScreen() {
   return (
     <SubjectForm
       subject={subject}
-      usedColors={subjects.map((candidate) => candidate.color)}
+      allColors={subjects.map((candidate) => candidate.color)}
+      usedColors={subjects
+        .filter((candidate) => candidate.id !== subject?.id)
+        .map((candidate) => candidate.color)}
       teachers={teachers}
     />
   );
