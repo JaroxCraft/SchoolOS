@@ -13,7 +13,7 @@ import { useSymbol } from "@/hooks/use-symbol";
 // accent-colored label runs an action (add, write an email). Rows without either only show a value
 // (LabeledRow).
 //
-// Row components carry an `asListItem` that returns their list item directly. <FormList> uses it
+// Row components carry an `asListItem` that returns their list item directly. <FormGroup> uses it
 // on Android: there a section draws its direct list items as rows, but wraps any other component
 // in a list item of its own, which doubles the padding and makes the row twice as tall.
 
