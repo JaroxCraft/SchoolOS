@@ -46,6 +46,8 @@ export function Screen({ title, showAddButton, toolbarItems, children }: ScreenP
             <AddEntryZoomButton />
           </Stack.Toolbar.View>
         )}
+        {/* Its own glass circle, apart from the gear, so only the "+" grows into the entry */}
+        {showAddButton && Platform.OS === "ios" && <Stack.Toolbar.Spacer width={8} />}
         {/* On Android the icon loads asynchronously; render the button once it is ready */}
         {settingsIcon && (
           <Stack.Toolbar.Button

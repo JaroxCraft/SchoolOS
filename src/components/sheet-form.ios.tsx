@@ -6,10 +6,11 @@ import {
 } from "@expo/ui/swift-ui/modifiers";
 import { router, useNavigation } from "expo-router";
 import type { NativeStackNavigationProp } from "expo-router/native-stack";
-import { useEffect, useState } from "react";
+import { useEffect, useRef } from "react";
 
 import { FormGroup } from "@/components/form-group";
 import type { SheetFormProps } from "@/components/sheet-form";
+import { markSheetClosing } from "@/lib/sheet-transition";
 
 // Longer than any presentation, in case the end of the transition is never reported
 const PRESENTED_FALLBACK_MS = 1500;
@@ -20,23 +21,38 @@ const PRESENTED_FALLBACK_MS = 1500;
 // "+" (Link.AppleZoom) would be set on that inner screen instead of the presented one, so the
 // sheet would slide up instead of growing out of the button.
 //
-// × and ✓ wait until the sheet is fully presented: closing it while it still zooms in leaves
-// react-native-screens unable to present or dismiss any modal until the app restarts
-// (expo/expo#43804, fixed by software-mansion/react-native-screens#4731, not released yet).
+// Closing it while it still zooms in would leave react-native-screens unable to present or dismiss
+// any modal until the app restarts (expo/expo#43804, fixed by software-mansion/react-native-screens
+// #4731, not released yet). So × and ✓ take a tap at any time, but carry it out once the sheet is
+// fully presented; and the "+" waits while the sheet shrinks back (markSheetClosing).
 export function SheetForm({ title, canSave, onSave, children }: SheetFormProps) {
   const navigation = useNavigation<NativeStackNavigationProp<Record<string, object | undefined>>>();
-  const [presented, setPresented] = useState(false);
+  const presented = useRef(false);
+  // A tap on × or ✓ during the presentation, carried out at its end
+  const pending = useRef<(() => void) | null>(null);
 
   useEffect(() => {
-    const fallback = setTimeout(() => setPresented(true), PRESENTED_FALLBACK_MS);
+    const finishPresenting = () => {
+      if (presented.current) return;
+      presented.current = true;
+      pending.current?.();
+      pending.current = null;
+    };
+    const fallback = setTimeout(finishPresenting, PRESENTED_FALLBACK_MS);
     const unsubscribe = navigation.addListener("transitionEnd", (event) => {
-      if (!event.data.closing) setPresented(true);
+      if (!event.data.closing) finishPresenting();
     });
     return () => {
       clearTimeout(fallback);
       unsubscribe();
+      markSheetClosing();
     };
   }, [navigation]);
+
+  const whenPresented = (action: () => void) => {
+    if (presented.current) action();
+    else pending.current = action;
+  };
 
   return (
     <Host style={{ flex: 1 }}>
@@ -51,16 +67,15 @@ export function SheetForm({ title, canSave, onSave, children }: SheetFormProps) 
                 role="close"
                 label="Abbrechen"
                 systemImage="xmark"
-                modifiers={[disabled(!presented)]}
-                onPress={() => router.back()}
+                onPress={() => whenPresented(() => router.back())}
               />
             </ToolbarItem>
             <ToolbarItem placement="confirmationAction">
               <Button
                 label="Sichern"
                 systemImage="checkmark"
-                modifiers={[disabled(!presented || !canSave)]}
-                onPress={onSave}
+                modifiers={[disabled(!canSave)]}
+                onPress={() => whenPresented(onSave)}
               />
             </ToolbarItem>
           </Toolbar.Content>
