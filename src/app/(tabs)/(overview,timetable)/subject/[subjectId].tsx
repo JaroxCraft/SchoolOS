@@ -1,7 +1,7 @@
 import { FieldGroup, Text } from "@expo/ui";
-import { router, Stack, useLocalSearchParams } from "expo-router";
+import { router, Stack, useLocalSearchParams, useNavigation } from "expo-router";
+import { useEffect, useState } from "react";
 
-import { EmptyState } from "@/components/empty-state";
 import { EntryRow } from "@/components/entry-row";
 import { FormList } from "@/components/form-list";
 import { LabeledRow } from "@/components/labeled-row";
@@ -20,7 +20,11 @@ export default function SubjectScreen() {
   const ink = useInk();
   const { subjectId } = useLocalSearchParams<{ subjectId: string }>();
   const id = Number(subjectId);
-  const subject = useSubjects().find((candidate) => candidate.id === id);
+  const current = useSubjects().find((candidate) => candidate.id === id);
+  // The subject stays on screen while the screen closes after it was deleted (see below), so the
+  // title does not fall back to the route name during the transition
+  const [subject, setSubject] = useState(current);
+  if (current && current !== subject) setSubject(current);
   const teacher = useTeachers().find((candidate) => candidate.id === subject?.teacherId);
   const periods = usePeriods();
   const lessons = useLessons()
@@ -38,15 +42,18 @@ export default function SubjectScreen() {
       (isCheckable(entry.type) ? !wasCompleted(entry) : entry.date >= now.date)
   );
 
-  if (!subject) {
-    return (
-      <EmptyState
-        icon={{ ios: "questionmark.folder", android: "folder_off" }}
-        title="Fach nicht gefunden"
-        message="Dieses Fach wurde gelöscht."
-      />
-    );
-  }
+  // The subject was deleted or the app reset, maybe while this screen waited in its tab: it has
+  // nothing left to show, so it closes itself. Goes back in this screen's own stack, not in
+  // whichever one is focused (router.back), since the settings sheet may still be open above.
+  const navigation = useNavigation();
+  const missing = current === undefined;
+  useEffect(() => {
+    if (!missing) return;
+    if (navigation.canGoBack()) navigation.goBack();
+    else router.replace("/");
+  }, [missing, navigation]);
+
+  if (!subject) return null;
 
   return (
     <>

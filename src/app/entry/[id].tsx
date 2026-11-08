@@ -1,5 +1,7 @@
-import { useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
+import { useState } from "react";
 
+import { EmptyState } from "@/components/empty-state";
 import { EntryForm } from "@/components/entry-form";
 import { useEntries, useLessons, usePeriods, useSettings, useSubjects } from "@/db/queries";
 
@@ -9,10 +11,24 @@ export default function EntryScreen() {
   const settings = useSettings();
   const periods = usePeriods();
   const lessons = useLessons();
-  const entry = useEntries().find((candidate) => String(candidate.id) === id);
+  const found = useEntries().find((candidate) => String(candidate.id) === id);
+  // A deleted entry stays in the form while its sheet closes, instead of the message below
+  const [lastFound, setLastFound] = useState(found);
+  if (found && found !== lastFound) setLastFound(found);
+  const entry = found ?? lastFound;
 
-  // The entry was deleted
-  if (id !== "new" && !entry) return null;
+  // A link to an entry that does not exist (any more). iOS hides the header of this route (see
+  // src/app/_layout.tsx), so the message itself offers the way out.
+  if (id !== "new" && !entry) {
+    return (
+      <EmptyState
+        icon={{ ios: "questionmark.circle", android: "help" }}
+        title="Eintrag nicht gefunden"
+        message="Dieser Eintrag existiert nicht mehr."
+        action={{ label: "Schliessen", onPress: () => router.back() }}
+      />
+    );
+  }
 
   return (
     <EntryForm
