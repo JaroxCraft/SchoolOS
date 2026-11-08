@@ -9,19 +9,19 @@ import { NEW_ENTRY } from "@/lib/routes";
 
 type ScreenProps = {
   title: string;
-  // The button for a new entry: "+" in the bottom toolbar (iOS), the floating button (Android)
+  // The button for a new entry: "+" in the navigation bar (iOS), the floating button (Android)
   showAddButton?: boolean;
-  // More buttons in the navigation bar, left of the gear. Pass <Stack.Toolbar.*> elements
+  // More buttons in the navigation bar, left of the "+" and the gear. Pass <Stack.Toolbar.*> elements
   // themselves: iOS ignores toolbar items wrapped in another component.
   toolbarItems?: ReactNode;
   children: ReactNode;
 };
 
-// A tab screen with a large title and the gear to the settings in the navigation bar, in exactly
-// the same place in every tab. The "+" for a new entry sits at the bottom, in reach of the thumb:
-// on iOS in the toolbar above the tab bar, as the compose button of Mail and Notes; on Android as
-// the floating button. The tab bar only switches between the tabs; it carries no actions (Apple
-// HIG, tab bars).
+// A tab screen with a large title and the gear to the settings at the far right of the navigation
+// bar, in exactly the same place in every tab. The "+" for a new entry sits left of the gear on
+// iOS, as in Calendar: a bottom toolbar would be hidden behind the tab bar, which UIKit draws above
+// the toolbar of a tab's navigation stack. Android has the floating button. The tab bar only
+// switches between the tabs; it carries no actions (Apple HIG, tab bars).
 export function Screen({ title, showAddButton, toolbarItems, children }: ScreenProps) {
   const settingsIcon = useSymbol("gearshape", "settings");
 
@@ -37,8 +37,16 @@ export function Screen({ title, showAddButton, toolbarItems, children }: ScreenP
         </View>
       )}
       <Stack.Title large>{title}</Stack.Title>
+      {/* iOS lays out these items in this order from left to right */}
       <Stack.Toolbar placement="right">
         {toolbarItems}
+        {showAddButton && Platform.OS === "ios" && (
+          <Stack.Toolbar.Button
+            icon="plus"
+            accessibilityLabel="Neuer Eintrag"
+            onPress={() => router.push(NEW_ENTRY)}
+          />
+        )}
         {/* On Android the icon loads asynchronously; render the button once it is ready */}
         {settingsIcon && (
           <Stack.Toolbar.Button
@@ -48,16 +56,6 @@ export function Screen({ title, showAddButton, toolbarItems, children }: ScreenP
           />
         )}
       </Stack.Toolbar>
-      {showAddButton && Platform.OS === "ios" && (
-        <Stack.Toolbar placement="bottom">
-          <Stack.Toolbar.Spacer />
-          <Stack.Toolbar.Button
-            icon="plus"
-            accessibilityLabel="Neuer Eintrag"
-            onPress={() => router.push(NEW_ENTRY)}
-          />
-        </Stack.Toolbar>
-      )}
     </>
   );
 }
