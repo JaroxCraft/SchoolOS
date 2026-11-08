@@ -17,10 +17,6 @@ export default function TabsLayout() {
         <NativeTabs.Trigger.Icon sf="checklist" md="checklist" />
         <NativeTabs.Trigger.Label>Agenda</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="grades">
-        <NativeTabs.Trigger.Icon sf="graduationcap" md="school" />
-        <NativeTabs.Trigger.Label>Noten</NativeTabs.Trigger.Label>
-      </NativeTabs.Trigger>
     </NativeTabs>
   );
 }
