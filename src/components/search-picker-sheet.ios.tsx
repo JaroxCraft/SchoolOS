@@ -33,8 +33,8 @@ const FORM = "form";
 // iOS: a sheet like the pickers of the system apps. It opens at half height with the grabber on
 // top, so it can be pulled up or swiped down to close; the xmark at the top left closes it too.
 // The title sits in the navigation bar, the system search field below it. "Neue …" pushes the
-// form inside the sheet, with "Hinzufügen" at the top right; "Bearbeiten" of an item (swipe left
-// or long press) pushes it filled in, with "Sichern". The form pulls the sheet up to full height,
+// form inside the sheet, with ✓ "Hinzufügen" at the top right; "Bearbeiten" of an item (swipe left
+// or long press) pushes it filled in, with ✓ "Sichern". The form pulls the sheet up to full height,
 // where it stays when the keyboard closes. The SwiftUI sheet is used instead of the universal
 // BottomSheet, which does not offer to choose the height.
 export function SearchPickerSheet<T extends { id: number }>(props: SearchPickerSheetProps<T>) {
@@ -132,6 +132,8 @@ export function SearchPickerSheet<T extends { id: number }>(props: SearchPickerS
                     <ToolbarItem placement="confirmationAction">
                       <Button
                         label={editing ? "Sichern" : "Hinzufügen"}
+                        // An icon in the bar, as the ✓ of Music; the label is for VoiceOver
+                        systemImage="checkmark"
                         modifiers={[disabled(!form.canSave || saving)]}
                         onPress={async () => {
                           setSaving(true);

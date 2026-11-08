@@ -11,32 +11,45 @@ type HeaderButton = {
   label: string;
   // iOS: the bold "done" style of the button that ends the screen
   done?: boolean;
-  // Android toolbars only render icon buttons
+  // iOS: an icon instead of the label, as the ✓ and × of the forms in the Apple apps (Music,
+  // Calendar); the label stays for VoiceOver. Android toolbars only render icon buttons anyway.
+  iconOnIOS?: boolean;
   sf: SFSymbol;
   md: AndroidSymbol;
 };
 
 const BUTTONS = {
-  save: { label: "Sichern", done: true, sf: "checkmark", md: "check" },
+  save: { label: "Sichern", done: true, iconOnIOS: true, sf: "checkmark", md: "check" },
   next: { label: "Weiter", sf: "arrow.right", md: "arrow_forward" },
   finish: { label: "Fertig", done: true, sf: "checkmark", md: "check" },
 } satisfies Record<string, HeaderButton>;
 
-// Props for a text button in the navigation bar on iOS, an icon button on Android. Spread them onto
-// a <Stack.Toolbar.Button> placed directly inside <Stack.Toolbar>: iOS ignores buttons wrapped in
-// another component. Returns null on Android until the Material Symbol has loaded.
-function useHeaderButton({ label, done, sf, md }: HeaderButton): ToolbarButtonProps | null {
+// Props for a button in the navigation bar: text or icon on iOS, an icon on Android. Spread them
+// onto a <Stack.Toolbar.Button> placed directly inside <Stack.Toolbar>: iOS ignores buttons wrapped
+// in another component. Returns null on Android until the Material Symbol has loaded.
+function useHeaderButton({
+  label,
+  done,
+  iconOnIOS,
+  sf,
+  md,
+}: HeaderButton): ToolbarButtonProps | null {
   const androidIcon = useSymbol(sf, md);
 
   if (Platform.OS === "ios") {
-    return done ? { variant: "done", children: label } : { children: label };
+    const content = iconOnIOS ? { icon: sf, accessibilityLabel: label } : { children: label };
+    return done ? { variant: "done", ...content } : content;
   }
   return androidIcon ? { icon: androidIcon, accessibilityLabel: label } : null;
 }
 
-// "Sichern" of a form
+// ✓ "Sichern" of a form
 export const useSaveButton = () => useHeaderButton(BUTTONS.save);
 
 // "Weiter" to the next setup step, "Fertig" on the last one
 export const useStepButton = (step: "next" | "done") =>
   useHeaderButton(step === "next" ? BUTTONS.next : BUTTONS.finish);
+
+// iOS: × "Abbrechen" of a form, at the left of the navigation bar. Android leaves with its back
+// arrow.
+export const CANCEL_BUTTON = { icon: "xmark", accessibilityLabel: "Abbrechen" } as const;

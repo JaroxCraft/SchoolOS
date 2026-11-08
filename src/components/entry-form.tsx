@@ -24,7 +24,7 @@ import {
 import { subjectLessonOn, upcomingSubjectLessons } from "@/lib/schedule";
 import { NEUTRAL_COLOR } from "@/lib/subject-colors";
 import { useDiscardGuard } from "@/hooks/use-discard-guard";
-import { useSaveButton } from "@/hooks/use-header-button";
+import { CANCEL_BUTTON, useSaveButton } from "@/hooks/use-header-button";
 
 const NONE = 0;
 
@@ -205,7 +205,7 @@ export function EntryForm({
       {/* Android shows the back arrow instead */}
       {Platform.OS === "ios" && (
         <Stack.Toolbar placement="left">
-          <Stack.Toolbar.Button onPress={() => router.back()}>Abbrechen</Stack.Toolbar.Button>
+          <Stack.Toolbar.Button {...CANCEL_BUTTON} onPress={() => router.back()} />
         </Stack.Toolbar>
       )}
       <Stack.Toolbar placement="right">
