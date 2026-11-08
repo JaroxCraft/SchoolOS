@@ -71,9 +71,11 @@ function entryItem({ entry, subject }: EntryRowProps, ink: Ink) {
   );
 }
 
-// iOS (the rows are not expanded there, see <FormList>): swipe right checks a task off or reopens
-// it, swipe left deletes the entry, as in Reminders; a long press offers the same and "Bearbeiten".
-function EntryRowComponent(props: EntryRowProps) {
+// Swipe right checks a task off or reopens it, swipe left deletes the entry, as in Reminders; a
+// long press offers the same and "Bearbeiten" (iOS: swipe actions and context menu; Android: the
+// menu of a long press, see <FormGroup>). Built without hooks, so <FormGroup> can use it as the
+// list item itself.
+function entryRow(props: EntryRowProps, ink: Ink) {
   const { entry } = props;
   const toggle: RowAction | undefined = isCheckable(entry.type)
     ? {
@@ -99,11 +101,15 @@ function EntryRowComponent(props: EntryRowProps) {
       leading={toggle && [toggle]}
       trailing={[remove]}
       menu={[...(toggle ? [toggle] : []), edit, remove]}>
-      {entryItem(props, useInk())}
+      {entryItem(props, ink)}
     </RowActions>
   );
 }
 
+function EntryRowComponent(props: EntryRowProps) {
+  return entryRow(props, useInk());
+}
+
 export const EntryRow: RowComponent<EntryRowProps> = Object.assign(EntryRowComponent, {
-  asListItem: entryItem,
+  asListItem: entryRow,
 });

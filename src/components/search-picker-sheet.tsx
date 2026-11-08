@@ -16,10 +16,9 @@ import { useSymbol } from "@/hooks/use-symbol";
 
 // Android: a Material bottom sheet that opens at half height with the drag handle on top, so it
 // can be pulled up or swiped down to close (also: tapping the scrim, the back gesture). "Neue …"
-// expands it to full height and shows the form in place of the list, like the pushed form in the
-// iOS sheet (search-picker-sheet.ios.tsx). Items cannot be changed here yet: Android lists have
-// no swipe or long-press actions so far. The Compose sheet is used instead of the universal
-// BottomSheet, which does not offer to expand it.
+// and "Bearbeiten" in the menu of an item's long press expand it to full height and show the form
+// in place of the list, like the pushed form in the iOS sheet (search-picker-sheet.ios.tsx). The
+// Compose sheet is used instead of the universal BottomSheet, which does not offer to expand it.
 export function SearchPickerSheet<T extends { id: number }>(props: SearchPickerSheetProps<T>) {
   const ink = useInk();
   const colors = useMaterialColors();
@@ -29,7 +28,8 @@ export function SearchPickerSheet<T extends { id: number }>(props: SearchPickerS
   const [mounted, setMounted] = useState(props.isPresented);
   if (props.isPresented && !mounted) setMounted(true);
   const [query, setQuery] = useState("");
-  const [creating, setCreating] = useState(false);
+  // The form in place of the list, for a new item or to change one
+  const [formMode, setFormMode] = useState<"new" | "edit" | null>(null);
   const { form } = props;
 
   useEffect(() => {
@@ -45,10 +45,20 @@ export function SearchPickerSheet<T extends { id: number }>(props: SearchPickerS
 
   const close = () => {
     setQuery("");
-    setCreating(false);
+    setFormMode(null);
     props.onDismiss();
   };
-  const { sections, choose } = usePickerSections(props, query, close);
+  const openForm = (item?: T) => {
+    form?.start(item);
+    setFormMode(item === undefined ? "new" : "edit");
+    sheet.current?.expand();
+  };
+  const { sections, choose } = usePickerSections(
+    props,
+    query,
+    close,
+    form?.editLabel ? openForm : undefined
+  );
 
   if (!mounted) return null;
 
@@ -61,17 +71,25 @@ export function SearchPickerSheet<T extends { id: number }>(props: SearchPickerS
         // The list paints the Material surface; the sheet's own surfaceContainerLow would frame it
         // in a second color above and below
         containerColor={colors.surface}>
-        {form && creating ? (
+        {form && formMode ? (
           <FormGroup>
-            <FieldGroup.Section title={form.label}>{form.fields}</FieldGroup.Section>
+            <FieldGroup.Section
+              title={formMode === "edit" ? (form.editLabel ?? form.label) : form.label}>
+              {form.fields}
+            </FieldGroup.Section>
             <FieldGroup.Section>
               <Button
                 variant="text"
-                label="Hinzufügen"
+                label={formMode === "edit" ? "Sichern" : "Hinzufügen"}
                 disabled={!form.canSave}
-                onPress={async () => choose(await form.save())}
+                onPress={async () => {
+                  const id = await form.save();
+                  // A changed item stays as it was picked; the list shows the change
+                  if (formMode === "edit") setFormMode(null);
+                  else choose(id);
+                }}
               />
-              <Button variant="text" label="Abbrechen" onPress={() => setCreating(false)} />
+              <Button variant="text" label="Abbrechen" onPress={() => setFormMode(null)} />
             </FieldGroup.Section>
           </FormGroup>
         ) : (
@@ -89,12 +107,7 @@ export function SearchPickerSheet<T extends { id: number }>(props: SearchPickerS
             </FieldGroup.Section>
             {form && !query.trim() && (
               <FieldGroup.Section>
-                <ListItem
-                  onPress={() => {
-                    form.start();
-                    setCreating(true);
-                    sheet.current?.expand();
-                  }}>
+                <ListItem onPress={() => openForm()}>
                   <Text textStyle={{ color: ink.accent }}>{form.label}</Text>
                 </ListItem>
               </FieldGroup.Section>
