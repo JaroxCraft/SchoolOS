@@ -27,3 +27,9 @@ bun start
 | `bun run typecheck`   | Type-check with TypeScript                             |
 | `bun run format`      | Format all files with Prettier                         |
 | `bun run db:generate` | Generate a migration after changing `src/db/schema.ts` |
+
+## Releases
+
+Pushing a tag of the form `vX.Y.Z` (e.g. `v1.2.0`) runs `.eas/workflows/release.yml`: it builds iOS and submits it to TestFlight, and builds the Android APK. The tag becomes the app version, so only plain `vX.Y.Z` tags give a valid release; suffixes like `-beta` do not.
+
+JavaScript-only changes can ship as an OTA update (`.eas/workflows/update.yml`). Adding or upgrading a native module needs a new tag and build instead, since an update cannot change native code.
