@@ -12,6 +12,7 @@ import { FormGroup } from "@/components/form-group";
 import { type SearchPickerSheetProps, usePickerSections } from "@/components/search-picker";
 import { TextField } from "@/components/text-field";
 import { useInk } from "@/hooks/use-ink";
+import { showMessage } from "@/lib/confirm";
 import { useSymbol } from "@/hooks/use-symbol";
 
 // Android: a Material bottom sheet that opens at half height with the drag handle on top, so it
@@ -30,6 +31,8 @@ export function SearchPickerSheet<T extends { id: number }>(props: SearchPickerS
   const [query, setQuery] = useState("");
   // The form in place of the list, for a new item or to change one
   const [formMode, setFormMode] = useState<"new" | "edit" | null>(null);
+  // While the form saves, so a second tap cannot add the item twice
+  const [saving, setSaving] = useState(false);
   const { form } = props;
 
   useEffect(() => {
@@ -81,12 +84,23 @@ export function SearchPickerSheet<T extends { id: number }>(props: SearchPickerS
               <Button
                 variant="text"
                 label={formMode === "edit" ? "Sichern" : "Hinzufügen"}
-                disabled={!form.canSave}
+                disabled={!form.canSave || saving}
                 onPress={async () => {
-                  const id = await form.save();
-                  // A changed item stays as it was picked; the list shows the change
-                  if (formMode === "edit") setFormMode(null);
-                  else choose(id);
+                  setSaving(true);
+                  try {
+                    const id = await form.save();
+                    // A changed item stays as it was picked; the list shows the change
+                    if (formMode === "edit") setFormMode(null);
+                    else choose(id);
+                  } catch {
+                    // Shared by the subject and teacher pickers, so the message names no kind of item
+                    showMessage(
+                      "Nicht gesichert",
+                      "Die Eingaben konnten nicht gesichert werden. Versuche es nochmals."
+                    );
+                  } finally {
+                    setSaving(false);
+                  }
                 }}
               />
               <Button variant="text" label="Abbrechen" onPress={() => setFormMode(null)} />

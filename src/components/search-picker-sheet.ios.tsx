@@ -26,6 +26,7 @@ import { FormGroup } from "@/components/form-group";
 import { NavigationRow } from "@/components/rows";
 import { type SearchPickerSheetProps, usePickerSections } from "@/components/search-picker";
 import { useInk } from "@/hooks/use-ink";
+import { showMessage } from "@/lib/confirm";
 
 const FORM = "form";
 
@@ -45,6 +46,8 @@ export function SearchPickerSheet<T extends { id: number }>(props: SearchPickerS
   const [detent, setDetent] = useState<PresentationDetent>("medium");
   // Whether the form changes an item instead of adding one
   const [editing, setEditing] = useState(false);
+  // While the form saves, so a second tap cannot add the item twice
+  const [saving, setSaving] = useState(false);
   const searchText = useNativeState("");
   const { form } = props;
 
@@ -129,12 +132,23 @@ export function SearchPickerSheet<T extends { id: number }>(props: SearchPickerS
                     <ToolbarItem placement="confirmationAction">
                       <Button
                         label={editing ? "Sichern" : "Hinzufügen"}
-                        modifiers={[disabled(!form.canSave)]}
+                        modifiers={[disabled(!form.canSave || saving)]}
                         onPress={async () => {
-                          const id = await form.save();
-                          // A changed item stays as it was picked; the list shows the change
-                          if (editing) setPath([]);
-                          else choose(id);
+                          setSaving(true);
+                          try {
+                            const id = await form.save();
+                            // A changed item stays as it was picked; the list shows the change
+                            if (editing) setPath([]);
+                            else choose(id);
+                          } catch {
+                            // Shared by the subject and teacher pickers, so the message names no kind of item
+                            showMessage(
+                              "Nicht gesichert",
+                              "Die Eingaben konnten nicht gesichert werden. Versuche es nochmals."
+                            );
+                          } finally {
+                            setSaving(false);
+                          }
                         }}
                       />
                     </ToolbarItem>

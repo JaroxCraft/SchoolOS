@@ -1,4 +1,5 @@
 import { usePreventRemove } from "expo-router";
+import { useState } from "react";
 
 import { confirm } from "@/lib/confirm";
 
@@ -8,12 +9,22 @@ import { confirm } from "@/lib/confirm";
 // deleting. A pushed form also wraps its content in <DiscardGuard>, since the iOS back button and
 // swipe would leave before the question.
 export function useDiscardGuard(dirty: boolean) {
-  return usePreventRemove(dirty, ({ repeat }) =>
+  // Turns the prevention off in the same update that disables it, so the prop never stays true
+  // after repeat/disablePrevention (usePreventRemove warns about that in development)
+  const [leaving, setLeaving] = useState(false);
+  const disablePrevention = usePreventRemove(dirty && !leaving, ({ repeat }) =>
     confirm({
       title: "Änderungen verwerfen?",
       message: "Deine Eingaben sind noch nicht gesichert.",
       confirmLabel: "Änderungen verwerfen",
-      onConfirm: repeat,
+      onConfirm: () => {
+        setLeaving(true);
+        repeat();
+      },
     })
   );
+  return () => {
+    setLeaving(true);
+    disablePrevention();
+  };
 }

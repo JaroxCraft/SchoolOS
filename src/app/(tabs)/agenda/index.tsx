@@ -28,18 +28,31 @@ export default function AgendaScreen() {
   const lessons = useLessons();
   const [typeFilter, setTypeFilter] = useState<EntryType | typeof ALL>(ALL);
   const [subjectFilter, setSubjectFilter] = useState(ALL_SUBJECTS);
+  // The filtered subject was deleted: show all subjects again, as if no filter was set
+  if (subjectFilter > 0 && !subjects.some((subject) => subject.id === subjectFilter)) {
+    setSubjectFilter(ALL_SUBJECTS);
+  }
   const wasCompleted = useWasCompleted();
   const ink = useInk();
+
+  // The choices above the types and subjects, used by the iOS menu and the Android rows alike.
+  // iOS names what "Alle" covers, since its menu lists types and subjects together; the Android
+  // rows already say "Typ" and "Fach".
+  const typeOptions: SelectOption<EntryType | typeof ALL>[] = [
+    { label: Platform.OS === "ios" ? "Alle Typen" : "Alle", value: ALL },
+    ...ENTRY_TYPE_OPTIONS,
+  ];
+  const subjectChoices = [
+    { label: Platform.OS === "ios" ? "Alle Fächer" : "Alle", value: ALL_SUBJECTS },
+    { label: "Allgemein", value: GENERAL },
+  ];
   const subjectPicker = useSubjectPicker({
     label: "Fach",
     value: subjectFilter,
     subjects,
     teachers: useTeachers(),
     lessons,
-    extraChoices: [
-      { label: "Alle", value: ALL_SUBJECTS },
-      { label: "Allgemein", value: GENERAL },
-    ],
+    extraChoices: subjectChoices,
     onChange: setSubjectFilter,
   });
 
@@ -80,13 +93,8 @@ export default function AgendaScreen() {
     { title: "Vergangen", items: past },
   ];
 
-  const typeOptions: SelectOption<EntryType | typeof ALL>[] = [
-    { label: "Alle Typen", value: ALL },
-    ...ENTRY_TYPE_OPTIONS,
-  ];
   const subjectOptions = [
-    { label: "Alle Fächer", value: ALL_SUBJECTS },
-    { label: "Allgemein", value: GENERAL },
+    ...subjectChoices,
     ...sortSubjectsByUse(subjects, lessons).map((subject) => ({
       label: subject.name,
       value: subject.id,
@@ -145,7 +153,7 @@ export default function AgendaScreen() {
               label="Typ"
               value={typeFilter}
               onChange={setTypeFilter}
-              options={[{ label: "Alle", value: ALL }, ...ENTRY_TYPE_OPTIONS]}
+              options={typeOptions}
             />
             {subjectPicker.row}
           </FieldGroup.Section>

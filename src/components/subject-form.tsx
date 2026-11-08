@@ -5,9 +5,9 @@ import { useState } from "react";
 import { Platform } from "react-native";
 
 import { ColorField } from "@/components/color-field";
-import { DestructiveButton } from "@/components/destructive-button";
 import { DiscardGuard } from "@/components/discard-guard";
 import { FooterText, FormList } from "@/components/form-list";
+import { DestructiveRow } from "@/components/rows";
 import { NO_TEACHER, TeacherPickerSheet } from "@/components/teacher-picker";
 import { TextField } from "@/components/text-field";
 import { saveSubject } from "@/db/actions";
@@ -16,10 +16,13 @@ import { useDiscardGuard } from "@/hooks/use-discard-guard";
 import { useInk } from "@/hooks/use-ink";
 import { confirmDelete, subjectDeletion } from "@/lib/confirm-delete";
 import { SUBJECT_COLORS } from "@/lib/subject-colors";
-import { useSaveButton } from "@/hooks/use-save-button";
+import { useSaveButton } from "@/hooks/use-header-button";
 
 type SubjectFormProps = {
   subject: Subject | undefined;
+  // Colors of all subjects, for picking a free one for a new subject
+  allColors: string[];
+  // Colors of the other subjects (by id), for the "used" dots of the swatches
   usedColors: string[];
   teachers: Teacher[];
 };
@@ -31,13 +34,13 @@ function firstFreeColor(usedColors: string[]): string {
 }
 
 // The abbreviation used when the field is left empty
-const defaultAbbreviation = (name: string) => name.trim().slice(0, 3);
+const defaultAbbreviation = (name: string) => name.trim().slice(0, 3).trim();
 
-export function SubjectForm({ subject, usedColors, teachers }: SubjectFormProps) {
+export function SubjectForm({ subject, allColors, usedColors, teachers }: SubjectFormProps) {
   const [name, setName] = useState(subject?.name ?? "");
   const [abbreviation, setAbbreviation] = useState(subject?.abbreviation ?? "");
   const [teacherId, setTeacherId] = useState(subject?.teacherId ?? NO_TEACHER);
-  const [color, setColor] = useState(() => subject?.color ?? firstFreeColor(usedColors));
+  const [color, setColor] = useState(() => subject?.color ?? firstFreeColor(allColors));
 
   const [teacherPickerOpen, setTeacherPickerOpen] = useState(false);
   const ink = useInk();
@@ -102,11 +105,7 @@ export function SubjectForm({ subject, usedColors, teachers }: SubjectFormProps)
 
           {/* iOS: a row with the system color picker; Android: the color swatches */}
           <FieldGroup.Section title={Platform.OS === "android" ? "Farbe" : undefined}>
-            <ColorField
-              value={color}
-              onChange={setColor}
-              usedColors={usedColors.filter((used) => used !== subject?.color)}
-            />
+            <ColorField value={color} onChange={setColor} usedColors={usedColors} />
             {Platform.OS === "android" ? (
               <FieldGroup.SectionFooter>
                 <FooterText>Ein Punkt markiert Farben, die schon ein anderes Fach hat.</FooterText>
@@ -118,7 +117,7 @@ export function SubjectForm({ subject, usedColors, teachers }: SubjectFormProps)
             )}
           </FieldGroup.Section>
 
-          <FieldGroup.Section title="Lehrperson">
+          <FieldGroup.Section>
             <ListItem
               onPress={() => setTeacherPickerOpen(true)}
               trailing={
@@ -132,7 +131,7 @@ export function SubjectForm({ subject, usedColors, teachers }: SubjectFormProps)
 
           {subject && (
             <FieldGroup.Section>
-              <DestructiveButton label="Fach löschen" onPress={remove} />
+              <DestructiveRow label="Fach löschen" onPress={remove} />
             </FieldGroup.Section>
           )}
         </FormList>
