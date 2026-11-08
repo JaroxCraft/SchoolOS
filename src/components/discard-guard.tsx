@@ -6,6 +6,9 @@ import { CANCEL_BUTTON } from "@/hooks/use-header-button";
 
 // A swipe to the right this far, mostly sideways, counts as the swipe back
 const SWIPE_DISTANCE = 12;
+// Only from the left edge, like the native swipe back: further in, a drag to the right belongs to
+// the form, e.g. a slider
+const EDGE_WIDTH = 30;
 
 type DiscardGuardProps = {
   dirty: boolean;
@@ -17,7 +20,7 @@ type DiscardGuardProps = {
 // form with unsaved changes, while the form stays where it is. The native back button and swipe
 // would take the screen away first and bring it back with the question afterwards. So while there
 // are changes, × "Abbrechen", which asks first, takes the place of the back button, and the native
-// swipe is off: a swipe to the right over the form asks right away instead. Android asks before
+// swipe is off: a swipe to the right from the left edge asks right away instead. Android asks before
 // leaving with its own back arrow and gesture, so it only shows the form.
 export function DiscardGuard({ dirty, children }: DiscardGuardProps) {
   // Always set, not only while dirty: an option set from a page stays after it unmounts, so the
@@ -27,8 +30,8 @@ export function DiscardGuard({ dirty, children }: DiscardGuardProps) {
     () =>
       PanResponder.create({
         // Capture phase: the form is a native list, which would not hand the touch on
-        onMoveShouldSetPanResponderCapture: (_, { dx, dy }) =>
-          dirty && dx > SWIPE_DISTANCE && dx > 2 * Math.abs(dy),
+        onMoveShouldSetPanResponderCapture: (_, { x0, dx, dy }) =>
+          dirty && x0 < EDGE_WIDTH && dx > SWIPE_DISTANCE && dx > 2 * Math.abs(dy),
         // Once per swipe: the guard holds the screen back and asks
         onPanResponderGrant: () => router.back(),
         onPanResponderTerminationRequest: () => false,
