@@ -59,7 +59,9 @@ function confirmReset() {
       await clearDatabase();
       await initDatabase();
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      router.replace("/");
+      // Back to the existing tabs, popping their stacks; replace would put a second set of tabs
+      // on top of the old ones
+      router.dismissTo("/");
     },
   });
 }
