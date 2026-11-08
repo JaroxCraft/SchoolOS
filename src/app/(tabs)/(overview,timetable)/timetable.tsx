@@ -6,6 +6,7 @@ import {
   type NativeSyntheticEvent,
   ScrollView,
   type ScrollViewInstance,
+  Platform,
   StyleSheet,
   useWindowDimensions,
   View,
@@ -81,19 +82,33 @@ export default function TimetableScreen() {
     scrollToDay(weekday, true);
   };
 
-  // When the finger lifts, the week row switches to the day the page will come to rest on, so the
-  // circle animates while the page slides into place, like in Calendar. iOS reports where the
-  // scroll will end; otherwise the swipe direction decides.
-  const selectDayOfSwipe = ({ nativeEvent }: NativeSyntheticEvent<NativeScrollEvent>) => {
-    const { targetContentOffset, contentOffset, velocity } = nativeEvent;
-    const page = targetContentOffset
-      ? Math.round(targetContentOffset.x / width)
-      : Math.abs(velocity?.x ?? 0) > 0.2
-        ? (velocity!.x > 0 ? Math.ceil : Math.floor)(contentOffset.x / width)
-        : Math.round(contentOffset.x / width);
+  const selectPage = (page: number) => {
     const weekday = Math.min(Math.max(page + 1, 1), days.length);
     if (weekday !== selected) setSelected(weekday);
   };
+
+  // When the finger lifts, the week row switches to the day the page will come to rest on, so the
+  // circle animates while the page slides into place, like in Calendar. iOS reports where the
+  // scroll will end; Android only the swipe direction, as the finger's velocity (negative towards
+  // the next day, the opposite of the iOS content velocity).
+  const selectDayOfSwipe = ({ nativeEvent }: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const { targetContentOffset, contentOffset, velocity } = nativeEvent;
+    if (targetContentOffset) {
+      selectPage(Math.round(targetContentOffset.x / width));
+      return;
+    }
+    const towardsNext = (Platform.OS === "android" ? -1 : 1) * (velocity?.x ?? 0);
+    const page = contentOffset.x / width;
+    selectPage(
+      Math.abs(towardsNext) > 0.2
+        ? (towardsNext > 0 ? Math.ceil : Math.floor)(page)
+        : Math.round(page)
+    );
+  };
+
+  // The page the scroll came to rest on, in case Android's fling ended elsewhere than guessed
+  const selectRestingDay = ({ nativeEvent }: NativeSyntheticEvent<NativeScrollEvent>) =>
+    selectPage(Math.round(nativeEvent.contentOffset.x / width));
 
   const timeline = {
     periods,
@@ -139,7 +154,8 @@ export default function TimetableScreen() {
             showsHorizontalScrollIndicator={false}
             // Opens on the chosen day without a visible scroll
             onLayout={() => scrollToDay(selected, false)}
-            onScrollEndDrag={selectDayOfSwipe}>
+            onScrollEndDrag={selectDayOfSwipe}
+            onMomentumScrollEnd={selectRestingDay}>
             {days.map((day) => (
               <View key={day.weekday} style={{ width, paddingHorizontal: PADDING }}>
                 <LessonTimeline
