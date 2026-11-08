@@ -17,22 +17,16 @@ type TeacherPickerSheetProps = {
 
 // The teachers by name, searchable by name or abbreviation, with "Keine" on top. A missing
 // teacher is added right in the sheet ("Neue Lehrperson") and picked at once.
-export function TeacherPickerSheet({ onDismiss, teachers, ...props }: TeacherPickerSheetProps) {
+export function TeacherPickerSheet({ teachers, ...props }: TeacherPickerSheetProps) {
   const [name, setName] = useState("");
   const [abbreviation, setAbbreviation] = useState("");
   const [email, setEmail] = useState("");
-
-  const dismiss = () => {
-    setName("");
-    setAbbreviation("");
-    setEmail("");
-    onDismiss();
-  };
+  // Remounts the fields for each new teacher, so they start as empty as the values above
+  const [draft, setDraft] = useState(0);
 
   return (
     <SearchPickerSheet
       {...props}
-      onDismiss={dismiss}
       title="Lehrperson"
       searchPlaceholder="Name oder Kürzel"
       items={[...teachers].sort((a, b) => a.name.localeCompare(b.name))}
@@ -44,6 +38,12 @@ export function TeacherPickerSheet({ onDismiss, teachers, ...props }: TeacherPic
       create={{
         label: "Neue Lehrperson",
         canSave: name.trim().length > 0,
+        start: () => {
+          setName("");
+          setAbbreviation("");
+          setEmail("");
+          setDraft((count) => count + 1);
+        },
         save: () =>
           addTeacher({
             name: name.trim(),
@@ -52,21 +52,21 @@ export function TeacherPickerSheet({ onDismiss, teachers, ...props }: TeacherPic
           }),
         fields: [
           <TextField
-            key="name"
+            key={`name-${draft}`}
             placeholder="Name, z. B. Julian Riegger"
             autoFocus
             autoCapitalize="words"
             onChangeText={setName}
           />,
           <TextField
-            key="abbreviation"
+            key={`abbreviation-${draft}`}
             placeholder="Kürzel, z. B. JRi"
             autoCapitalize="none"
             maxLength={5}
             onChangeText={setAbbreviation}
           />,
           <TextField
-            key="email"
+            key={`email-${draft}`}
             placeholder="E-Mail (optional)"
             keyboardType="email-address"
             autoCapitalize="none"

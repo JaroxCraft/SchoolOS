@@ -46,7 +46,12 @@ export function SearchPickerSheet<T extends { id: number }>(props: SearchPickerS
       onDismiss={close}
       snapPoints={["half", "full"]}
       contentPadding={0}>
-      <NavigationStack path={path} onPathChange={setPath}>
+      <NavigationStack
+        path={path}
+        onPathChange={(next) => {
+          if (next.includes(CREATE) && !path.includes(CREATE)) create?.start();
+          setPath(next);
+        }}>
         <Toolbar>
           <FieldGroup
             modifiers={[

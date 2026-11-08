@@ -57,7 +57,11 @@ export function SearchPickerSheet<T extends { id: number }>(props: SearchPickerS
           </FieldGroup.Section>
           {create && !query.trim() && (
             <FieldGroup.Section>
-              <ListItem onPress={() => setCreating(true)}>
+              <ListItem
+                onPress={() => {
+                  create.start();
+                  setCreating(true);
+                }}>
                 <Text textStyle={{ color: ink.accent }}>{create.label}</Text>
               </ListItem>
             </FieldGroup.Section>
