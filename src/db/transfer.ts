@@ -103,6 +103,10 @@ const isObject = (value: unknown): value is Record<string, unknown> =>
 
 const TIME = /^(?:[01]\d|2[0-3]):[0-5]\d$/;
 const COLOR = /^#[0-9A-Fa-f]{6}$/;
+// The range the lead day picker in the settings offers
+const MAX_LEAD_DAYS = 21;
+// Rows per insert statement, so a large file stays below SQLite's limit of bound variables
+const INSERT_CHUNK_SIZE = 500;
 
 // A real calendar day as "YYYY-MM-DD"; Date.UTC rolls "2026-02-30" over, so it would not match.
 function isDate(value: string) {
@@ -196,6 +200,8 @@ export function parseTransferFile(text: string): TransferFile {
     throw new TransferError("Die Datei ist keine SchoolOS-Datei.");
   }
 
+  const startTimes = new Set<string>();
+  const slots = new Set<string>();
   const periodIds = checkRows<Period>(
     data.periods,
     periods,
@@ -208,6 +214,11 @@ export function parseTransferFile(text: string): TransferFile {
       if (period.startTime >= period.endTime) {
         fail(`${name}: Beginn ${period.startTime} liegt nicht vor dem Ende ${period.endTime}.`);
       }
+      // A timetable import matches periods by their start time
+      if (startTimes.has(period.startTime)) {
+        fail(`${name}: Eine Lektion beginnt bereits um ${period.startTime}.`);
+      }
+      startTimes.add(period.startTime);
     }
   );
   const teacherIds = checkRows<Teacher>(data.teachers, teachers, "Lehrpersonen", "Lehrperson");
@@ -234,6 +245,11 @@ export function parseTransferFile(text: string): TransferFile {
       }
       checkReference(name, "Das Fach", subjectIds, lesson.subjectId);
       checkReference(name, "Die Lektionszeit", periodIds, lesson.periodId);
+      const slot = `${lesson.weekday}-${lesson.periodId}`;
+      if (slots.has(slot)) {
+        fail(`${name}: Am selben Tag liegt zur selben Lektionszeit schon eine Lektion.`);
+      }
+      slots.add(slot);
     }
   );
 
@@ -267,6 +283,16 @@ export function parseTransferFile(text: string): TransferFile {
     const fileSettings = data.settings as Settings;
     checkTime("Einstellungen", "Die zweite Erinnerung", fileSettings.secondReminderTime);
     checkTime("Einstellungen", "Die Übersicht", fileSettings.noLessonSummaryTime);
+    for (const [key, what] of [
+      ["examLeadDays", "Der Lernbeginn für Prüfungen"],
+      ["presentationLeadDays", "Der Lernbeginn für Präsentationen"],
+      ["submissionLeadDays", "Der Lernbeginn für Abgaben"],
+    ] as const) {
+      const days = fileSettings[key];
+      if (!Number.isInteger(days) || days < 0 || days > MAX_LEAD_DAYS) {
+        fail(`Einstellungen: ${what} (${days} Tage) liegt nicht zwischen 0 und ${MAX_LEAD_DAYS}.`);
+      }
+    }
   }
 
   return data as unknown as TransferFile;
@@ -303,10 +329,15 @@ function columnValues<T extends Table>(table: T, row: object): T["$inferInsert"]
 export function importData(file: TransferFile) {
   db.transaction((tx) => {
     const insert = <T extends Table>(table: T, rows: object[]) => {
-      if (rows.length === 0) return;
-      tx.insert(table)
-        .values(rows.map((row) => columnValues(table, row)) as T["$inferInsert"][])
-        .run();
+      for (let start = 0; start < rows.length; start += INSERT_CHUNK_SIZE) {
+        tx.insert(table)
+          .values(
+            rows
+              .slice(start, start + INSERT_CHUNK_SIZE)
+              .map((row) => columnValues(table, row)) as T["$inferInsert"][]
+          )
+          .run();
+      }
     };
 
     if (file.kind === "backup") {

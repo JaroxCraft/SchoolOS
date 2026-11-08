@@ -16,6 +16,8 @@ import {
 import { confirm, showMessage } from "@/lib/confirm";
 import { today } from "@/lib/dates";
 
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
+
 // Built when sharing, so a backup made after midnight carries the new date
 function fileName(kind: TransferKind) {
   return kind === "timetable" ? "SchoolOS-Stundenplan.json" : `SchoolOS-Backup-${today()}.json`;
@@ -54,7 +56,17 @@ export async function pickAndImport(onDone?: () => void) {
       copyToCacheDirectory: Platform.OS === "ios",
     });
     if (result.canceled) return;
-    text = await new File(result.assets[0].uri).text();
+    const picked = result.assets[0];
+    // Exports are a few hundred KB at most; a large file is not one and would block reading it
+    if ((picked.size ?? new File(picked.uri).size) > MAX_FILE_SIZE) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      showMessage(
+        "Import nicht möglich",
+        "Die Datei ist grösser als 5 MB und keine SchoolOS-Datei."
+      );
+      return;
+    }
+    text = await new File(picked.uri).text();
   } catch {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     showMessage("Die Datei konnte nicht geöffnet werden", "Versuche es noch einmal.");
