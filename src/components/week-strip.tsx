@@ -1,4 +1,3 @@
-import * as Haptics from "expo-haptics";
 import { useEffect } from "react";
 import { Pressable, StyleSheet, useColorScheme, View } from "react-native";
 import Animated, {
@@ -37,7 +36,7 @@ export type WeekStripProps = {
 // circle, in the accent color if it is today and in the text color otherwise, as in Calendar.
 export function WeekStrip({ days, selected, today, onSelect, inset, gap }: WeekStripProps) {
   return (
-    <View style={[styles.row, { paddingLeft: inset, gap }]}>
+    <View style={[styles.row, { paddingLeft: inset, gap }]} accessibilityRole="tablist">
       {days.map((day) => (
         <WeekDay
           key={day.weekday}
@@ -90,16 +89,15 @@ function WeekDay({ weekday, selected, isToday, onSelect }: WeekDayProps) {
   return (
     <Pressable
       style={styles.day}
-      accessibilityRole="button"
+      accessibilityRole="tab"
       accessibilityState={{ selected }}
       accessibilityLabel={`${weekdayName(weekday)}${isToday ? ", heute" : ""}`}
-      onPress={() => {
-        if (!selected) Haptics.selectionAsync();
-        onSelect(weekday);
-      }}>
+      onPress={() => onSelect(weekday)}>
       <View style={styles.circle}>
         <Animated.View style={[styles.fill, { backgroundColor: fill }, circleStyle]} />
-        <Animated.Text style={[styles.weekday, textStyle]}>{weekdayShort(weekday)}</Animated.Text>
+        <Animated.Text style={[styles.weekday, textStyle]} maxFontSizeMultiplier={1.4}>
+          {weekdayShort(weekday)}
+        </Animated.Text>
       </View>
     </Pressable>
   );

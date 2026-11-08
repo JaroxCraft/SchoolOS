@@ -3,11 +3,12 @@ import { Pressable, StyleSheet, Text, useColorScheme, View } from "react-native"
 
 import { colors } from "@/constants/colors";
 import type { Lesson, Period, Subject, Teacher } from "@/db/schema";
+import { SCHOOL_ROUTES } from "@/lib/routes";
 import { lessonBlocks, type LessonBlock, minutesOf } from "@/lib/timeline";
 import { joinDetails } from "@/lib/text";
 
 export const GUTTER_WIDTH = 44;
-const COLUMN_GAP = 4;
+export const COLUMN_GAP = 4;
 // Text grows with the system text size, but the cards have the height of their lessons
 const MAX_FONT_SCALE = 1.3;
 
@@ -50,7 +51,8 @@ export function LessonTimeline({
   // Re-renders on light/dark changes, so Android resolves the native colors again
   useColorScheme();
   const start = minutesOf(visiblePeriods[0].startTime);
-  const end = minutesOf(visiblePeriods.at(-1)!.endTime);
+  // The latest end, not the last period's: an earlier period may end later and must not be clipped
+  const end = Math.max(...visiblePeriods.map((period) => minutesOf(period.endTime)));
   const y = (minutes: number) => (minutes - start) * scale;
   const columnWidth = (width - GUTTER_WIDTH - COLUMN_GAP * days.length) / days.length;
   const columnLeft = (index: number) =>
@@ -150,7 +152,9 @@ function LessonCard({ block, subject, teacher, compact, top, height, state }: Le
   const periodsLabel =
     block.firstNumber === block.lastNumber
       ? `${block.firstNumber}. Lektion`
-      : `${block.firstNumber}. und ${block.lastNumber}. Lektion`;
+      : block.lastNumber - block.firstNumber === 1
+        ? `${block.firstNumber}. und ${block.lastNumber}. Lektion`
+        : `${block.firstNumber}.–${block.lastNumber}. Lektion`;
   // Short cards put the details next to the name
   const twoLines = compact || height >= 52;
 
@@ -207,20 +211,18 @@ function LessonCard({ block, subject, teacher, compact, top, height, state }: Le
         </Link.Trigger>
         <Link.Menu title={`${subject.name} · ${periodsLabel}`}>
           <Link.MenuAction
-            title="Neuer Eintrag"
             icon="plus"
             onPress={() =>
               router.push({
                 pathname: "/entry/[id]",
                 params: { id: "new", subjectId: String(subject.id) },
               })
-            }
-          />
-          <Link.MenuAction
-            title="Stundenplan bearbeiten"
-            icon="pencil"
-            onPress={() => router.push("/setup/timetable")}
-          />
+            }>
+            Neuer Eintrag
+          </Link.MenuAction>
+          <Link.MenuAction icon="pencil" onPress={() => router.push(SCHOOL_ROUTES.setup.timetable)}>
+            Stundenplan bearbeiten
+          </Link.MenuAction>
         </Link.Menu>
       </Link>
     </View>
