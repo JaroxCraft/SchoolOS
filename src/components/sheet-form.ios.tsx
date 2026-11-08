@@ -10,7 +10,7 @@ import { useEffect, useRef } from "react";
 
 import { FormGroup } from "@/components/form-group";
 import type { SheetFormProps } from "@/components/sheet-form";
-import { markSheetClosing } from "@/lib/sheet-transition";
+import { holdSheetClosing, releaseSheetClosing } from "@/lib/sheet-transition";
 
 // Longer than any presentation, in case the end of the transition is never reported
 const PRESENTED_FALLBACK_MS = 1500;
@@ -24,7 +24,7 @@ const PRESENTED_FALLBACK_MS = 1500;
 // Closing it while it still zooms in would leave react-native-screens unable to present or dismiss
 // any modal until the app restarts (expo/expo#43804, fixed by software-mansion/react-native-screens
 // #4731, not released yet). So × and ✓ take a tap at any time, but carry it out once the sheet is
-// fully presented; and the "+" waits while the sheet shrinks back (markSheetClosing).
+// fully presented; and the "+" waits while the sheet shrinks back (isSheetClosing).
 export function SheetForm({ title, canSave, onSave, children }: SheetFormProps) {
   const navigation = useNavigation<NativeStackNavigationProp<Record<string, object | undefined>>>();
   const presented = useRef(false);
@@ -32,6 +32,8 @@ export function SheetForm({ title, canSave, onSave, children }: SheetFormProps) 
   const pending = useRef<(() => void) | null>(null);
 
   useEffect(() => {
+    // Swiped down to the end: the transition is over when the screen unmounts
+    let closed = false;
     const finishPresenting = () => {
       if (presented.current) return;
       presented.current = true;
@@ -39,13 +41,28 @@ export function SheetForm({ title, canSave, onSave, children }: SheetFormProps) 
       pending.current = null;
     };
     const fallback = setTimeout(finishPresenting, PRESENTED_FALLBACK_MS);
-    const unsubscribe = navigation.addListener("transitionEnd", (event) => {
-      if (!event.data.closing) finishPresenting();
+    const unsubscribeStart = navigation.addListener("transitionStart", (event) => {
+      if (event.data.closing) holdSheetClosing();
     });
+    const unsubscribeEnd = navigation.addListener("transitionEnd", (event) => {
+      if (!event.data.closing) {
+        finishPresenting();
+        return;
+      }
+      closed = true;
+      releaseSheetClosing(false);
+    });
+    // Swiping down was cancelled, the sheet stays
+    const unsubscribeCancel = navigation.addListener("gestureCancel", () =>
+      releaseSheetClosing(false)
+    );
     return () => {
       clearTimeout(fallback);
-      unsubscribe();
-      markSheetClosing();
+      unsubscribeStart();
+      unsubscribeEnd();
+      unsubscribeCancel();
+      // Closed from JS: unmounted right away, while it still shrinks back
+      if (!closed) releaseSheetClosing(true);
     };
   }, [navigation]);
 
