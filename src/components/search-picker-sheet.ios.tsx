@@ -54,7 +54,9 @@ export function SearchPickerSheet<T extends { id: number }>(props: SearchPickerS
           setPath(next);
         }}>
         <Toolbar>
-          <FormGroup
+          {/* Not a FormGroup: its tap gesture would take the taps of the NavigationLink below. The
+              system search field ends its own editing. */}
+          <FieldGroup
             modifiers={[
               navigationTitle(props.title),
               navigationBarTitleDisplayMode("inline"),
@@ -68,7 +70,7 @@ export function SearchPickerSheet<T extends { id: number }>(props: SearchPickerS
               </FieldGroup.Section>
             )}
             {sections}
-          </FormGroup>
+          </FieldGroup>
           <Toolbar.Content>
             <ToolbarItem placement="cancellationAction">
               {/* Label and icon are needed: without them the button is empty before iOS 26 */}
