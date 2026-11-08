@@ -1,6 +1,5 @@
 import { FieldGroup, Text } from "@expo/ui";
 import { router, Stack, useLocalSearchParams } from "expo-router";
-import { Linking } from "react-native";
 
 import { EmptyState } from "@/components/empty-state";
 import { EntryRow } from "@/components/entry-row";
@@ -65,12 +64,6 @@ export default function SubjectScreen() {
             <LabeledRow label="E-Mail">
               <Text textStyle={{ color: ink.secondary }}>{teacher.email}</Text>
             </LabeledRow>
-          )}
-          {teacher?.email && (
-            <ActionRow
-              label="E-Mail schreiben"
-              onPress={() => Linking.openURL(`mailto:${teacher.email}`)}
-            />
           )}
         </FieldGroup.Section>
 

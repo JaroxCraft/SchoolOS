@@ -5,11 +5,10 @@ import { router, Stack } from "expo-router";
 import { useEffect, useState } from "react";
 import { Image, Platform, useColorScheme } from "react-native";
 
-import { DestructiveButton } from "@/components/destructive-button";
 import { FooterText, FormList } from "@/components/form-list";
 import { LabeledRow } from "@/components/labeled-row";
-import { ActionRow, LinkRow, NavigationRow } from "@/components/rows";
-import { clearDatabase, initDatabase } from "@/db/actions";
+import { ActionRow, DestructiveRow, LinkRow, NavigationRow } from "@/components/rows";
+import { resetDatabase } from "@/db/actions";
 import { useInk } from "@/hooks/use-ink";
 import { appInfoRows, appInfoText, GITHUB_URL, versionLabel } from "@/lib/app-info";
 import { confirm } from "@/lib/confirm";
@@ -27,25 +26,6 @@ const ICON_SIZE = 80;
 // How long the button shows "Kopiert" after copying
 const COPIED_MS = 2000;
 
-// Copies the technical info; the label confirms it for a moment, with a success haptic.
-function CopyInfoRow() {
-  const [copied, setCopied] = useState(false);
-
-  useEffect(() => {
-    if (!copied) return;
-    const timeout = setTimeout(() => setCopied(false), COPIED_MS);
-    return () => clearTimeout(timeout);
-  }, [copied]);
-
-  const copy = async () => {
-    await Clipboard.setStringAsync(appInfoText());
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    setCopied(true);
-  };
-
-  return <ActionRow label={copied ? "Kopiert ✓" : "Infos kopieren"} onPress={copy} />;
-}
-
 // Deletes everything and starts over like a new installation, e.g. before handing on the phone or
 // to set up again from a classmate's timetable. Kept at the end of "Über SchoolOS", out of the
 // way of the everyday settings.
@@ -55,9 +35,8 @@ function confirmReset() {
     message:
       "Stundenplan, Fächer, Lehrpersonen, Einträge, Noten und Einstellungen werden gelöscht. Sichere vorher ein Backup, wenn du die Daten behalten möchtest.",
     confirmLabel: "Zurücksetzen",
-    onConfirm: async () => {
-      await clearDatabase();
-      await initDatabase();
+    onConfirm: () => {
+      resetDatabase();
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       // Back to the existing tabs, popping their stacks; replace would put a second set of tabs
       // on top of the old ones
@@ -69,6 +48,22 @@ function confirmReset() {
 export default function AboutScreen() {
   const ink = useInk();
   const dark = useColorScheme() === "dark";
+  // The copy row confirms with "Kopiert" for a moment. Kept in the screen so the row stays a
+  // direct <ActionRow> of its section (Android would otherwise wrap it as a small text button).
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    if (!copied) return;
+    const timeout = setTimeout(() => setCopied(false), COPIED_MS);
+    return () => clearTimeout(timeout);
+  }, [copied]);
+
+  const copyInfo = async () => {
+    await Clipboard.setStringAsync(appInfoText());
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    setCopied(true);
+  };
+
   const appIcon =
     Platform.OS === "ios" ? (
       <Image source={IOS_ICON} style={{ width: ICON_SIZE, height: ICON_SIZE }} />
@@ -122,15 +117,14 @@ export default function AboutScreen() {
               <Text textStyle={{ color: ink.secondary }}>{row.value}</Text>
             </LabeledRow>
           ))}
-          <CopyInfoRow />
+          <ActionRow label={copied ? "Kopiert ✓" : "Infos kopieren"} onPress={copyInfo} />
         </FieldGroup.Section>
 
         <FieldGroup.Section>
-          <DestructiveButton label="App zurücksetzen" onPress={confirmReset} />
+          <DestructiveRow label="App zurücksetzen" onPress={confirmReset} />
           <FieldGroup.SectionFooter>
             <FooterText>
-              Löscht alle Daten auf diesem Gerät. Die App ist danach wie frisch installiert, mit dem
-              Standard-Lektionenraster.
+              Löscht alle Daten auf diesem Gerät. Die App ist danach wie frisch installiert.
             </FooterText>
           </FieldGroup.SectionFooter>
         </FieldGroup.Section>

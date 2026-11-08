@@ -1,6 +1,5 @@
 import { FieldGroup } from "@expo/ui";
 import { router, Stack } from "expo-router";
-import { Linking } from "react-native";
 
 import { FormList } from "@/components/form-list";
 import { type RowAction, RowActions } from "@/components/row-actions";
@@ -21,8 +20,7 @@ export default function TeachersScreen() {
       <Stack.Title>Lehrpersonen</Stack.Title>
       <FormList>
         <FieldGroup.Section>
-          {/* iOS: swipe left or long press to delete (asked first); long press also to edit or
-              to write an email */}
+          {/* iOS: swipe left or long press to delete (asked first); long press also to edit */}
           {teachers.map((teacher) => {
             const remove: RowAction = {
               label: "Löschen",
@@ -37,15 +35,6 @@ export default function TeachersScreen() {
                 icon: "pencil",
                 onPress: () => openTeacher(String(teacher.id)),
               },
-              ...(teacher.email
-                ? [
-                    {
-                      label: "E-Mail schreiben",
-                      icon: "envelope",
-                      onPress: () => Linking.openURL(`mailto:${teacher.email}`),
-                    } as const,
-                  ]
-                : []),
               remove,
             ];
             return (

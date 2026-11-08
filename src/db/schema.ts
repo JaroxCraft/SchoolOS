@@ -85,6 +85,9 @@ export const settings = sqliteTable("settings", {
   noLessonSummaryTime: text("no_lesson_summary_time").notNull().default("10:00"),
 });
 
+// The data tables, children before the rows they reference: the order to delete them in.
+export const DATA_TABLES = [grades, entries, lessons, subjects, teachers, periods, semesters];
+
 export type Period = typeof periods.$inferSelect;
 export type Teacher = typeof teachers.$inferSelect;
 export type Subject = typeof subjects.$inferSelect;

@@ -8,6 +8,7 @@ import { SelectRow } from "@/components/select-row";
 import { updateSettings } from "@/db/actions";
 import { useLessons, usePeriods, useSettings, useSubjects, useTeachers } from "@/db/queries";
 import { versionLabel } from "@/lib/app-info";
+import { SCHOOL_ROUTES } from "@/lib/routes";
 import { SETUP_STEP_ICONS } from "@/lib/setup";
 import { pickAndImport, shareExport } from "@/lib/transfer-file";
 
@@ -40,19 +41,19 @@ export default function SettingsScreen() {
         <FieldGroup.Section title="Schule">
           <NavigationRow
             icon={SETUP_STEP_ICONS.periods}
-            onPress={() => router.push("/settings/periods")}
+            onPress={() => router.push(SCHOOL_ROUTES.settings.periods)}
             supportingText={`${periods.length} Lektionen pro Tag`}>
             Lektionenraster
           </NavigationRow>
           <NavigationRow
             icon={SETUP_STEP_ICONS.subjects}
-            onPress={() => router.push("/settings/subjects")}
+            onPress={() => router.push(SCHOOL_ROUTES.settings.subjects)}
             supportingText={`${subjects.length} Fächer`}>
             Fächer
           </NavigationRow>
           <NavigationRow
             icon={SETUP_STEP_ICONS.timetable}
-            onPress={() => router.push("/settings/timetable")}
+            onPress={() => router.push(SCHOOL_ROUTES.settings.timetable)}
             supportingText={`${lessons.length} Lektionen pro Woche`}>
             Stundenplan
           </NavigationRow>
@@ -65,8 +66,16 @@ export default function SettingsScreen() {
         </FieldGroup.Section>
 
         <FieldGroup.Section title="Teilen">
-          <ActionRow label="Stundenplan teilen" onPress={() => shareExport("timetable")} />
-          <ActionRow label="Datei importieren" onPress={() => pickAndImport()} />
+          <ActionRow
+            icon={{ sf: "square.and.arrow.up", md: "share", color: "#5856D6" }}
+            label="Stundenplan teilen"
+            onPress={() => shareExport("timetable")}
+          />
+          <ActionRow
+            icon={{ sf: "square.and.arrow.down", md: "download", color: "#30B0C7" }}
+            label="Datei importieren"
+            onPress={() => pickAndImport()}
+          />
           <FieldGroup.SectionFooter>
             <FooterText>
               Schick deiner Klasse Lektionenraster, Fächer, Lehrpersonen und Stundenplan als Datei,
@@ -103,7 +112,11 @@ export default function SettingsScreen() {
         </FieldGroup.Section>
 
         <FieldGroup.Section title="Backup">
-          <ActionRow label="Backup sichern" onPress={() => shareExport("backup")} />
+          <ActionRow
+            icon={{ sf: "externaldrive", md: "backup", color: "#8E8E93" }}
+            label="Backup sichern"
+            onPress={() => shareExport("backup")}
+          />
           <FieldGroup.SectionFooter>
             <FooterText>
               Sichert alle Daten in einer Datei, zum Beispiel für ein neues Gerät. Wiederherstellen
