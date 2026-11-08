@@ -4,8 +4,8 @@ import { Platform, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { AddButton } from "@/components/add-button";
+import { AddEntryZoomButton } from "@/components/add-entry-zoom-button";
 import { useSymbol } from "@/hooks/use-symbol";
-import { NEW_ENTRY } from "@/lib/routes";
 
 type ScreenProps = {
   title: string;
@@ -19,9 +19,10 @@ type ScreenProps = {
 
 // A tab screen with a large title and the gear to the settings at the far right of the navigation
 // bar, in exactly the same place in every tab. The "+" for a new entry sits left of the gear on
-// iOS, as in Calendar: a bottom toolbar would be hidden behind the tab bar, which UIKit draws above
-// the toolbar of a tab's navigation stack. Android has the floating button. The tab bar only
-// switches between the tabs; it carries no actions (Apple HIG, tab bars).
+// iOS, as in Calendar, and the new entry grows out of it, as in Music: a bottom toolbar would be
+// hidden behind the tab bar, which UIKit draws above the toolbar of a tab's navigation stack.
+// Android has the floating button. The tab bar only switches between the tabs; it carries no
+// actions (Apple HIG, tab bars).
 export function Screen({ title, showAddButton, toolbarItems, children }: ScreenProps) {
   const settingsIcon = useSymbol("gearshape", "settings");
 
@@ -41,11 +42,9 @@ export function Screen({ title, showAddButton, toolbarItems, children }: ScreenP
       <Stack.Toolbar placement="right">
         {toolbarItems}
         {showAddButton && Platform.OS === "ios" && (
-          <Stack.Toolbar.Button
-            icon="plus"
-            accessibilityLabel="Neuer Eintrag"
-            onPress={() => router.push(NEW_ENTRY)}
-          />
+          <Stack.Toolbar.View>
+            <AddEntryZoomButton />
+          </Stack.Toolbar.View>
         )}
         {/* On Android the icon loads asynchronously; render the button once it is ready */}
         {settingsIcon && (
