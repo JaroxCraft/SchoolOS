@@ -14,8 +14,12 @@ const SECTIONS = [
     text: "Erinnerungen werden auf dem Gerät geplant. Dafür werden keine Daten an einen Server gesendet.",
   },
   {
+    title: "Teilen und Backups",
+    text: "Daten verlassen dein Gerät nur, wenn du eine Datei teilst (Stundenplan teilen oder Backup sichern). Sie geht dann über das Teilen-Menü an wen oder wohin du wählst.",
+  },
+  {
     title: "App-Updates",
-    text: "Die App lädt Updates von den Servern von Expo. Dabei werden technische Angaben wie Version und Plattform übertragen, aber keine Inhalte aus der App.",
+    text: "Die App sucht bei Expo (Server in den USA) nach Updates. Dabei werden eine zufällige Installations-ID (EAS-Client-ID), die App-Version und die Plattform übertragen sowie, wie bei jeder Verbindung, deine IP-Adresse. Inhalte aus der App werden nie gesendet.",
   },
 ];
 
