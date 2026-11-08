@@ -1,4 +1,5 @@
 import { BottomSheet, Button, FieldGroup, Icon, ListItem, Row, Text, TextInput } from "@expo/ui";
+import { useMaterialColors } from "@expo/ui/jetpack-compose";
 import { useState } from "react";
 
 import { type SearchPickerSheetProps, usePickerSections } from "@/components/search-picker";
@@ -10,6 +11,7 @@ import { useSymbol } from "@/hooks/use-symbol";
 // shows the form in place of the list. iOS has its own sheet (search-picker-sheet.ios.tsx).
 export function SearchPickerSheet<T extends { id: number }>(props: SearchPickerSheetProps<T>) {
   const ink = useInk();
+  const colors = useMaterialColors();
   const searchIcon = useSymbol("magnifyingglass", "search");
   const [query, setQuery] = useState("");
   const [creating, setCreating] = useState(false);
@@ -27,6 +29,9 @@ export function SearchPickerSheet<T extends { id: number }>(props: SearchPickerS
       isPresented={props.isPresented}
       onDismiss={close}
       snapPoints={["half", "full"]}
+      // The list paints the Material surface; the sheet's own surfaceContainerLow would frame it
+      // in a second color above and below
+      containerColor={colors.surface}
       contentPadding={0}>
       {create && creating ? (
         <FieldGroup>
