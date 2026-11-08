@@ -47,6 +47,8 @@ export default function TimetableScreen() {
   const lessons = useLessons();
   const now = useNow();
   const pager = useRef<ScrollViewInstance>(null);
+  // The pager and window width the chosen day was last scrolled into view for (see onLayout)
+  const positioned = useRef<{ pager: ScrollViewInstance | null; width: number }>(null);
   const reducedMotion = useReducedMotion();
 
   // This week; at the weekend already the coming one
@@ -168,8 +170,15 @@ export default function TimetableScreen() {
             horizontal
             pagingEnabled
             showsHorizontalScrollIndicator={false}
-            // Opens on the chosen day without a visible scroll
-            onLayout={() => scrollToDay(selected, false)}
+            // Opens on the chosen day without a visible scroll. Only on the first layout of this
+            // pager and when the width changes (rotation, iPad split view): later layouts, e.g.
+            // while the timetable grows, would pull a swipe in progress back to the chosen day.
+            onLayout={() => {
+              const last = positioned.current;
+              if (last?.pager === pager.current && last.width === width) return;
+              positioned.current = { pager: pager.current, width };
+              scrollToDay(selected, false);
+            }}
             onScrollEndDrag={selectDayOfSwipe}
             onMomentumScrollEnd={selectRestingDay}>
             {days.map((day) => (
