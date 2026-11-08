@@ -70,7 +70,8 @@ export function SearchPickerSheet<T extends { id: number }>(props: SearchPickerS
           </FieldGroup>
           <Toolbar.Content>
             <ToolbarItem placement="cancellationAction">
-              <Button role="close" onPress={close} />
+              {/* Label and icon are needed: without them the button is empty before iOS 26 */}
+              <Button role="close" label="Schliessen" systemImage="xmark" onPress={close} />
             </ToolbarItem>
           </Toolbar.Content>
         </Toolbar>
