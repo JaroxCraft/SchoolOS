@@ -22,6 +22,13 @@
       "when": 1793219083637,
       "tag": "0002_drop_subject_teacher",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1794170511078,
+      "tag": "0003_subject_teacher_set_null",
+      "breakpoints": true
     }
   ]
 }
