@@ -3,6 +3,7 @@ import { router, Stack } from "expo-router";
 import { useState } from "react";
 
 import { DestructiveButton } from "@/components/destructive-button";
+import { DiscardCancelButton } from "@/components/discard-cancel-button";
 import { FormList } from "@/components/form-list";
 import { TextField } from "@/components/text-field";
 import { saveTeacher } from "@/db/actions";
@@ -22,11 +23,11 @@ export function TeacherForm({ teacher }: TeacherFormProps) {
 
   const canSave = name.trim().length > 0;
   const saveButton = useSaveButton();
-  const allowLeave = useDiscardGuard(
+  const dirty =
     name !== (teacher?.name ?? "") ||
-      abbreviation !== (teacher?.abbreviation ?? "") ||
-      email !== (teacher?.email ?? "")
-  );
+    abbreviation !== (teacher?.abbreviation ?? "") ||
+    email !== (teacher?.email ?? "");
+  const allowLeave = useDiscardGuard(dirty);
 
   const save = async () => {
     await saveTeacher(teacher?.id ?? null, {
@@ -46,6 +47,7 @@ export function TeacherForm({ teacher }: TeacherFormProps) {
   return (
     <>
       <Stack.Title>{teacher ? teacher.name : "Neue Lehrperson"}</Stack.Title>
+      <DiscardCancelButton dirty={dirty} />
       <Stack.Toolbar placement="right">
         {saveButton && <Stack.Toolbar.Button {...saveButton} disabled={!canSave} onPress={save} />}
       </Stack.Toolbar>
