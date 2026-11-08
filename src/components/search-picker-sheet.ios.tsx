@@ -5,7 +5,6 @@ import {
   Group,
   Host,
   NavigationDestination,
-  NavigationLink,
   NavigationStack,
   Toolbar,
   ToolbarItem,
@@ -24,6 +23,7 @@ import {
 import { useState } from "react";
 
 import { FormGroup } from "@/components/form-group";
+import { NavigationRow } from "@/components/rows";
 import { type SearchPickerSheetProps, usePickerSections } from "@/components/search-picker";
 import { useInk } from "@/hooks/use-ink";
 
@@ -71,18 +71,10 @@ export function SearchPickerSheet<T extends { id: number }>(props: SearchPickerS
               onSelectionChange: setDetent,
             }),
           ]}>
-          <NavigationStack
-            path={path}
-            onPathChange={(next) => {
-              if (next.includes(CREATE) && !path.includes(CREATE)) {
-                create?.start();
-                setDetent("large");
-              }
-              setPath(next);
-            }}>
+          <NavigationStack path={path} onPathChange={setPath}>
             <Toolbar>
-              {/* Not a FormGroup: its tap gesture would take the taps of the NavigationLink below. The
-              system search field ends its own editing. */}
+              {/* A plain FieldGroup: its only text field is the system search field, which ends
+              its own editing */}
               <FieldGroup
                 modifiers={[
                   navigationTitle(props.title),
@@ -91,9 +83,17 @@ export function SearchPickerSheet<T extends { id: number }>(props: SearchPickerS
                 ]}>
                 {create && !query.trim() && (
                   <FieldGroup.Section>
-                    <NavigationLink value={CREATE}>
+                    {/* Not a NavigationLink, which pushes before React can prepare the form: this
+                        clears the form, pushes it and pulls the sheet up in one update, so the
+                        push, the sheet and the keyboard move together */}
+                    <NavigationRow
+                      onPress={() => {
+                        create.start();
+                        setDetent("large");
+                        setPath([CREATE]);
+                      }}>
                       <Text textStyle={{ color: ink.accent }}>{create.label}</Text>
-                    </NavigationLink>
+                    </NavigationRow>
                   </FieldGroup.Section>
                 )}
                 {sections}
