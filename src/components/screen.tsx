@@ -9,17 +9,19 @@ import { NEW_ENTRY } from "@/lib/routes";
 
 type ScreenProps = {
   title: string;
-  // The button for a new entry: "+" in the navigation bar (iOS), the floating button (Android)
+  // The button for a new entry: "+" in the bottom toolbar (iOS), the floating button (Android)
   showAddButton?: boolean;
-  // More buttons in the navigation bar, left of the others. Pass <Stack.Toolbar.*> elements
+  // More buttons in the navigation bar, left of the gear. Pass <Stack.Toolbar.*> elements
   // themselves: iOS ignores toolbar items wrapped in another component.
   toolbarItems?: ReactNode;
   children: ReactNode;
 };
 
-// A tab screen with a large title and its buttons in the navigation bar: the gear to the settings
-// in every tab, and on iOS the "+" for a new entry. The tab bar only switches between the tabs; it
-// carries no actions (Apple HIG, tab bars).
+// A tab screen with a large title and the gear to the settings in the navigation bar, in exactly
+// the same place in every tab. The "+" for a new entry sits at the bottom, in reach of the thumb:
+// on iOS in the toolbar above the tab bar, as the compose button of Mail and Notes; on Android as
+// the floating button. The tab bar only switches between the tabs; it carries no actions (Apple
+// HIG, tab bars).
 export function Screen({ title, showAddButton, toolbarItems, children }: ScreenProps) {
   const settingsIcon = useSymbol("gearshape", "settings");
 
@@ -45,14 +47,17 @@ export function Screen({ title, showAddButton, toolbarItems, children }: ScreenP
             onPress={() => router.push("/settings")}
           />
         )}
-        {showAddButton && Platform.OS === "ios" && (
+      </Stack.Toolbar>
+      {showAddButton && Platform.OS === "ios" && (
+        <Stack.Toolbar placement="bottom">
+          <Stack.Toolbar.Spacer />
           <Stack.Toolbar.Button
             icon="plus"
             accessibilityLabel="Neuer Eintrag"
             onPress={() => router.push(NEW_ENTRY)}
           />
-        )}
-      </Stack.Toolbar>
+        </Stack.Toolbar>
+      )}
     </>
   );
 }
