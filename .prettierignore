@@ -4,3 +4,5 @@ dist/
 drizzle/
 assets/schoolos.icon/
 design/icon/export/
+.claude/
+.agents/

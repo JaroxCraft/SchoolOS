@@ -6,7 +6,7 @@ on:
       message:
         type: string
         required: true
-        description: 'What changed, shown on the EAS dashboard'
+        description: "What changed, shown on the EAS dashboard"
 
 jobs:
   publish_update:
