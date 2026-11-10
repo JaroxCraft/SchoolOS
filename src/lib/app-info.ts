@@ -5,6 +5,7 @@ import * as Updates from "expo-updates";
 import { Platform } from "react-native";
 
 export const GITHUB_URL = "https://github.com/JaroxCraft/SchoolOS";
+export const FEEDBACK_URL = "https://schoolos.jarox.dev/feedback";
 
 export type AppInfoRow = { label: string; value: string };
 

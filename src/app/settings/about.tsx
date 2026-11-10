@@ -10,7 +10,7 @@ import { LabeledRow } from "@/components/labeled-row";
 import { ActionRow, DestructiveRow, LinkRow, NavigationRow } from "@/components/rows";
 import { resetDatabase } from "@/db/actions";
 import { useInk } from "@/hooks/use-ink";
-import { appInfoRows, appInfoText, GITHUB_URL, versionLabel } from "@/lib/app-info";
+import { appInfoRows, appInfoText, FEEDBACK_URL, GITHUB_URL, versionLabel } from "@/lib/app-info";
 import { confirm } from "@/lib/confirm";
 import { typography } from "@/lib/typography";
 
@@ -100,8 +100,7 @@ export default function AboutScreen() {
           </LinkRow>
           <LinkRow
             icon={{ sf: "bubble.left", md: "chat_bubble", color: "#007AFF" }}
-            url={`${GITHUB_URL}/issues`}
-            supportingText="Fehler melden oder Ideen vorschlagen">
+            url={FEEDBACK_URL}>
             Feedback
           </LinkRow>
           <NavigationRow
