@@ -44,3 +44,6 @@ example
 
 # design tooling output
 .taste-skill/
+
+# ide
+.idea
