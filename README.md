@@ -45,4 +45,3 @@ bun run dev     # http://localhost:4321
 bun run build   # static site in landing/dist
 bun run check   # type-check the Astro files
 ```
-
