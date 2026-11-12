@@ -2,7 +2,7 @@
 import Button from "@/components/Button.astro";
 import PageHead from "@/components/PageHead.astro";
 import Base from "@/layouts/Base.astro";
-import { EMAIL, SURVEY_URL } from "@/links";
+import { EMAIL } from "@/links";
 ---
 
 <Base
@@ -16,7 +16,12 @@ import { EMAIL, SURVEY_URL } from "@/links";
     <p
       class="rise mt-10 flex flex-wrap justify-center gap-3 max-sm:mx-auto max-sm:max-w-xs max-sm:flex-col max-sm:items-stretch"
       style="--i: 2">
-      <Button href={SURVEY_URL}>Zur Umfrage</Button>
+      <span
+        aria-disabled="true"
+        title="Die Umfrage ist noch nicht geöffnet"
+        class="inline-flex min-h-12 cursor-not-allowed items-center justify-center rounded-ui bg-surface px-6 font-medium text-muted">
+        Umfrage noch nicht offen
+      </span>
       <Button href={`mailto:${EMAIL}`} variant="quiet">
         {EMAIL}
       </Button>
