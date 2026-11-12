@@ -10,7 +10,7 @@ import { LabeledRow } from "@/components/labeled-row";
 import { ActionRow, DestructiveRow, LinkRow, NavigationRow } from "@/components/rows";
 import { resetDatabase } from "@/db/actions";
 import { useInk } from "@/hooks/use-ink";
-import { appInfoRows, appInfoText, FEEDBACK_URL, GITHUB_URL, versionLabel } from "@/lib/app-info";
+import { appInfoRows, appInfoText, FEEDBACK_URL, versionLabel, WEBSITE_URL } from "@/lib/app-info";
 import { confirm } from "@/lib/confirm";
 import { typography } from "@/lib/typography";
 
@@ -92,11 +92,8 @@ export default function AboutScreen() {
         </FieldGroup.Section>
 
         <FieldGroup.Section title="Links">
-          <LinkRow
-            icon={{ sf: "chevron.left.forwardslash.chevron.right", md: "code", color: "#8E8E93" }}
-            url={GITHUB_URL}
-            supportingText="GitHub">
-            Quellcode
+          <LinkRow icon={{ sf: "globe", md: "code", color: "#8E8E93" }} url={WEBSITE_URL}>
+            Website
           </LinkRow>
           <LinkRow
             icon={{ sf: "bubble.left", md: "chat_bubble", color: "#007AFF" }}
