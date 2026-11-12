@@ -1,0 +1,30 @@
+---
+interface Props {
+  /** Renders a link; without it, a button. */
+  href?: string;
+  type?: "button" | "submit";
+  variant?: "accent" | "quiet";
+  class?: string;
+  [key: `data-${string}`]: unknown;
+}
+
+const { href, type = "button", variant = "accent", class: className, ...rest } = Astro.props;
+
+const classes = [
+  "inline-flex min-h-12 cursor-pointer items-center justify-center rounded-ui px-6 font-medium whitespace-nowrap no-underline transition-[transform,background-color,color] duration-150 ease-out active:scale-97 active:duration-75",
+  variant === "accent"
+    ? "bg-accent text-white hover:bg-accent-strong"
+    : "bg-surface text-ink hover:bg-line",
+  className,
+];
+---
+
+{href ? (
+  <a href={href} class:list={classes} {...rest}>
+    <slot />
+  </a>
+) : (
+  <button type={type} class:list={classes} {...rest}>
+    <slot />
+  </button>
+)}

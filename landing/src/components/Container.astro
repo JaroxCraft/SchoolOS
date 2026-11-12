@@ -1,0 +1,17 @@
+---
+interface Props {
+  as?: "div" | "section" | "header" | "main";
+  /** "content" is the centred reading width of the pages, "full" spans the window like header and footer. */
+  width?: "content" | "full";
+  class?: string;
+  [key: `aria-${string}`]: string | undefined;
+}
+
+const { as: Tag = "div", width = "content", class: className, ...rest } = Astro.props;
+---
+
+<Tag
+  class:list={["w-full px-margin", width === "content" && "mx-auto max-w-5xl", className]}
+  {...rest}>
+  <slot />
+</Tag>

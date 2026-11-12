@@ -1,0 +1,22 @@
+---
+import Container from "@/components/Container.astro";
+
+interface Props {
+  id: string;
+  title: string;
+  lead?: string;
+  class?: string;
+}
+
+const { id, title, lead, class: className = "pt-[clamp(3rem,10vh,6rem)]" } = Astro.props;
+---
+
+<Container as="section" class:list={["text-center", className]} aria-labelledby={id}>
+  <h1 id={id} class="rise text-display" style="--i: 0">
+    {title}
+  </h1>
+  <p class="rise mx-auto mt-6 max-w-[38ch] text-lead text-muted" style="--i: 1">
+    {lead}
+  </p>
+  <slot />
+</Container>

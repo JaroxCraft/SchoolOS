@@ -1,0 +1,131 @@
+@import "tailwindcss";
+
+/* SchoolOS tester pages: a quiet info page. One column of text, the subject colours of the app as
+   small accents, and the timetable mosaic of the app icon as the footer. */
+
+@theme {
+  --color-bg: #f7f8fa;
+  --color-surface: #eceff3;
+  --color-line: #dfe3e9;
+  --color-ink: #0b0b0c;
+  --color-ink-soft: #2c2c2e;
+  --color-muted: #5a5f69;
+  --color-faint: #c5c9d1;
+  --color-accent: #0062cc;
+  --color-accent-strong: #004fa6;
+
+  --color-deutsch: #007aff;
+  --color-rzg: #ff2d55;
+  --color-englisch: #af52de;
+  --color-nt: #34c759;
+  --color-mathe: #ff9500;
+
+  --font-display: "Stack Sans Headline", system-ui, sans-serif;
+  --font-text: "Stack Sans Text", system-ui, sans-serif;
+
+  --text-small: 0.875rem;
+  --text-small--letter-spacing: 0.01em;
+  --text-body: clamp(1.0625rem, 1rem + 0.2vw, 1.125rem);
+  --text-body--line-height: 1.6;
+  --text-lead: clamp(1.25rem, 1.1rem + 0.5vw, 1.5rem);
+  --text-lead--line-height: 1.4;
+  --text-lead--letter-spacing: -0.01em;
+  --text-head: clamp(1.625rem, 1.3rem + 1.2vw, 2.25rem);
+  --text-head--line-height: 1.15;
+  --text-head--letter-spacing: -0.015em;
+  --text-display: clamp(2.75rem, 1.6rem + 4.2vw, 4.75rem);
+  --text-display--line-height: 1;
+  --text-display--letter-spacing: -0.025em;
+
+  --spacing-margin: clamp(1.25rem, 4vw, 2.5rem);
+  --spacing-gutter: clamp(1rem, 2.5vw, 2.5rem);
+  --spacing-section: clamp(4.5rem, 9vw, 7.5rem);
+
+  --radius-ui: 12px;
+
+  /* Entrances and presses */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  /* Things that move across the screen, like the thumb of the platform switch */
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+
+  --animate-rise: rise 450ms var(--ease-out) both;
+  --animate-reveal: reveal 220ms var(--ease-out) both;
+  --animate-fade: fade 200ms ease-out both;
+
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+  }
+  @keyframes reveal {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+  }
+  @keyframes fade {
+    from {
+      opacity: 0;
+    }
+  }
+}
+
+/* Applies only once the page's script runs, so nothing stays hidden without JavaScript. */
+@custom-variant js (&:where(.js, .js *));
+/* The platform the head script picked; desktop visitors ("neither") see the iPhone steps. */
+@custom-variant on-android (&:where([data-platform="android"] *));
+@custom-variant on-ios (&:where([data-platform="ios"] *, [data-platform="neither"] *));
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-bg font-text text-body text-ink antialiased;
+  }
+  h1,
+  h2,
+  h3 {
+    @apply font-display font-light text-balance;
+  }
+  p {
+    @apply text-pretty;
+  }
+  ::selection {
+    @apply bg-accent text-white;
+  }
+  :focus-visible {
+    @apply outline-3 outline-offset-3 outline-accent;
+  }
+}
+
+/* Rises once on load, staggered by --i. */
+@utility rise {
+  @media (prefers-reduced-motion: no-preference) {
+    &:where(.js *) {
+      animation: var(--animate-rise);
+      animation-delay: calc(var(--i, 0) * 50ms);
+    }
+  }
+}
+
+/* FAQ answers open and close with the same motion where the browser can animate to auto height. */
+@supports (interpolate-size: allow-keywords) {
+  @media (prefers-reduced-motion: no-preference) {
+    :root {
+      interpolate-size: allow-keywords;
+    }
+    details::details-content {
+      block-size: 0;
+      overflow-y: clip;
+      transition:
+        block-size 280ms var(--ease-out),
+        content-visibility 280ms allow-discrete;
+    }
+    details[open]::details-content {
+      block-size: auto;
+    }
+  }
+}

@@ -1,0 +1,61 @@
+---
+import Button from "@/components/Button.astro";
+import type { Platform } from "@/scripts/platform";
+
+export interface Step {
+  title: string;
+  text: string;
+  /** Without `href` the action is not available yet and shows as a muted label. */
+  action?: { href?: string; label: string };
+}
+
+interface Props {
+  platform: Platform;
+  heading: string;
+  steps: Step[];
+}
+
+const { platform, heading, steps } = Astro.props;
+
+// Step numbers are small lesson blocks in the subject colours, like the footer mosaic.
+// Dark digits keep at least 4.5:1 on each of these colours.
+const tiles = ["bg-deutsch", "bg-mathe", "bg-nt", "bg-englisch"];
+---
+
+<!-- Without JavaScript no platform is set, so both lists stay visible -->
+<div
+  class:list={[
+    "not-first:mt-section js:not-first:mt-0 motion-safe:animate-fade",
+    platform === "ios" ? "on-android:hidden" : "on-ios:hidden",
+  ]}>
+  <h2 class="mb-8 text-head js:sr-only">{heading}</h2>
+  <ol class="grid gap-x-gutter gap-y-12 md:grid-cols-2">
+    {steps.map(({ title, text, action }, index) => (
+      <li class="grid grid-cols-[2.25rem_1fr] gap-x-4">
+        <span
+          class:list={[
+            "mt-0.5 grid size-9 place-items-center rounded-[10px] text-small font-medium text-ink",
+            tiles[index % tiles.length],
+          ]}
+          aria-hidden="true">
+          {index + 1}
+        </span>
+        <div>
+          <h3 class="font-text text-lead font-medium">{title}</h3>
+          <p class="mt-2 max-w-[48ch] text-muted">{text}</p>
+          {action && (
+            <p class="mt-4">
+              {action.href ? (
+                <Button href={action.href}>{action.label}</Button>
+              ) : (
+                <span class="inline-flex min-h-12 items-center rounded-ui bg-surface px-6 font-medium text-muted">
+                  {action.label}
+                </span>
+              )}
+            </p>
+          )}
+        </div>
+      </li>
+    ))}
+  </ol>
+</div>

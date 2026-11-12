@@ -1,0 +1,51 @@
+---
+import Container from "@/components/Container.astro";
+import FaqItem from "@/components/FaqItem.astro";
+import PageHead from "@/components/PageHead.astro";
+import Base from "@/layouts/Base.astro";
+---
+
+<Base
+  title="Fragen zu SchoolOS"
+  description="Daten, Kosten, Updates und Backups: Antworten zur Testversion von SchoolOS."
+  current="faq">
+  <PageHead id="faq-title" title="Fragen"/>
+
+  <Container
+    as="section"
+    width="full"
+    class="mx-auto max-w-3xl pt-12"
+    aria-label="Fragen und Antworten">
+    <div class="border-t border-line contrast-more:border-muted">
+      <FaqItem question="Wo landen meine Daten?" open>
+        Nur auf deinem Handy. Es gibt kein Konto und keinen Server. Wenn die App nach Updates sucht,
+        schickt sie eine zufällige Installations-ID, die App-Version, die Plattform und deine
+        IP-Adresse an Expo, aber keine Inhalte. Deine Einträge verlassen das Handy nur, wenn du
+        selbst eine Datei teilst.
+      </FaqItem>
+      <FaqItem question="Kostet die App etwas?">
+        Nein. Keine Werbung, keine Käufe, kein Abo.
+      </FaqItem>
+      <FaqItem question="Wie bekomme ich neue Versionen?">
+        Kleine Updates lädt die App selbst im Hintergrund und nutzt sie beim nächsten Start. Für
+        grössere Versionen meldet sich auf dem iPhone TestFlight; auf Android lädst du die neue APK
+        herunter und installierst sie über die alte.
+      </FaqItem>
+      <FaqItem question="Was passiert, wenn ich die App lösche?">
+        Dann sind deine Daten weg, weil sie nur auf dem Handy liegen. Sichere sie vorher in den
+        Einstellungen mit «Backup sichern» in eine Datei; die kannst du später wieder importieren.
+      </FaqItem>
+      <FaqItem question="Läuft die Testversion ab?">
+        Auf dem iPhone lässt TestFlight eine Testversion 90 Tage laufen. Vorher kommt eine neue,
+        deine Daten bleiben dabei erhalten. Die APK für Android läuft nicht ab.
+      </FaqItem>
+    </div>
+    <p class="mt-10 text-center text-muted">
+      Andere Frage?{" "}
+      <a class="text-ink underline underline-offset-3 active:text-accent" href="/feedback/">
+        Schreib mir
+      </a>
+      .
+    </p>
+  </Container>
+</Base>

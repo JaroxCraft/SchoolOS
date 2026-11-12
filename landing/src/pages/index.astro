@@ -1,0 +1,57 @@
+---
+import Button from "@/components/Button.astro";
+import PageHead from "@/components/PageHead.astro";
+import Container from "@/components/Container.astro";
+import Base from "@/layouts/Base.astro";
+---
+
+<Base
+  title="SchoolOS testen"
+  description="SchoolOS ist ein Schulplaner für Stundenplan, Hausaufgaben und Prüfungen. Hier installierst du die Testversion auf iPhone oder Android."
+  current="home"
+  center>
+  <PageHead
+    id="hero-title"
+    class="pt-12"
+    title="SchoolOS testen"
+    lead="Der Schulplaner für Stundenplan, Hausaufgaben und Prüfungen. Teste ihn und sag mir, was stört.">
+    <p
+      class="rise mt-10 flex flex-wrap justify-center gap-3 max-sm:mx-auto max-sm:max-w-xs max-sm:flex-col max-sm:items-stretch"
+      style="--i: 2">
+      <Button href="/installieren/" data-install-cta>
+        Installieren
+      </Button>
+      <Button href="/feedback/" variant="quiet">
+        Feedback geben
+      </Button>
+    </p>
+  </PageHead>
+
+  <Container as="section" class="pt-section text-center" aria-labelledby="data-title">
+    <h2 id="data-title" class="text-head">
+      Deine Daten bleiben bei dir
+    </h2>
+    <p class="mx-auto mt-4 max-w-[46ch] text-muted">
+      Alles liegt nur auf deinem Handy. Es gibt kein Konto, und die App läuft offline. Mehr dazu
+      unter{" "}
+      <a class="text-ink underline underline-offset-3 active:text-accent" href="/fragen/">
+        Fragen
+      </a>
+      .
+    </p>
+  </Container>
+</Base>
+
+<script>
+  import { platform } from "@/scripts/platform";
+
+  const cta = document.querySelector("[data-install-cta]");
+  if (cta)
+    switch (platform) {
+      case "android":
+        cta.textContent = "Auf Android installieren";
+        break;
+      case "ios":
+        cta.textContent = "Auf dem iPhone installieren";
+    }
+</script>
