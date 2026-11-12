@@ -1,0 +1,36 @@
+---
+export type Page = "home" | "install" | "faq" | "feedback";
+
+interface Props {
+  current: Page;
+}
+
+const { current } = Astro.props;
+
+const links: { href: string; label: string; page: Page }[] = [
+  { href: "/installieren/", label: "Installieren", page: "install" },
+  { href: "/fragen/", label: "Fragen", page: "faq" },
+  { href: "/feedback/", label: "Feedback", page: "feedback" },
+];
+---
+
+<header class="relative z-30 flex items-center justify-between gap-4 px-margin py-5">
+  <a
+    class="-m-1.5 inline-flex items-center gap-2.5 p-1.5 font-medium no-underline"
+    href="/"
+    aria-label="SchoolOS, zur Startseite"
+    aria-current={current === "home" ? "page" : undefined}>
+    <img class="rounded-lg" src="/icon.png" alt="" width="32" height="32" />
+    <span class="max-md:sr-only">SchoolOS</span>
+  </a>
+  <nav class="flex gap-[clamp(1rem,2.4vw,2.25rem)]" aria-label="Seiten">
+    {links.map(({ href, label, page }) => (
+      <a
+        class="relative underline decoration-transparent decoration-[0.07em] underline-offset-[0.2em] transition-[text-decoration-color] duration-150 ease-out after:absolute after:-inset-x-2 after:-inset-y-2.5 after:content-[''] hover:decoration-current active:decoration-current aria-[current=page]:decoration-current"
+        href={href}
+        aria-current={page === current ? "page" : undefined}>
+        {label}
+      </a>
+    ))}
+  </nav>
+</header>

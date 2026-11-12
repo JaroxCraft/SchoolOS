@@ -1,0 +1,96 @@
+---
+import Container from "@/components/Container.astro";
+import PageHead from "@/components/PageHead.astro";
+import Steps, { type Step } from "@/components/Steps.astro";
+import Base from "@/layouts/Base.astro";
+import { BETA_URL } from "@/links";
+
+const setup: Step = {
+  title: "Stundenplan einrichten",
+  text: "Die App führt dich durch Lektionen, Fächer und Stundenplan. Schneller geht es, wenn dir jemand aus der Klasse den Stundenplan als Datei schickt.",
+};
+
+const ios: Step[] = [
+  {
+    title: "TestFlight laden",
+    text: "TestFlight ist Apples App für Testversionen. Sie ist gratis und braucht nur deine Apple-ID.",
+    action: {
+      href: "https://apps.apple.com/app/testflight/id899247664",
+      label: "TestFlight im App Store",
+    },
+  },
+  {
+    title: "Einladung annehmen",
+    text: "Öffne den Link auf dem iPhone. TestFlight zeigt SchoolOS an; tippe auf «Annehmen».",
+    action: { href: BETA_URL, label: "Einladung öffnen" },
+  },
+  {
+    title: "SchoolOS installieren",
+    text: "Tippe in TestFlight auf «Installieren». Auf dem Home-Bildschirm hat SchoolOS einen orangen Punkt vor dem Namen: Daran erkennst du Testversionen.",
+  },
+  setup,
+];
+
+const android: Step[] = [
+  {
+    title: "APK herunterladen",
+    text: "Die App kommt als Datei statt aus dem Play Store. Sie ist rund 100 MB gross, lade sie am besten im WLAN.",
+    action: { label: "APK folgt bald" },
+  },
+  {
+    title: "Installation erlauben",
+    text: "Beim Öffnen fragt Android, ob dein Browser Apps installieren darf. Tippe auf «Einstellungen» und schalte «Aus dieser Quelle zulassen» ein.",
+  },
+  {
+    title: "Warnung bestätigen",
+    text: "Play Protect kennt Apps ausserhalb des Play Stores nicht und warnt deshalb. Tippe auf «Weitere Details» und dann auf «Trotzdem installieren».",
+  },
+  setup,
+];
+
+// The labels sit on a white thumb that slides to the chosen side
+const option =
+  "relative z-10 inline-flex min-h-11 cursor-pointer items-center justify-center rounded-lg px-5 font-medium text-muted transition-[color,transform] duration-150 ease-out active:scale-97 has-checked:text-ink has-focus-visible:outline-3 has-focus-visible:outline-offset-2 has-focus-visible:outline-accent";
+const radio = "absolute inset-0 m-0 cursor-pointer opacity-0";
+---
+
+<Base
+  title="SchoolOS installieren"
+  description="So installierst du die Testversion von SchoolOS auf iPhone oder Android."
+  current="install">
+  <PageHead
+    id="install-title"
+    title="Installieren"
+    lead="Vier Schritte, je nach Handy. Danach kommen kleine Updates von selbst.">
+    <fieldset
+      class="rise group relative mt-10 inline-grid grid-cols-2 rounded-ui bg-surface p-1"
+      style="--i: 2">
+      <legend class="sr-only">Dein Handy</legend>
+      <span
+        class="absolute inset-y-1 left-1 w-[calc(50%-0.25rem)] rounded-lg bg-white shadow-sm transition-transform duration-300 ease-in-out group-has-[[value=android]:checked]:translate-x-full motion-reduce:transition-none"
+        aria-hidden="true"></span>
+      <label class={option}>
+        <input class={radio} type="radio" name="platform" value="ios" checked /> iPhone
+      </label>
+      <label class={option}>
+        <input class={radio} type="radio" name="platform" value="android" /> Android
+      </label>
+    </fieldset>
+  </PageHead>
+
+  <Container as="section" class="pt-12" aria-label="Schritte">
+    <Steps platform="ios" heading="Auf dem iPhone" steps={ios} />
+    <Steps platform="android" heading="Auf Android" steps={android} />
+  </Container>
+</Base>
+
+<script>
+  import { choosePlatform, platform } from "@/scripts/platform";
+
+  // The head script already shows the right steps; the switch only has to match and remember.
+  const radios = document.querySelectorAll<HTMLInputElement>('input[name="platform"]');
+  radios.forEach((radio) => {
+    radio.checked = radio.value === (platform === "android" ? "android" : "ios");
+    radio.addEventListener("change", () => choosePlatform(radio.value as "ios" | "android"));
+  });
+</script>

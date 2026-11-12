@@ -1,0 +1,21 @@
+---
+interface Props {
+  question: string;
+  open?: boolean;
+}
+
+const { question, open = false } = Astro.props;
+---
+
+<!-- Each answer opens on its own, so a tapped question never moves away from the finger -->
+<details class="group border-b border-line contrast-more:border-muted" open={open}>
+  <summary class="flex cursor-pointer list-none items-center justify-between gap-6 py-6 text-lead transition-[color] duration-150 ease-out hover:text-accent active:text-accent [&::-webkit-details-marker]:hidden">
+    {question}
+    <span
+      class="relative size-4 shrink-0 before:absolute before:inset-x-0 before:top-1/2 before:h-0.5 before:-translate-y-1/2 before:rounded-full before:bg-current after:absolute after:inset-y-0 after:left-1/2 after:w-0.5 after:-translate-x-1/2 after:rounded-full after:bg-current after:transition-transform after:duration-200 after:ease-out group-open:after:scale-y-0"
+      aria-hidden="true"></span>
+  </summary>
+  <p class="max-w-[60ch] pb-7 text-muted motion-safe:group-open:animate-reveal">
+    <slot />
+  </p>
+</details>

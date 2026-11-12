@@ -1,0 +1,67 @@
+---
+import Footer from "@/components/Footer.astro";
+import Header, { type Page } from "@/components/Header.astro";
+import "@/styles/global.css";
+
+interface Props {
+  title: string;
+  description: string;
+  current: Page;
+  /** Centres short content vertically on the first screen. */
+  center?: boolean;
+}
+
+const { title, description, current, center = false } = Astro.props;
+---
+
+<!doctype html>
+<html lang="de-CH">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#f7f8fa" />
+    <link rel="icon" href="/icon.png" type="image/png" />
+    <link rel="apple-touch-icon" href="/icon-ios.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Stack+Sans+Headline:wght@300&family=Stack+Sans+Text:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <script is:inline>
+      document.documentElement.classList.add("js");
+      // The visitor's phone, before the first paint so the install page never flashes the wrong
+      // steps. A choice made on the install page wins over the user agent.
+      (() => {
+        let saved = null;
+        try {
+          saved = localStorage.getItem("schoolos-platform");
+        } catch {}
+        const ua = navigator.userAgent;
+        document.documentElement.dataset.platform =
+          saved === "ios" || saved === "android"
+            ? saved
+            : /Android/i.test(ua)
+              ? "android"
+              : /iPhone/i.test(ua)
+                ? "ios"
+                : "neither";
+      })();
+      // Safari on iOS only applies :active press states once a touch listener exists
+      document.addEventListener("touchstart", () => {}, { passive: true });
+    </script>
+  </head>
+  <body>
+    <!-- At least one screen tall, so the footer never shows on the first screen -->
+    <div class="flex min-h-svh flex-col">
+      <Header current={current} />
+      <main
+        class:list={["flex-1", center ? "flex flex-col justify-center pb-[12vh]" : "pb-section"]}>
+        <slot />
+      </main>
+    </div>
+    <Footer />
+  </body>
+</html>

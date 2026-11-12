@@ -1,0 +1,25 @@
+---
+import Button from "@/components/Button.astro";
+import PageHead from "@/components/PageHead.astro";
+import Base from "@/layouts/Base.astro";
+import { EMAIL, SURVEY_URL } from "@/links";
+---
+
+<Base
+  title="Feedback zu SchoolOS"
+  description="Melde Fehler und Wünsche zur Testversion von SchoolOS über die Umfrage oder per E-Mail."
+  current="feedback">
+  <PageHead
+    id="feedback-title"
+    title="Feedback"
+    lead="Fehler, Wünsche, Verwirrendes: Alles hilft. Die Umfrage bitte erst nach mehreren Wochen Testen ausfüllen.">
+    <p
+      class="rise mt-10 flex flex-wrap justify-center gap-3 max-sm:mx-auto max-sm:max-w-xs max-sm:flex-col max-sm:items-stretch"
+      style="--i: 2">
+      <Button href={SURVEY_URL}>Zur Umfrage</Button>
+      <Button href={`mailto:${EMAIL}`} variant="quiet">
+        {EMAIL}
+      </Button>
+    </p>
+  </PageHead>
+</Base>
