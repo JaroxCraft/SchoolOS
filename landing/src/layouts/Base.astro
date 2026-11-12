@@ -33,21 +33,14 @@ const { title, description, current, center = false } = Astro.props;
     <script is:inline>
       document.documentElement.classList.add("js");
       // The visitor's phone, before the first paint so the install page never flashes the wrong
-      // steps. A choice made on the install page wins over the user agent.
+      // steps.
       (() => {
-        let saved = null;
-        try {
-          saved = localStorage.getItem("schoolos-platform");
-        } catch {}
         const ua = navigator.userAgent;
-        document.documentElement.dataset.platform =
-          saved === "ios" || saved === "android"
-            ? saved
-            : /Android/i.test(ua)
-              ? "android"
-              : /iPhone/i.test(ua)
-                ? "ios"
-                : "neither";
+        document.documentElement.dataset.platform = /Android/i.test(ua)
+          ? "android"
+          : /iPhone/i.test(ua)
+            ? "ios"
+            : "neither";
       })();
       // Safari on iOS only applies :active press states once a touch listener exists
       document.addEventListener("touchstart", () => {}, { passive: true });

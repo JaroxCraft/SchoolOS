@@ -48,7 +48,10 @@ const tiles = ["bg-deutsch", "bg-mathe", "bg-nt", "bg-englisch"];
               {action.href ? (
                 <Button href={action.href}>{action.label}</Button>
               ) : (
-                <span class="inline-flex min-h-12 items-center rounded-ui bg-surface px-6 font-medium text-muted">
+                <span
+                  aria-disabled="true"
+                  title="Noch nicht verfügbar"
+                  class="inline-flex min-h-12 cursor-not-allowed items-center rounded-ui bg-surface px-6 font-medium text-muted">
                   {action.label}
                 </span>
               )}

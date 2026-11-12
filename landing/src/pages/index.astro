@@ -2,6 +2,7 @@
 import Button from "@/components/Button.astro";
 import Container from "@/components/Container.astro";
 import PageHead from "@/components/PageHead.astro";
+import PlatformIcon from "@/components/PlatformIcon.astro";
 import Base from "@/layouts/Base.astro";
 ---
 
@@ -18,7 +19,10 @@ import Base from "@/layouts/Base.astro";
     <p
       class="rise mt-10 flex flex-wrap justify-center gap-3 max-sm:mx-auto max-sm:max-w-xs max-sm:flex-col max-sm:items-stretch"
       style="--i: 2">
-      <Button href="/installieren/" data-install-cta>
+      <Button href="/installieren/" class="gap-2">
+        <!-- Only the detected phone's icon; unknown devices get none -->
+        <PlatformIcon platform="ios" class="hidden in-data-[platform=ios]:block" />
+        <PlatformIcon platform="android" class="hidden in-data-[platform=android]:block" />
         Installieren
       </Button>
       <Button href="/feedback/" variant="quiet">
@@ -41,17 +45,3 @@ import Base from "@/layouts/Base.astro";
     </p>
   </Container>
 </Base>
-
-<script>
-  import { platform } from "@/scripts/platform";
-
-  const cta = document.querySelector("[data-install-cta]");
-  if (cta)
-    switch (platform) {
-      case "android":
-        cta.textContent = "Auf Android installieren";
-        break;
-      case "ios":
-        cta.textContent = "Auf dem iPhone installieren";
-    }
-</script>

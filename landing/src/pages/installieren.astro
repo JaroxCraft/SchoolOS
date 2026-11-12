@@ -1,6 +1,7 @@
 ---
 import Container from "@/components/Container.astro";
 import PageHead from "@/components/PageHead.astro";
+import PlatformIcon from "@/components/PlatformIcon.astro";
 import Steps, { type Step } from "@/components/Steps.astro";
 import Base from "@/layouts/Base.astro";
 import { BETA_URL } from "@/links";
@@ -50,7 +51,7 @@ const android: Step[] = [
 
 // The labels sit on a white thumb that slides to the chosen side
 const option =
-  "relative z-10 inline-flex min-h-11 cursor-pointer items-center justify-center rounded-lg px-5 font-medium text-muted transition-[color,transform] duration-150 ease-out active:scale-97 has-checked:text-ink has-focus-visible:outline-3 has-focus-visible:outline-offset-2 has-focus-visible:outline-accent";
+  "relative z-10 inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-lg px-5 font-medium text-muted transition-[color,transform] duration-150 ease-out active:scale-97 has-checked:text-ink has-focus-visible:outline-3 has-focus-visible:outline-offset-2 has-focus-visible:outline-accent";
 const radio = "absolute inset-0 m-0 cursor-pointer opacity-0";
 ---
 
@@ -70,10 +71,12 @@ const radio = "absolute inset-0 m-0 cursor-pointer opacity-0";
         class="absolute inset-y-1 left-1 w-[calc(50%-0.25rem)] rounded-lg bg-white shadow-sm transition-transform duration-300 ease-in-out group-has-[[value=android]:checked]:translate-x-full motion-reduce:transition-none"
         aria-hidden="true"></span>
       <label class={option}>
-        <input class={radio} type="radio" name="platform" value="ios" checked /> iPhone
+        <input class={radio} type="radio" name="platform" value="ios" checked />
+        <PlatformIcon platform="ios" /> iPhone
       </label>
       <label class={option}>
-        <input class={radio} type="radio" name="platform" value="android" /> Android
+        <input class={radio} type="radio" name="platform" value="android" />
+        <PlatformIcon platform="android" /> Android
       </label>
     </fieldset>
   </PageHead>
@@ -87,7 +90,7 @@ const radio = "absolute inset-0 m-0 cursor-pointer opacity-0";
 <script>
   import { choosePlatform, platform } from "@/scripts/platform";
 
-  // The head script already shows the right steps; the switch only has to match and remember.
+  // The head script already shows the right steps; the switch only has to match and follow.
   const radios = document.querySelectorAll<HTMLInputElement>('input[name="platform"]');
   radios.forEach((radio) => {
     radio.checked = radio.value === (platform === "android" ? "android" : "ios");
