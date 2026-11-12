@@ -1,0 +1,6 @@
+{
+  "name": "schoolos-landing",
+  "compatibility_date": "2026-11-12",
+  "assets": { "directory": "./dist" },
+  "routes": [{ "pattern": "schoolos.jarox.dev", "custom_domain": true }]
+}

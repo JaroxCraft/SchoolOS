@@ -45,3 +45,5 @@ bun run dev     # http://localhost:4321
 bun run build   # static site in landing/dist
 bun run check   # type-check the Astro files
 ```
+
+It is deployed as the Cloudflare Worker `schoolos-landing` (static assets, config in `landing/wrangler.jsonc`). Workers Builds builds and deploys every push to `master`. The redirects `/beta` (TestFlight) and `/feedback` (Tally) are Cloudflare Redirect Rules on the `jarox.dev` zone, not part of this project.
