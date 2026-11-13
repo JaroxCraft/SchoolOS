@@ -7,7 +7,7 @@ import { EMAIL } from "@/links";
 
 <Base
   title="Feedback zu SchoolOS"
-  description="Melde Fehler und Wünsche zur Testversion von SchoolOS über die Umfrage oder per E-Mail."
+  description="Melde Fehler und Wünsche zur Testversion von SchoolOS über die Umfrage, per E-Mail oder direkt in TestFlight."
   current="feedback">
   <PageHead
     id="feedback-title"
@@ -25,6 +25,10 @@ import { EMAIL } from "@/links";
       <Button href={`mailto:${EMAIL}`} variant="quiet">
         {EMAIL}
       </Button>
+    </p>
+    <p class="rise mx-auto mt-8 max-w-[44ch] text-small text-muted" style="--i: 3">
+      <strong class="font-medium text-ink">Auf dem iPhone:</strong> Mach in SchoolOS einen
+      Screenshot, tippe auf die Vorschau, tippe auf Teilen und dann auf "Beta Feedback senden".
     </p>
   </PageHead>
 </Base>
