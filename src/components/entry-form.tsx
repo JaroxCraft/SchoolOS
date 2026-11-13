@@ -213,7 +213,7 @@ export function EntryForm({
             options={ENTRY_TYPE_OPTIONS}
           />
           <TextField
-            placeholder={form.type === "homework" ? "Aufgabe" : "Titel"}
+            placeholder={info.titlePlaceholder}
             defaultValue={form.title}
             autoFocus={!entry}
             onChangeText={(title) => edit({ title })}
