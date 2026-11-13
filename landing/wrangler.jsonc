@@ -2,5 +2,7 @@
   "name": "schoolos-landing",
   "compatibility_date": "2026-11-12",
   "assets": { "directory": "./dist" },
-  "routes": [{ "pattern": "schoolos.jarox.dev", "custom_domain": true }]
+  // Production on schoolos.jarox.dev, Previews of other branches on <preview>.schoolos.jarox.dev
+  "routes": [{ "pattern": "schoolos.jarox.dev", "custom_domain": true, "previews_enabled": true }],
+  "previews": {},
 }
