@@ -8,6 +8,7 @@ import {
   describeTransferFile,
   exportData,
   importData,
+  NOT_A_SCHOOLOS_FILE,
   parseTransferFile,
   TransferError,
   type TransferFile,
@@ -49,10 +50,15 @@ export async function shareExport(kind: TransferKind) {
 export async function pickAndImport(onDone?: () => void) {
   let text;
   try {
-    // Messengers often send JSON files without their type, so every file can be picked
-    // Android reads the picked file through its content:// URI: the copy in the cache lies outside
-    // the folders the app may read in Expo Go ("Missing 'READ' permission").
+    // Only JSON files can be picked. Android messengers often save them without their type
+    // (application/octet-stream), so those stay pickable there; on iOS that type would allow
+    // every file. Android reads the picked file through its content:// URI: the copy in the cache
+    // lies outside the folders the app may read in Expo Go ("Missing 'READ' permission").
     const result = await DocumentPicker.getDocumentAsync({
+      type:
+        Platform.OS === "android"
+          ? ["application/json", "application/octet-stream"]
+          : "application/json",
       copyToCacheDirectory: Platform.OS === "ios",
     });
     if (result.canceled) return;
@@ -60,10 +66,7 @@ export async function pickAndImport(onDone?: () => void) {
     // Exports are a few hundred KB at most; a large file is not one and would block reading it
     if ((picked.size ?? new File(picked.uri).size) > MAX_FILE_SIZE) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      showMessage(
-        "Import nicht möglich",
-        "Die Datei ist grösser als 5 MB und keine SchoolOS-Datei."
-      );
+      showMessage("Import nicht möglich", NOT_A_SCHOOLOS_FILE);
       return;
     }
     text = await new File(picked.uri).text();

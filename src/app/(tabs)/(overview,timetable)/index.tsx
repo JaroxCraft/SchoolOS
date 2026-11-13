@@ -80,7 +80,8 @@ function Setup({ periods, subjects }: SetupProps) {
         <FieldGroup.SectionFooter>
           <FooterText>
             Hat jemand aus deiner Klasse SchoolOS schon eingerichtet? Unter Einstellungen › Teilen
-            lässt sich der Stundenplan als Datei schicken.
+            lässt sich der Stundenplan als Datei schicken. Importieren lassen sich nur solche
+            SchoolOS-Dateien (JSON), keine PDFs oder Bilder eines Stundenplans.
           </FooterText>
         </FieldGroup.SectionFooter>
       </FieldGroup.Section>

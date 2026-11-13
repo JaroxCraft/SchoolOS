@@ -80,6 +80,8 @@ export default function SettingsScreen() {
             <FooterText>
               Schick deiner Klasse Lektionenraster, Fächer, Lehrpersonen und Stundenplan als Datei,
               damit niemand alles von Hand erfassen muss. Einträge und Noten bleiben privat.
+              Importieren lassen sich nur Stundenplan- und Backup-Dateien von SchoolOS (JSON), keine
+              PDFs oder Bilder.
             </FooterText>
           </FieldGroup.SectionFooter>
         </FieldGroup.Section>
