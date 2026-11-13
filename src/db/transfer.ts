@@ -94,6 +94,10 @@ export function exportData(kind: TransferKind): TransferFile {
 // Thrown for files that are not a valid SchoolOS export; the message is shown to the user.
 export class TransferError extends Error {}
 
+// Names the only supported format, since a PDF or photo of a timetable is the obvious first try
+export const NOT_A_SCHOOLOS_FILE =
+  "Die Datei ist keine SchoolOS-Datei. Importieren lassen sich nur JSON-Dateien, die SchoolOS mit «Stundenplan teilen» oder «Backup sichern» erstellt hat, keine PDFs oder Bilder.";
+
 const fail = (message: string): never => {
   throw new TransferError(message);
 };
@@ -183,10 +187,10 @@ export function parseTransferFile(text: string): TransferFile {
   try {
     data = JSON.parse(text);
   } catch {
-    throw new TransferError("Die Datei ist keine SchoolOS-Datei.");
+    throw new TransferError(NOT_A_SCHOOLOS_FILE);
   }
   if (!isObject(data) || data.app !== "SchoolOS") {
-    throw new TransferError("Die Datei ist keine SchoolOS-Datei.");
+    throw new TransferError(NOT_A_SCHOOLOS_FILE);
   }
   if (typeof data.format !== "number" || !Number.isInteger(data.format) || data.format < 1) {
     throw new TransferError("Die Dateiversion ist ungültig.");
@@ -197,7 +201,7 @@ export function parseTransferFile(text: string): TransferFile {
     );
   }
   if (data.kind !== "timetable" && data.kind !== "backup") {
-    throw new TransferError("Die Datei ist keine SchoolOS-Datei.");
+    throw new TransferError(NOT_A_SCHOOLOS_FILE);
   }
 
   const startTimes = new Set<string>();
