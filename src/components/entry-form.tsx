@@ -13,7 +13,7 @@ import { deleteEntry, saveEntry } from "@/db/actions";
 import { useTeachers } from "@/db/queries";
 import type { Entry, EntryType, Lesson, Period, Settings, Subject } from "@/db/schema";
 import { confirmDelete } from "@/lib/confirm-delete";
-import { addDays, formatDate, today } from "@/lib/dates";
+import { addDays, formatDate } from "@/lib/dates";
 import {
   defaultLeadDays,
   ENTRY_TYPE_INFO,
@@ -23,6 +23,7 @@ import {
 import { subjectLessonOn, upcomingSubjectLessons } from "@/lib/schedule";
 import { NEUTRAL_COLOR } from "@/lib/subject-colors";
 import { useDiscardGuard } from "@/hooks/use-discard-guard";
+import { useNow } from "@/hooks/use-now";
 import { useSaving } from "@/hooks/use-saving";
 
 const NONE = 0;
@@ -63,7 +64,10 @@ export function EntryForm({
   lessons,
   settings,
 }: EntryFormProps) {
-  const upcoming = (subjectId: number) => upcomingSubjectLessons(subjectId, lessons, periods, 2);
+  const now = useNow();
+  const tomorrow = addDays(now.date, 1);
+  const upcoming = (subjectId: number) =>
+    upcomingSubjectLessons(subjectId, lessons, periods, 2, now);
 
   // Fills in the due date, period and study start that follow from the other fields.
   const derive = (state: FormState): FormState => {
@@ -73,12 +77,17 @@ export function EntryForm({
       if (next.dueChoice !== "custom") {
         const [first, second] = upcoming(next.subjectId);
         const pick = next.dueChoice === "next" ? first : (second ?? first);
-        next.date = pick?.date ?? addDays(today(), 1);
+        next.date = pick?.date ?? tomorrow;
         next.periodId = pick?.period.id ?? NONE;
       }
     } else {
       if (!next.dateTouched) {
-        next.date = upcoming(next.subjectId)[0]?.date ?? addDays(today(), 1);
+        // An exam is announced ahead, so it gets the first lesson from tomorrow on
+        next.date =
+          upcomingSubjectLessons(next.subjectId, lessons, periods, 1, {
+            date: tomorrow,
+            minutes: 0,
+          })[0]?.date ?? tomorrow;
       }
       if (!next.periodTouched) {
         next.periodId =
@@ -92,7 +101,7 @@ export function EntryForm({
     } else if (!next.studyStartTouched || next.studyStart === null) {
       // Not before today, but never after the entry itself
       const suggested = addDays(next.date, -leadDays);
-      next.studyStart = suggested >= today() ? suggested : [today(), next.date].sort()[0];
+      next.studyStart = suggested >= now.date ? suggested : [now.date, next.date].sort()[0];
     }
     return next;
   };
@@ -119,7 +128,7 @@ export function EntryForm({
           title: "",
           description: "",
           subjectId: initialSubjectId ?? NONE,
-          date: today(),
+          date: now.date,
           periodId: NONE,
           dueChoice: "next",
           completed: false,
