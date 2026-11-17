@@ -16,9 +16,6 @@ import {
 
 const DEFAULT_SETTINGS: Settings = {
   id: 1,
-  examLeadDays: 7,
-  presentationLeadDays: 7,
-  submissionLeadDays: 3,
   notificationsEnabled: true,
   secondReminderTime: "18:00",
   noLessonSummaryTime: "10:00",

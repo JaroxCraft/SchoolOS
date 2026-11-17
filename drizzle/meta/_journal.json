@@ -29,6 +29,13 @@
       "when": 1794170511078,
       "tag": "0003_subject_teacher_set_null",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1794922501347,
+      "tag": "0004_drop_study_start",
+      "breakpoints": true
     }
   ]
 }

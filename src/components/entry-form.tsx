@@ -11,15 +11,10 @@ import { TaskCheckbox } from "@/components/task-checkbox";
 import { TextField } from "@/components/text-field";
 import { deleteEntry, saveEntry } from "@/db/actions";
 import { useTeachers } from "@/db/queries";
-import type { Entry, EntryType, Lesson, Period, Settings, Subject } from "@/db/schema";
+import type { Entry, EntryType, Lesson, Period, Subject } from "@/db/schema";
 import { confirmDelete } from "@/lib/confirm-delete";
 import { addDays, formatDate } from "@/lib/dates";
-import {
-  defaultLeadDays,
-  ENTRY_TYPE_INFO,
-  ENTRY_TYPE_OPTIONS,
-  isCheckable,
-} from "@/lib/entry-types";
+import { ENTRY_TYPE_INFO, ENTRY_TYPE_OPTIONS, isCheckable } from "@/lib/entry-types";
 import { subjectLessonOn, upcomingSubjectLessons } from "@/lib/schedule";
 import { NEUTRAL_COLOR } from "@/lib/subject-colors";
 import { useDiscardGuard } from "@/hooks/use-discard-guard";
@@ -39,12 +34,10 @@ type FormState = {
   periodId: number;
   dueChoice: DueChoice;
   completed: boolean;
-  studyStart: string | null;
   topic: string;
   // Set once the user picks the value, so it is no longer derived automatically
   dateTouched: boolean;
   periodTouched: boolean;
-  studyStartTouched: boolean;
 };
 
 type EntryFormProps = {
@@ -53,23 +46,15 @@ type EntryFormProps = {
   subjects: Subject[];
   periods: Period[];
   lessons: Lesson[];
-  settings: Settings;
 };
 
-export function EntryForm({
-  entry,
-  initialSubjectId,
-  subjects,
-  periods,
-  lessons,
-  settings,
-}: EntryFormProps) {
+export function EntryForm({ entry, initialSubjectId, subjects, periods, lessons }: EntryFormProps) {
   const now = useNow();
   const tomorrow = addDays(now.date, 1);
   const upcoming = (subjectId: number) =>
     upcomingSubjectLessons(subjectId, lessons, periods, 2, now);
 
-  // Fills in the due date, period and study start that follow from the other fields.
+  // Fills in the due date and period that follow from the other fields.
   const derive = (state: FormState): FormState => {
     const next = { ...state };
 
@@ -94,15 +79,6 @@ export function EntryForm({
           subjectLessonOn(next.subjectId, next.date, lessons, periods)?.period.id ?? NONE;
       }
     }
-
-    const leadDays = defaultLeadDays(next.type, settings);
-    if (leadDays === null) {
-      next.studyStart = null;
-    } else if (!next.studyStartTouched || next.studyStart === null) {
-      // Not before today, but never after the entry itself
-      const suggested = addDays(next.date, -leadDays);
-      next.studyStart = suggested >= now.date ? suggested : [now.date, next.date].sort()[0];
-    }
     return next;
   };
 
@@ -117,11 +93,9 @@ export function EntryForm({
           periodId: entry.periodId ?? NONE,
           dueChoice: "custom",
           completed: entry.completed,
-          studyStart: entry.studyStart,
           topic: entry.topic ?? "",
           dateTouched: true,
           periodTouched: true,
-          studyStartTouched: true,
         }
       : derive({
           type: "homework",
@@ -132,11 +106,9 @@ export function EntryForm({
           periodId: NONE,
           dueChoice: "next",
           completed: false,
-          studyStart: null,
           topic: "",
           dateTouched: false,
           periodTouched: false,
-          studyStartTouched: false,
         })
   );
 
@@ -153,17 +125,7 @@ export function EntryForm({
   // The form as it was opened, to tell whether anything was changed
   const [initialForm] = useState(form);
   const dirty = (
-    [
-      "type",
-      "title",
-      "description",
-      "subjectId",
-      "date",
-      "periodId",
-      "completed",
-      "studyStart",
-      "topic",
-    ] as const
+    ["type", "title", "description", "subjectId", "date", "periodId", "completed", "topic"] as const
   ).some((field) => form[field] !== initialForm[field]);
   const allowLeave = useDiscardGuard(dirty);
   const { saving, run } = useSaving({ closesOnSuccess: true });
@@ -188,7 +150,6 @@ export function EntryForm({
         date: form.date,
         periodId: form.periodId === NONE ? null : form.periodId,
         completed: isCheckable(form.type) && form.completed,
-        studyStart: form.studyStart,
         topic: info.gradable ? form.topic.trim() || null : null,
       });
       allowLeave();
@@ -286,13 +247,8 @@ export function EntryForm({
           )}
         </FieldGroup.Section>
 
-        {info.gradable && form.studyStart && (
+        {info.gradable && (
           <FieldGroup.Section title="Vorbereitung">
-            <DateField
-              label="Lernbeginn"
-              value={form.studyStart}
-              onChange={(studyStart) => change({ studyStart, studyStartTouched: true })}
-            />
             <TextField
               placeholder="Stoff"
               defaultValue={form.topic}

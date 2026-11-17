@@ -3,12 +3,11 @@ import { useState } from "react";
 
 import { EmptyState } from "@/components/empty-state";
 import { EntryForm } from "@/components/entry-form";
-import { useEntries, useLessons, usePeriods, useSettings, useSubjects } from "@/db/queries";
+import { useEntries, useLessons, usePeriods, useSubjects } from "@/db/queries";
 
 export default function EntryScreen() {
   const { id, subjectId } = useLocalSearchParams<{ id: string; subjectId?: string }>();
   const subjects = useSubjects();
-  const settings = useSettings();
   const periods = usePeriods();
   const lessons = useLessons();
   const found = useEntries().find((candidate) => String(candidate.id) === id);
@@ -37,7 +36,6 @@ export default function EntryScreen() {
       subjects={subjects}
       periods={periods}
       lessons={lessons}
-      settings={settings}
     />
   );
 }

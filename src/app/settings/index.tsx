@@ -4,25 +4,17 @@ import { Platform } from "react-native";
 
 import { FooterText, FormList } from "@/components/form-list";
 import { ActionRow, NavigationRow } from "@/components/rows";
-import { SelectRow } from "@/components/select-row";
-import { updateSettings } from "@/db/actions";
-import { useLessons, usePeriods, useSettings, useSubjects, useTeachers } from "@/db/queries";
+import { useLessons, usePeriods, useSubjects, useTeachers } from "@/db/queries";
 import { versionLabel } from "@/lib/app-info";
 import { SCHOOL_ROUTES } from "@/lib/routes";
 import { SETUP_STEP_ICONS } from "@/lib/setup";
 import { pickAndImport, shareExport } from "@/lib/transfer-file";
-
-const LEAD_DAY_OPTIONS = Array.from({ length: 22 }, (_, days) => ({
-  label: days === 1 ? "1 Tag" : `${days} Tage`,
-  value: days,
-}));
 
 export default function SettingsScreen() {
   const periods = usePeriods();
   const subjects = useSubjects();
   const teachers = useTeachers();
   const lessons = useLessons();
-  const settings = useSettings();
 
   return (
     <>
@@ -82,33 +74,6 @@ export default function SettingsScreen() {
               damit niemand alles von Hand erfassen muss. Einträge und Noten bleiben privat.
               Importieren lassen sich nur Stundenplan- und Backup-Dateien von SchoolOS (JSON), keine
               PDFs oder Bilder.
-            </FooterText>
-          </FieldGroup.SectionFooter>
-        </FieldGroup.Section>
-
-        <FieldGroup.Section title="Lernbeginn">
-          <SelectRow
-            label="Prüfung"
-            value={settings.examLeadDays}
-            options={LEAD_DAY_OPTIONS}
-            onChange={(examLeadDays) => updateSettings({ examLeadDays })}
-          />
-          <SelectRow
-            label="Präsentation"
-            value={settings.presentationLeadDays}
-            options={LEAD_DAY_OPTIONS}
-            onChange={(presentationLeadDays) => updateSettings({ presentationLeadDays })}
-          />
-          <SelectRow
-            label="Abgabe"
-            value={settings.submissionLeadDays}
-            options={LEAD_DAY_OPTIONS}
-            onChange={(submissionLeadDays) => updateSettings({ submissionLeadDays })}
-          />
-          <FieldGroup.SectionFooter>
-            <FooterText>
-              Wie viele Tage vor dem Termin das Lernen beginnt. Lässt sich bei jedem Eintrag
-              anpassen.
             </FooterText>
           </FieldGroup.SectionFooter>
         </FieldGroup.Section>
