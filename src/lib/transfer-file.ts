@@ -111,13 +111,11 @@ export async function pickAndImport() {
 function runImport(file: TransferFile) {
   try {
     data.importData(file);
-  } catch (error) {
+  } catch {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     showMessage(
       "Import nicht möglich",
-      error instanceof TransferError
-        ? error.message
-        : "Die Datei konnte nicht importiert werden. Es wurde nichts geändert."
+      "Die Datei konnte nicht importiert werden. Es wurde nichts geändert."
     );
     return;
   }

@@ -20,8 +20,6 @@ import { subjectAbbreviation } from "@/lib/text";
 
 type SubjectFormProps = {
   subject: Subject | undefined;
-  // Colors of all subjects, for picking a free one for a new subject
-  allColors: string[];
   // Colors of the other subjects (by id), for the "used" dots of the swatches
   usedColors: string[];
   teachers: Teacher[];
@@ -33,11 +31,11 @@ function firstFreeColor(usedColors: string[]): string {
     .value;
 }
 
-export function SubjectForm({ subject, allColors, usedColors, teachers }: SubjectFormProps) {
+export function SubjectForm({ subject, usedColors, teachers }: SubjectFormProps) {
   const [name, setName] = useState(subject?.name ?? "");
   const [abbreviation, setAbbreviation] = useState(subject?.abbreviation ?? "");
   const [teacherId, setTeacherId] = useState(subject?.teacherId ?? NONE);
-  const [color, setColor] = useState(() => subject?.color ?? firstFreeColor(allColors));
+  const [color, setColor] = useState(() => subject?.color ?? firstFreeColor(usedColors));
   const teacherPicker = useTeacherPicker({
     label: "Lehrperson",
     teachers,

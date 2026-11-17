@@ -11,7 +11,7 @@ import { nextSchoolDay, schoolEnd } from "@/lib/schedule";
 
 // Days planned ahead. iOS keeps at most 64 pending notifications per app and a day has at most
 // two; the plan is renewed whenever the data changes or a new day begins in the open app.
-export const REMINDER_DAYS = 21;
+const REMINDER_DAYS = 21;
 // The summary comes this long after the last lesson, once the student is out of school; the
 // settings footer names it
 export const AFTER_SCHOOL_MINUTES = 30;

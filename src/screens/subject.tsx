@@ -14,7 +14,6 @@ export default function SubjectEditScreen() {
   return (
     <SubjectForm
       subject={subject}
-      allColors={subjects.map((candidate) => candidate.color)}
       usedColors={subjects
         .filter((candidate) => candidate.id !== subject?.id)
         .map((candidate) => candidate.color)}

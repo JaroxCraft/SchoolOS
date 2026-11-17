@@ -4,8 +4,6 @@ import { tint } from "@expo/ui/swift-ui/modifiers";
 import type { RowAction, RowActionsProps } from "@/components/row-actions";
 import { SYSTEM_COLORS } from "@/lib/system-colors";
 
-export type { RowAction } from "@/components/row-actions";
-
 // A button of the context menu, or of a swipe group (`swipe`). A destructive swipe button with the
 // destructive role makes iOS remove the row right away; for an action that asks first, the row
 // must stay until the user confirms, so the button only takes the red.

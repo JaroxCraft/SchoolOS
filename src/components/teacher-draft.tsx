@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 import { TextField } from "@/components/text-field";
-import { addTeacher, saveTeacher } from "@/db/actions";
+import { addTeacher, updateTeacher } from "@/db/actions";
 import type { Teacher } from "@/db/schema";
 import { teacherAbbreviation } from "@/lib/text";
 
@@ -36,7 +36,7 @@ export function useTeacherDraft(initial?: Teacher) {
       email: email.trim() || null,
     };
     if (!teacher) return addTeacher(values);
-    await saveTeacher(teacher.id, values);
+    await updateTeacher(teacher.id, values);
     return teacher.id;
   };
 

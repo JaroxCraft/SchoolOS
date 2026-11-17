@@ -5,8 +5,7 @@ import type { ReactElement } from "react";
 import { Platform } from "react-native";
 
 import { RowIcon, type RowSymbol } from "@/components/row-icon";
-import type { Ink } from "@/hooks/use-ink";
-import { useInk } from "@/hooks/use-ink";
+import { type Ink, useInk } from "@/hooks/use-ink";
 import { useSymbol } from "@/hooks/use-symbol";
 
 // Every tappable row shows what it does: a chevron opens a screen, an arrow opens a web page, an
