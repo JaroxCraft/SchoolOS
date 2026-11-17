@@ -71,13 +71,16 @@ export function useTeacherDraft(initial?: Teacher) {
     />,
   ];
 
+  const dirty =
+    name !== (teacher?.name ?? "") ||
+    abbreviation !== (teacher?.abbreviation ?? "") ||
+    email !== (teacher?.email ?? "");
+
   return {
     fields,
-    canSave: name.trim().length > 0,
-    dirty:
-      name !== (teacher?.name ?? "") ||
-      abbreviation !== (teacher?.abbreviation ?? "") ||
-      email !== (teacher?.email ?? ""),
+    // ✓ only while there is something to save
+    canSave: dirty && name.trim().length > 0,
+    dirty,
     start,
     save,
   };

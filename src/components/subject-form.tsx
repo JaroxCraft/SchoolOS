@@ -45,7 +45,6 @@ export function SubjectForm({ subject, allColors, usedColors, teachers }: Subjec
     onChange: setTeacherId,
   });
 
-  const canSave = name.trim().length > 0;
   const saveButton = useSaveButton();
   // A new subject only counts as changed once something is typed or picked, not for its color
   const dirty =
@@ -53,6 +52,8 @@ export function SubjectForm({ subject, allColors, usedColors, teachers }: Subjec
     abbreviation !== (subject?.abbreviation ?? "") ||
     teacherId !== (subject?.teacherId ?? NONE) ||
     (subject !== undefined && color !== subject.color);
+  // ✓ only while there is something to save
+  const canSave = dirty && name.trim().length > 0;
   const { saving, saveAndClose, deleteAndClose } = useClosingForm(dirty);
 
   const save = () =>

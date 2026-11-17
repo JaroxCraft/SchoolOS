@@ -121,7 +121,7 @@ export default function PeriodsEditScreen() {
         {!routes.setup && saveButton && (
           <Stack.Toolbar.Button
             {...saveButton}
-            disabled={saving}
+            disabled={!dirty || saving}
             onPress={() => saveAndLeave(() => router.back())}
           />
         )}
