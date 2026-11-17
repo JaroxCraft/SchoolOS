@@ -71,7 +71,10 @@ export const grades = sqliteTable("grades", {
   entryId: integer("entry_id").references(() => entries.id, { onDelete: "set null" }),
 });
 
-// Single row with id 1
+// The id of the single settings row
+export const SETTINGS_ID = 1;
+
+// Single row with id SETTINGS_ID, created with the database (prepareDatabase in src/db/database.ts)
 export const settings = sqliteTable("settings", {
   id: integer("id").primaryKey(),
   notificationsEnabled: integer("notifications_enabled", { mode: "boolean" })

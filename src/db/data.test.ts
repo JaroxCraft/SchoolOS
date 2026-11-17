@@ -10,6 +10,7 @@ import {
   periods,
   semesters,
   settings,
+  SETTINGS_ID,
   subjects,
   teachers,
   type Entry,
@@ -19,10 +20,9 @@ import { parseTransferFile, TransferError, type TransferFile } from "@/db/transf
 
 const TODAY = "2026-11-17";
 
-// A database as after the first launch (initDatabase), with its operations
+// A database as after the first launch, with its operations
 function setup() {
   const db = createTestDatabase();
-  db.insert(settings).values({ id: 1 }).run();
   return { db, ...dataOperations(db) };
 }
 
@@ -373,7 +373,7 @@ describe("resetDatabase", () => {
       grades: [],
       settings: [
         {
-          id: 1,
+          id: SETTINGS_ID,
           notificationsEnabled: true,
           secondReminderTime: "18:00",
           noLessonSummaryTime: "10:00",
