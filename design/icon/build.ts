@@ -2,9 +2,10 @@
 // S3a timetable 2026/27, double lessons drawn as one block.
 // Run with `bun run icons`. Validate the .icon package afterwards with the compose-app-icon skill.
 
-import { Resvg } from "@resvg/resvg-js";
 import { copyFileSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+
+import { Resvg } from "@resvg/resvg-js";
 import { PNG } from "pngjs";
 
 const ROOT = join(import.meta.dirname, "..", "..");
