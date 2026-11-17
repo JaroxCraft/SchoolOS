@@ -38,6 +38,11 @@ export function periodNumber(periods: Period[], periodId: number): number {
   return periods.findIndex((period) => period.id === periodId) + 1;
 }
 
+// "3. Lektion"
+export function periodLabel(number: number): string {
+  return `${number}. Lektion`;
+}
+
 // "07:30–08:15"
 export function periodRange(period: Period): string {
   return `${period.startTime}–${period.endTime}`;

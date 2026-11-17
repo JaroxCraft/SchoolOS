@@ -2,13 +2,14 @@ import { FieldGroup, Text } from "@expo/ui";
 import { Stack } from "expo-router";
 
 import { FormList } from "@/components/form-list";
-import { type RowAction, RowActions } from "@/components/row-actions";
+import { RowActions } from "@/components/row-actions";
 import { ActionRow, NavigationRow } from "@/components/rows";
 import { SubjectDot } from "@/components/subject-dot";
 import { useSubjects, useTeachers } from "@/db/queries";
 import { useStepButton } from "@/hooks/use-header-button";
 import { useInk } from "@/hooks/use-ink";
-import { confirmRowDelete, subjectDeletion } from "@/lib/confirm-delete";
+import { deleteAction, editAction, subjectDeletion } from "@/lib/confirm-delete";
+import { findById } from "@/lib/find";
 import { openScreen, useSchoolRoutes } from "@/lib/routes";
 import { joinDetails } from "@/lib/text";
 
@@ -41,21 +42,8 @@ export default function SubjectsScreen() {
           {subjects.length === 0 && <Text textStyle={{ color: ink.secondary }}>Keine Fächer</Text>}
           {/* iOS: swipe left or long press to delete (asked first), long press to edit */}
           {subjects.map((subject) => {
-            const remove: RowAction = {
-              label: "Löschen",
-              icon: "trash",
-              destructive: true,
-              asksFirst: true,
-              onPress: () => confirmRowDelete(subjectDeletion(subject)),
-            };
-            const menu: RowAction[] = [
-              {
-                label: "Bearbeiten",
-                icon: "pencil",
-                onPress: () => openSubject(String(subject.id)),
-              },
-              remove,
-            ];
+            const remove = deleteAction(subjectDeletion(subject));
+            const menu = [editAction(() => openSubject(String(subject.id))), remove];
             return (
               <RowActions key={subject.id} trailing={[remove]} menu={menu}>
                 <NavigationRow
@@ -63,7 +51,7 @@ export default function SubjectsScreen() {
                   leading={<SubjectDot color={subject.color} />}
                   supportingText={joinDetails(
                     subject.abbreviation,
-                    teachers.find((teacher) => teacher.id === subject.teacherId)?.name
+                    findById(teachers, subject.teacherId)?.name
                   )}>
                   {subject.name}
                 </NavigationRow>

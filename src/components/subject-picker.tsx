@@ -6,6 +6,7 @@ import { SearchPickerSheet } from "@/components/search-picker-sheet";
 import { SubjectDot } from "@/components/subject-dot";
 import type { LessonSlot, Subject, Teacher } from "@/db/schema";
 import { useInk } from "@/hooks/use-ink";
+import { findById } from "@/lib/find";
 import { NEUTRAL_COLOR } from "@/lib/subject-colors";
 import { joinDetails } from "@/lib/text";
 
@@ -40,8 +41,7 @@ export function SubjectPickerSheet({
   lessons,
   ...props
 }: SubjectPickerSheetProps) {
-  const teacherOf = (subject: Subject) =>
-    teachers.find((teacher) => teacher.id === subject.teacherId);
+  const teacherOf = (subject: Subject) => findById(teachers, subject.teacherId);
 
   return (
     <SearchPickerSheet
@@ -73,7 +73,7 @@ type SubjectPickerOptions = Omit<SubjectPickerSheetProps, "isPresented" | "onDis
 export function useSubjectPicker({ label, ...props }: SubjectPickerOptions) {
   const ink = useInk();
   const [open, setOpen] = useState(false);
-  const selected = props.subjects.find((subject) => subject.id === props.value);
+  const selected = findById(props.subjects, props.value);
   const selectedLabel =
     selected?.name ?? props.extraChoices.find((choice) => choice.value === props.value)?.label;
 

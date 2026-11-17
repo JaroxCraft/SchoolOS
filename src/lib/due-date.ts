@@ -30,7 +30,7 @@ export type DueChoiceDates = { next: string | null; afterNext: string | null };
 
 // The next two lessons of the subject after `now`: the lesson in progress does not count (what is
 // given in it is due at the following one), a later one today does
-function nextLessons(
+function nextTwoSubjectLessons(
   subjectId: number | null,
   lessons: Lesson[],
   periods: Period[],
@@ -45,7 +45,7 @@ export function dueChoiceDates(
   periods: Period[],
   now: Now
 ): DueChoiceDates {
-  const [next, afterNext] = nextLessons(subjectId, lessons, periods, now);
+  const [next, afterNext] = nextTwoSubjectLessons(subjectId, lessons, periods, now);
   return { next: next?.date ?? null, afterNext: afterNext?.date ?? null };
 }
 
@@ -58,7 +58,7 @@ export function suggestDue(fields: DueFields, lessons: Lesson[], periods: Period
   const { subjectId, date } = fields;
 
   if (fields.dueChoice !== "custom") {
-    const [first, second] = nextLessons(subjectId, lessons, periods, now);
+    const [first, second] = nextTwoSubjectLessons(subjectId, lessons, periods, now);
     const pick = fields.dueChoice === "next" ? first : (second ?? first);
     return { date: pick?.date ?? addDays(now.date, 1), periodId: pick?.period.id ?? null };
   }

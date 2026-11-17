@@ -6,6 +6,7 @@ import { SearchPickerSheet } from "@/components/search-picker-sheet";
 import { useTeacherDraft } from "@/components/teacher-draft";
 import type { Teacher } from "@/db/schema";
 import { useInk } from "@/hooks/use-ink";
+import { findById } from "@/lib/find";
 
 // The choice for a Fach without a Lehrperson, in the sheet and in the row showing the choice
 const NO_TEACHER_CHOICE: ExtraChoice = { label: "Keine", value: NONE };
@@ -58,8 +59,7 @@ type TeacherPickerOptions = Omit<TeacherPickerSheetProps, "isPresented" | "onDis
 export function useTeacherPicker({ label, ...props }: TeacherPickerOptions) {
   const ink = useInk();
   const [open, setOpen] = useState(false);
-  const selectedLabel =
-    props.teachers.find((teacher) => teacher.id === props.value)?.name ?? NO_TEACHER_CHOICE.label;
+  const selectedLabel = findById(props.teachers, props.value)?.name ?? NO_TEACHER_CHOICE.label;
 
   // A direct list item of the section: Android draws it as the row with the section background
   const row = (

@@ -4,9 +4,10 @@ import * as WebBrowser from "expo-web-browser";
 import type { ReactElement } from "react";
 import { Platform } from "react-native";
 
-import { RowIcon, type RowSymbol } from "@/components/row-icon";
+import { RowIcon } from "@/components/row-icon";
 import { type Ink, useInk } from "@/hooks/use-ink";
 import { useSymbol } from "@/hooks/use-symbol";
+import type { RowSymbol } from "@/lib/row-action";
 
 // Every tappable row shows what it does: a chevron opens a screen, an arrow opens a web page, an
 // accent-colored label runs an action (add, write an email). Rows without either only show a value

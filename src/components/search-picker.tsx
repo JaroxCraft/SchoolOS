@@ -5,11 +5,17 @@ import type { ReactNode } from "react";
 import { RowActions } from "@/components/row-actions";
 import { useInk } from "@/hooks/use-ink";
 import { useSymbol } from "@/hooks/use-symbol";
+import { editAction } from "@/lib/confirm-delete";
 import { SYSTEM_COLORS } from "@/lib/system-colors";
 
 // "None" in every picker and select: no Fach ("Allgemein"), no Lehrperson ("Keine"), a free period
 // ("Frei") or no Lektion. Ids of saved rows start at 1, so 0 never collides with one.
 export const NONE = 0;
+
+// The id to save for a picked value: null for NONE
+export function noneToNull(id: number): number | null {
+  return id === NONE ? null : id;
+}
 
 // Choices above the items, e.g. "Frei" in the timetable or "Allgemein" for entries
 export type ExtraChoice = { label: string; value: number };
@@ -131,13 +137,8 @@ export function usePickerSections<T extends { id: number }>(
             </ListItem>
           );
           if (!onEdit) return row;
-          const edit = {
-            label: "Bearbeiten",
-            icon: "pencil",
-            // Gray like the swipe buttons that change a row in Mail
-            tint: SYSTEM_COLORS.gray,
-            onPress: () => onEdit(item),
-          } as const;
+          // Gray like the swipe buttons that change a row in Mail
+          const edit = editAction(() => onEdit(item), SYSTEM_COLORS.gray);
           return (
             <RowActions key={item.id} trailing={[edit]} menu={[edit]}>
               {row}

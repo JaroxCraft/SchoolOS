@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
-import { AppState } from "react-native";
+import { useCallback, useEffect, useState } from "react";
 
+import { useOnAppActive } from "@/hooks/use-on-app-active";
 import { toISODate } from "@/lib/dates";
 import type { Now } from "@/lib/schedule";
 
@@ -17,22 +17,19 @@ const readNow = (): Now => {
 export function useNow(): Now {
   const [now, setNow] = useState(readNow);
 
-  useEffect(() => {
-    const refresh = () => {
-      const next = readNow();
-      setNow((prev) => (prev.date === next.date && prev.minutes === next.minutes ? prev : next));
-    };
-    const interval = setInterval(refresh, 30_000);
-    // Timers stand still in the background, so coming back the next morning would show yesterday
-    // for up to half a minute
-    const subscription = AppState.addEventListener("change", (state) => {
-      if (state === "active") refresh();
-    });
-    return () => {
-      clearInterval(interval);
-      subscription.remove();
-    };
+  const refresh = useCallback(() => {
+    const next = readNow();
+    setNow((prev) => (prev.date === next.date && prev.minutes === next.minutes ? prev : next));
   }, []);
+
+  useEffect(() => {
+    const interval = setInterval(refresh, 30_000);
+    return () => clearInterval(interval);
+  }, [refresh]);
+
+  // Timers stand still in the background, so coming back the next morning would show yesterday
+  // for up to half a minute
+  useOnAppActive(refresh);
 
   return now;
 }

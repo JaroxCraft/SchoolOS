@@ -13,7 +13,7 @@ import {
   type TransferFile,
   type TransferKind,
 } from "@/db/transfer";
-import { confirm, showMessage } from "@/lib/confirm";
+import { confirm, showError } from "@/lib/confirm";
 import { today } from "@/lib/dates";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
@@ -39,8 +39,7 @@ export async function shareExport(kind: TransferKind) {
       dialogTitle: kind === "timetable" ? "Stundenplan teilen" : "Backup sichern",
     });
   } catch {
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-    showMessage("Teilen nicht möglich", "Versuche es noch einmal.");
+    showError("Teilen nicht möglich", "Versuche es noch einmal.");
   }
 }
 
@@ -64,14 +63,12 @@ export async function pickAndImport() {
     const picked = result.assets[0];
     // Exports are a few hundred KB at most; a large file is not one and would block reading it
     if ((picked.size ?? new File(picked.uri).size) > MAX_FILE_SIZE) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      showMessage("Import nicht möglich", NOT_A_SCHOOLOS_FILE);
+      showError("Import nicht möglich", NOT_A_SCHOOLOS_FILE);
       return;
     }
     text = await new File(picked.uri).text();
   } catch {
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-    showMessage(
+    showError(
       "Öffnen nicht möglich",
       "Die Datei konnte nicht geöffnet werden. Versuche es noch einmal."
     );
@@ -82,8 +79,7 @@ export async function pickAndImport() {
   try {
     file = parseTransferFile(text);
   } catch (error) {
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-    showMessage(
+    showError(
       "Import nicht möglich",
       error instanceof TransferError ? error.message : "Die Datei konnte nicht gelesen werden."
     );
@@ -112,8 +108,7 @@ function runImport(file: TransferFile) {
   try {
     data.importData(file);
   } catch {
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-    showMessage(
+    showError(
       "Import nicht möglich",
       "Die Datei konnte nicht importiert werden. Es wurde nichts geändert."
     );

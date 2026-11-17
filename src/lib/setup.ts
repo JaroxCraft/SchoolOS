@@ -1,4 +1,4 @@
-import type { RowSymbol } from "@/components/row-icon";
+import type { RowSymbol } from "@/lib/row-action";
 import { SYSTEM_COLORS } from "@/lib/system-colors";
 
 // Icons of the setup screens, shared by the settings and the setup steps of the overview.

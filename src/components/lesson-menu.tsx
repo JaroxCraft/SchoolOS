@@ -1,4 +1,4 @@
-import type { RowAction } from "@/components/row-actions";
+import type { RowAction } from "@/lib/row-action";
 
 export type LessonMenuProps = {
   // See lessonActions

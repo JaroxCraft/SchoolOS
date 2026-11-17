@@ -1,5 +1,6 @@
 import type { Entry, Lesson, Period, Settings, Subject } from "@/db/schema";
 import { addDays, dateAt, isoWeekday, minutesOf, toISODate } from "@/lib/dates";
+import { findById } from "@/lib/find";
 import {
   type DueItem,
   dueLine,
@@ -63,7 +64,7 @@ export function planReminders({
   if (!settings.notificationsEnabled) return [];
 
   const open = entries.filter((entry) => !entry.completed);
-  const subjectOf = (entry: Entry) => subjects.find((subject) => subject.id === entry.subjectId);
+  const subjectOf = (entry: Entry) => findById(subjects, entry.subjectId);
   const today = toISODate(now);
   const reminders: Reminder[] = [];
 

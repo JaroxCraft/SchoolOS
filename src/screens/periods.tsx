@@ -17,6 +17,7 @@ import { confirm } from "@/lib/confirm";
 import { addMinutes, minutesOf } from "@/lib/dates";
 import { openScreen, useSchoolRoutes } from "@/lib/routes";
 import { saveFailed } from "@/lib/save-failed";
+import { periodLabel } from "@/lib/schedule";
 
 const LESSON_MINUTES = 50;
 const FIRST_START = "07:25";
@@ -136,7 +137,7 @@ export default function PeriodsEditScreen() {
               <TimeRangeRow
                 // Added periods have no id yet; only the last one can be removed
                 key={period.id ?? `new-${index}`}
-                label={`${index + 1}. Lektion`}
+                label={periodLabel(index + 1)}
                 start={period.startTime}
                 end={period.endTime}
                 onChange={(start, end) => setDraft(changePeriod(grid, index, start, end))}

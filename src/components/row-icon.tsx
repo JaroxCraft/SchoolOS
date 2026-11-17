@@ -1,9 +1,9 @@
 import { Box, Icon } from "@expo/ui/jetpack-compose";
 import { background, clip, Shapes, size } from "@expo/ui/jetpack-compose/modifiers";
-import type { AndroidSymbol, SFSymbol } from "expo-symbols";
 
 import { useInk } from "@/hooks/use-ink";
 import { useSymbol } from "@/hooks/use-symbol";
+import type { RowSymbol } from "@/lib/row-action";
 
 // Relative luminance (sRGB, 0 black to 1 white) of a "#RRGGBB" color
 function luminance(hex: string) {
@@ -13,14 +13,6 @@ function luminance(hex: string) {
   });
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 }
-
-export type RowSymbol = {
-  sf: SFSymbol;
-  md: AndroidSymbol;
-  // iOS: background of the icon square, like the system Settings app. Android: the icon's color
-  // on a light tint of it.
-  color: string;
-};
 
 // Android: the Material Symbol in its color on a round tonal background of the same color, like
 // the settings of Pixel phones. Near-black colors (e.g. the GitHub one) take the label color

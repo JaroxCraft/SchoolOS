@@ -84,6 +84,9 @@ export const settings = sqliteTable("settings", {
 // The data tables, children before the rows they reference: the order to delete them in.
 export const DATA_TABLES = [grades, entries, lessons, subjects, teachers, periods, semesters];
 
+// Every table: the data tables and the settings
+export type Table = (typeof DATA_TABLES)[number] | typeof settings;
+
 export type Period = typeof periods.$inferSelect;
 export type Teacher = typeof teachers.$inferSelect;
 export type Subject = typeof subjects.$inferSelect;

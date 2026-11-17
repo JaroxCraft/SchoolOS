@@ -1,16 +1,17 @@
 import { ListItem, Text } from "@expo/ui";
 
-import { type RowAction, RowActions } from "@/components/row-actions";
+import { RowActions } from "@/components/row-actions";
 import type { RowComponent } from "@/components/rows";
 import { TaskCheckbox, toggleHaptic } from "@/components/task-checkbox";
 import type { Entry, Subject } from "@/db/schema";
 import { checkOffEntry } from "@/hooks/use-entry-placement";
 import { type Ink, useInk } from "@/hooks/use-ink";
-import { confirmRowDelete, entryDeletion } from "@/lib/confirm-delete";
+import { deleteAction, editAction, entryDeletion } from "@/lib/confirm-delete";
 import { formatDate, relativeDay } from "@/lib/dates";
 import { isOverdue } from "@/lib/entry-status";
-import { ENTRY_TYPE_INFO } from "@/lib/entry-types";
+import { ENTRY_TYPE_INFO, NO_SUBJECT_LABEL } from "@/lib/entry-types";
 import { openEntry } from "@/lib/routes";
+import type { RowAction } from "@/lib/row-action";
 import { NEUTRAL_COLOR } from "@/lib/subject-colors";
 import { SYSTEM_COLORS } from "@/lib/system-colors";
 import { typography } from "@/lib/typography";
@@ -31,7 +32,7 @@ function entryItem({ entry, subject, today }: EntryRowProps, ink: Ink) {
   const overdue = isOverdue(entry, today);
   const details = [
     ENTRY_TYPE_INFO[entry.type].label,
-    subject?.name ?? "Allgemein",
+    subject?.name ?? NO_SUBJECT_LABEL,
     `${formatDate(entry.date)}, ${relativeDay(entry.date, today)}`,
   ].join(" · ");
 
@@ -75,18 +76,8 @@ function entryRow(props: EntryRowProps, ink: Ink) {
       checkOffEntry(entry, !entry.completed);
     },
   };
-  const remove: RowAction = {
-    label: "Löschen",
-    icon: "trash",
-    destructive: true,
-    asksFirst: true,
-    onPress: () => confirmRowDelete(entryDeletion(entry)),
-  };
-  const edit: RowAction = {
-    label: "Bearbeiten",
-    icon: "pencil",
-    onPress: () => openEntry({ id: entry.id }),
-  };
+  const remove = deleteAction(entryDeletion(entry));
+  const edit = editAction(() => openEntry({ id: entry.id }));
 
   return (
     <RowActions leading={[toggle]} trailing={[remove]} menu={[toggle, edit, remove]}>

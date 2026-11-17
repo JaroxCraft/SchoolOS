@@ -7,7 +7,8 @@ import { Platform } from "react-native";
 export const WEBSITE_URL = "https://schoolos.jarox.dev/";
 export const FEEDBACK_URL = `${WEBSITE_URL}feedback/`;
 
-export type AppInfoRow = { label: string; value: string };
+// `copyValue` replaces `value` in the copied text, e.g. with the full ID
+export type AppInfoRow = { label: string; value: string; copyValue?: string };
 
 // In Expo Go (or another development client) the running app is not SchoolOS itself, so its
 // native version and build are not ours. The app id tells: it only matches our own builds.
@@ -50,9 +51,17 @@ export function appInfoRows(): AppInfoRow[] {
   return [
     { label: "Version", value: appVersion },
     { label: "Build", value: appBuild ?? "–" },
-    { label: "Update", value: updateLabel() },
+    {
+      label: "Update",
+      value: updateLabel(),
+      copyValue: updates?.id && !Updates.isEmbeddedLaunch ? updates.id : undefined,
+    },
     { label: "Channel", value: updates?.channel ?? "–" },
-    { label: "Runtime", value: updates?.runtime?.slice(0, 8) ?? "–" },
+    {
+      label: "Runtime",
+      value: updates?.runtime?.slice(0, 8) ?? "–",
+      copyValue: updates?.runtime || undefined,
+    },
     {
       label: "System",
       value: [`${Device.osName ?? ""} ${Device.osVersion ?? ""}`.trim(), Device.modelName]
@@ -64,12 +73,6 @@ export function appInfoRows(): AppInfoRow[] {
 
 // Plain text for bug reports: one "Label: value" line per row, with full IDs.
 export function appInfoText(): string {
-  const rows = appInfoRows().map((row) => {
-    if (row.label === "Update" && updates?.id && !Updates.isEmbeddedLaunch) {
-      return `Update: ${updates.id}`;
-    }
-    if (row.label === "Runtime" && updates?.runtime) return `Runtime: ${updates.runtime}`;
-    return `${row.label}: ${row.value}`;
-  });
+  const rows = appInfoRows().map((row) => `${row.label}: ${row.copyValue ?? row.value}`);
   return ["SchoolOS", ...rows].join("\n");
 }
