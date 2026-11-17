@@ -14,7 +14,7 @@ import { useTeachers } from "@/db/queries";
 import type { Entry, EntryType, Lesson, Period, Subject } from "@/db/schema";
 import { confirmDelete } from "@/lib/confirm-delete";
 import { addDays, formatDate } from "@/lib/dates";
-import { ENTRY_TYPE_INFO, ENTRY_TYPE_OPTIONS, isCheckable } from "@/lib/entry-types";
+import { ENTRY_TYPE_INFO, ENTRY_TYPE_OPTIONS } from "@/lib/entry-types";
 import { subjectLessonOn, upcomingSubjectLessons } from "@/lib/schedule";
 import { NEUTRAL_COLOR } from "@/lib/subject-colors";
 import { useDiscardGuard } from "@/hooks/use-discard-guard";
@@ -149,7 +149,7 @@ export function EntryForm({ entry, initialSubjectId, subjects, periods, lessons 
         subjectId: form.subjectId === NONE ? null : form.subjectId,
         date: form.date,
         periodId: form.periodId === NONE ? null : form.periodId,
-        completed: isCheckable(form.type) && form.completed,
+        completed: form.completed,
         topic: info.gradable ? form.topic.trim() || null : null,
       });
       allowLeave();
@@ -235,7 +235,7 @@ export function EntryForm({ entry, initialSubjectId, subjects, periods, lessons 
               ]}
             />
           )}
-          {isCheckable(form.type) && entry && (
+          {entry && (
             <TaskCheckbox
               label="Erledigt"
               value={form.completed}

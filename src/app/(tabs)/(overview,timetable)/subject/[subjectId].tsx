@@ -8,7 +8,6 @@ import { LabeledRow } from "@/components/labeled-row";
 import { ActionRow } from "@/components/rows";
 import { useEntries, useLessons, usePeriods, useSubjects, useTeachers } from "@/db/queries";
 import { weekdayName } from "@/lib/dates";
-import { isCheckable } from "@/lib/entry-types";
 import { openEntry } from "@/lib/routes";
 import { periodNumber } from "@/lib/schedule";
 import { joinDetails } from "@/lib/text";
@@ -37,9 +36,7 @@ export default function SubjectScreen() {
   const wasCompleted = useWasCompleted();
   const now = useNow();
   const openEntries = useEntries().filter(
-    (entry) =>
-      entry.subjectId === id &&
-      (isCheckable(entry.type) ? !wasCompleted(entry) : entry.date >= now.date)
+    (entry) => entry.subjectId === id && !wasCompleted(entry)
   );
 
   // The subject was deleted or the app reset, maybe while this screen waited in its tab: it has

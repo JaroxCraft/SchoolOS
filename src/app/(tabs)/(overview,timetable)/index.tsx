@@ -13,14 +13,12 @@ import { useInk } from "@/hooks/use-ink";
 import { useNow } from "@/hooks/use-now";
 import { useWasCompleted } from "@/hooks/use-recently-completed";
 import { formatDate, relativeDay } from "@/lib/dates";
-import { isCheckable } from "@/lib/entry-types";
 import { nextLessons, periodNumber, periodRange } from "@/lib/schedule";
 import { openEntry, SCHOOL_ROUTES } from "@/lib/routes";
 import { SETUP_STEP_ICONS } from "@/lib/setup";
 import { joinDetails } from "@/lib/text";
 import { pickAndImport } from "@/lib/transfer-file";
 
-const UPCOMING_EVENTS = 5;
 const DONE_ICON = { sf: "checkmark", md: "check", color: "#34C759" } as const;
 
 type SetupProps = { periods: Period[]; subjects: Subject[] };
@@ -109,13 +107,9 @@ export default function OverviewScreen() {
   }
 
   const upcomingLessons = nextLessons(lessons, periods, now);
-  // Tasks checked off here stay until the screen is left, so they can be unchecked again
-  const openTasks = entries.filter((entry) => isCheckable(entry.type) && !wasCompleted(entry));
-  const upcomingEvents = entries
-    .filter(
-      (entry) => (entry.type === "exam" || entry.type === "presentation") && entry.date >= now.date
-    )
-    .slice(0, UPCOMING_EVENTS);
+  // Every open entry in one list by date, whatever its type; overdue and missed ones in red.
+  // Entries checked off here stay until the screen is left, so they can be unchecked again.
+  const openEntries = entries.filter((entry) => !wasCompleted(entry));
 
   const lessonsDate = upcomingLessons[0]?.date;
 
@@ -161,11 +155,11 @@ export default function OverviewScreen() {
           })}
         </FieldGroup.Section>
 
-        <FieldGroup.Section title="Offene Aufgaben">
-          {openTasks.length === 0 && (
+        <FieldGroup.Section title="Offene Einträge">
+          {openEntries.length === 0 && (
             <Text textStyle={{ color: ink.secondary }}>Alles erledigt</Text>
           )}
-          {openTasks.map((entry) => (
+          {openEntries.map((entry) => (
             <EntryRow
               key={entry.id}
               entry={entry}
@@ -173,22 +167,6 @@ export default function OverviewScreen() {
               today={now.date}
             />
           ))}
-        </FieldGroup.Section>
-
-        <FieldGroup.Section title="Prüfungen und Präsentationen">
-          {upcomingEvents.length === 0 && (
-            <Text textStyle={{ color: ink.secondary }}>Keine anstehenden Termine</Text>
-          )}
-          {upcomingEvents.map((entry) => (
-            <EntryRow
-              key={entry.id}
-              entry={entry}
-              subject={subjectById(entry.subjectId)}
-              today={now.date}
-            />
-          ))}
-          {/* Switches to the Agenda tab, so it is an action and not a pushed screen */}
-          <ActionRow label="Alle in der Agenda" onPress={() => router.navigate("/agenda")} />
         </FieldGroup.Section>
       </FormList>
     </Screen>

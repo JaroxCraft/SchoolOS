@@ -11,11 +11,11 @@ import { Screen } from "@/components/screen";
 import { type SelectOption, SelectRow } from "@/components/select-row";
 import { sortSubjectsByUse, useSubjectPicker } from "@/components/subject-picker";
 import { useEntries, useLessons, useSubjects, useTeachers } from "@/db/queries";
-import type { Entry, EntryType } from "@/db/schema";
+import type { EntryType } from "@/db/schema";
 import { useInk } from "@/hooks/use-ink";
 import { useNow } from "@/hooks/use-now";
 import { useWasCompleted } from "@/hooks/use-recently-completed";
-import { ENTRY_TYPE_OPTIONS, isCheckable } from "@/lib/entry-types";
+import { ENTRY_TYPE_OPTIONS } from "@/lib/entry-types";
 import { openEntry } from "@/lib/routes";
 
 const ALL = "all";
@@ -79,19 +79,14 @@ export default function AgendaScreen() {
         (subjectFilter === GENERAL ? entry.subjectId === null : entry.subjectId === subjectFilter))
   );
 
-  // Tasks (un)checked just now stay in their section until the screen is left
-  const isDone = (entry: Entry) => isCheckable(entry.type) && wasCompleted(entry);
-  // Open homework and submissions stay upcoming even when overdue
-  const isPast = (entry: Entry) => !isCheckable(entry.type) && entry.date < now.date;
-
-  const upcoming = visible.filter((entry) => !isDone(entry) && !isPast(entry));
-  const done = visible.filter(isDone).reverse();
-  const past = visible.filter(isPast).reverse();
+  // Every entry stays upcoming until it is checked off, even when overdue. Entries (un)checked just
+  // now stay in their section until the screen is left.
+  const upcoming = visible.filter((entry) => !wasCompleted(entry));
+  const done = visible.filter(wasCompleted).reverse();
 
   const sections = [
     { title: "Anstehend", items: upcoming },
     { title: "Erledigt", items: done },
-    { title: "Vergangen", items: past },
   ];
 
   const subjectOptions = [
