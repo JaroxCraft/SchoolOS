@@ -9,6 +9,7 @@ import {
   periods,
   semesters,
   settings,
+  SETTINGS_ID,
   subjects,
   teachers,
   type LessonSlot,
@@ -43,7 +44,7 @@ export function dataOperations(db: Database) {
       for (const table of [...DATA_TABLES, settings]) {
         tx.delete(table).run();
       }
-      tx.insert(settings).values({ id: 1 }).run();
+      tx.insert(settings).values({ id: SETTINGS_ID }).run();
     });
   }
 

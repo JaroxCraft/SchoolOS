@@ -7,7 +7,6 @@ import { AppStack } from "@/components/app-stack";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { EmptyState } from "@/components/empty-state";
 import { Reminders } from "@/components/reminders";
-import { initDatabase } from "@/db/actions";
 import { useDatabaseMigrations } from "@/db/migrate";
 import { useNavigationTheme } from "@/hooks/use-navigation-theme";
 
@@ -23,8 +22,6 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (success || error) SplashScreen.hide();
-    if (!success) return;
-    initDatabase();
   }, [success, error]);
 
   if (error) {

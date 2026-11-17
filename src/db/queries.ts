@@ -9,17 +9,11 @@ import {
   lessons,
   periods,
   settings,
+  SETTINGS_ID,
   subjects,
   teachers,
   type Settings,
 } from "@/db/schema";
-
-const DEFAULT_SETTINGS: Settings = {
-  id: 1,
-  notificationsEnabled: true,
-  secondReminderTime: "18:00",
-  noLessonSummaryTime: "10:00",
-};
 
 // The rows of one table, shared by every screen that shows it.
 type TableStore<T> = {
@@ -94,9 +88,10 @@ const lessonsStore = tableStore(lessons, () => db.select().from(lessons).all());
 const entriesStore = tableStore(entries, () =>
   db.select().from(entries).orderBy(asc(entries.date)).all()
 );
-const settingsStore = tableStore(
-  settings,
-  () => db.select().from(settings).where(eq(settings.id, 1)).get() ?? DEFAULT_SETTINGS
+// The row always exists: prepareDatabase creates it before the app renders, and a reset creates it
+// again in the same transaction that deletes it.
+const settingsStore = tableStore(settings, () =>
+  db.select().from(settings).where(eq(settings.id, SETTINGS_ID)).get()!
 );
 
 export function usePeriods() {

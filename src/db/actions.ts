@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 
 import { data, db } from "@/db/client";
-import { entries, settings, subjects, teachers, type Settings } from "@/db/schema";
+import { entries, settings, SETTINGS_ID, subjects, teachers, type Settings } from "@/db/schema";
 
 type NewTeacher = typeof teachers.$inferInsert;
 type NewSubject = typeof subjects.$inferInsert;
@@ -10,14 +10,8 @@ type NewEntry = typeof entries.$inferInsert;
 // The writes that replace whole tables (reset, period grid, timetable) live in src/db/data.ts
 export const { resetDatabase, savePeriods, saveLessons } = data;
 
-// Creates the settings row on the first launch. The period grid is left empty: schools differ,
-// the setup asks for it first.
-export async function initDatabase() {
-  await db.insert(settings).values({ id: 1 }).onConflictDoNothing();
-}
-
 export async function updateSettings(values: Partial<Omit<Settings, "id">>) {
-  await db.update(settings).set(values).where(eq(settings.id, 1));
+  await db.update(settings).set(values).where(eq(settings.id, SETTINGS_ID));
 }
 
 // Returns the id of the new teacher

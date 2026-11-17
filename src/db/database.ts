@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
 import type { BaseSQLiteDatabase } from "drizzle-orm/sqlite-core";
 
+import { settings, SETTINGS_ID } from "@/db/schema";
 import type * as schema from "@/db/schema";
 
 // The seam to the database: drizzle's synchronous SQLite flavour with the app's schema. The app
@@ -14,10 +15,18 @@ export type Database = BaseSQLiteDatabase<"sync", unknown, typeof schema>;
 // that reference it when it drops the old table. PRAGMA foreign_keys has no effect inside the
 // migration transaction, so it is switched on after the migrations, once the references are
 // checked.
-export function enableForeignKeys(db: Database) {
+function enableForeignKeys(db: Database) {
   const broken = db.all(sql`PRAGMA foreign_key_check;`);
   if (broken.length > 0) {
     throw new Error(`${broken.length} Verweise in der Datenbank zeigen ins Leere.`);
   }
   db.run(sql`PRAGMA foreign_keys = ON;`);
+}
+
+// Readies a migrated database: switches on the foreign keys and creates the settings row on the
+// first launch, so every screen can read it. The period grid is left empty: schools differ, the
+// setup asks for it first.
+export function prepareDatabase(db: Database) {
+  enableForeignKeys(db);
+  db.insert(settings).values({ id: SETTINGS_ID }).onConflictDoNothing().run();
 }

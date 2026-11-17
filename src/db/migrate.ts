@@ -2,12 +2,12 @@ import { migrate } from "drizzle-orm/expo-sqlite/migrator";
 import { useEffect, useState } from "react";
 
 import { db } from "@/db/client";
-import { enableForeignKeys } from "@/db/database";
+import { prepareDatabase } from "@/db/database";
 import migrations from "@/drizzle/migrations";
 
 async function runMigrations() {
   await migrate(db, migrations);
-  enableForeignKeys(db);
+  prepareDatabase(db);
 }
 
 export function useDatabaseMigrations() {
