@@ -4,10 +4,9 @@ import * as Haptics from "expo-haptics";
 import * as Sharing from "expo-sharing";
 import { Platform } from "react-native";
 
+import { data } from "@/db/client";
 import {
   describeTransferFile,
-  exportData,
-  importData,
   NOT_A_SCHOOLOS_FILE,
   parseTransferFile,
   TransferError,
@@ -32,7 +31,7 @@ export async function shareExport(kind: TransferKind) {
     const file = new File(Paths.cache, fileName(kind));
     if (file.exists) file.delete();
     file.create();
-    await file.write(JSON.stringify(exportData(kind), null, 2));
+    await file.write(JSON.stringify(data.exportData(kind), null, 2));
 
     await Sharing.shareAsync(file.uri, {
       mimeType: "application/json",
@@ -108,7 +107,7 @@ export async function pickAndImport(onDone?: () => void) {
 
 function runImport(file: TransferFile, onDone?: () => void) {
   try {
-    importData(file);
+    data.importData(file);
   } catch (error) {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     showMessage(
