@@ -186,7 +186,7 @@ export default function AgendaScreen() {
           </FieldGroup.Section>
         )}
       </FormList>
-      {subjectPicker.sheet}
+      {Platform.OS === "android" && subjectPicker.sheet}
     </Screen>
   );
 }

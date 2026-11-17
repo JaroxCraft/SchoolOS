@@ -1,5 +1,5 @@
 import { FieldGroup } from "@expo/ui";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import { DateField } from "@/components/date-field";
 import { DestructiveRow } from "@/components/rows";
@@ -89,12 +89,17 @@ export function EntryForm({ entry, initialSubjectId, subjects, periods, lessons 
 
   const change = (changes: Partial<FormState>) =>
     setForm((state) => derive({ ...state, ...changes }));
-  // The texts do not affect the derived fields, so typing skips the schedule lookups
+  // The texts do not affect the derived fields, so typing skips the schedule lookups; the
+  // choice dates below are memoized for the same reason
   const edit = (changes: Partial<Pick<FormState, "title" | "topic" | "description">>) =>
     setForm((state) => ({ ...state, ...changes }));
 
   const info = ENTRY_TYPE_INFO[form.type];
-  const choiceDates = dueChoiceDates(noneToNull(form.subjectId), lessons, periods, now);
+  const subjectId = noneToNull(form.subjectId);
+  const choiceDates = useMemo(
+    () => dueChoiceDates(subjectId, lessons, periods, now),
+    [subjectId, lessons, periods, now]
+  );
   // The form as it was opened, to tell whether anything was changed
   const [initialForm] = useState(form);
   const dirty = (

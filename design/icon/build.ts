@@ -175,9 +175,11 @@ function buildIconPackage() {
   write(join(ICON_PACKAGE, "icon.json"), JSON.stringify(document, null, 2) + "\n");
 }
 
+// Returns the opaque light icon, which the App Store export uses unchanged
 function buildAppImages() {
   // Fallback icon (Expo Go, older Android without adaptive icons)
-  write(join(IMAGES, "icon.png"), opaquePng(svg(background("light") + grid("light"))));
+  const lightIcon = opaquePng(svg(background("light") + grid("light")));
+  write(join(IMAGES, "icon.png"), lightIcon);
   // Dark variant for the about screen in dark mode
   write(join(IMAGES, "icon-dark.png"), opaquePng(svg(background("dark") + grid("dark"))));
   // The about screen on iOS shows the icon as the home screen does, rendered by Apple
@@ -194,10 +196,11 @@ function buildAppImages() {
   // Splash screen: Android shows the image in a circle like the adaptive icon
   write(join(IMAGES, "splash-icon.png"), png(svg(grid("light", ANDROID_SCALE))));
   write(join(IMAGES, "splash-icon-dark.png"), png(svg(grid("dark", ANDROID_SCALE))));
+  return lightIcon;
 }
 
 // Stores, documentation and everything outside the app
-function buildExports() {
+function buildExports(lightIcon: Uint8Array) {
   rmSync(EXPORT, { recursive: true, force: true });
   mkdirSync(EXPORT, { recursive: true });
   // Corner radius of an iOS icon, for documents (the system draws the real shape)
@@ -215,13 +218,13 @@ function buildExports() {
   }
 
   const square = svg(background("light") + grid("light"));
-  write(join(EXPORT, "app-store-1024.png"), opaquePng(square));
+  write(join(EXPORT, "app-store-1024.png"), lightIcon);
   write(join(EXPORT, "play-store-512.png"), png(square, 512));
 }
 
 console.log("Icon Composer package");
 buildIconPackage();
 console.log("App images");
-buildAppImages();
+const lightIcon = buildAppImages();
 console.log("Exports");
-buildExports();
+buildExports(lightIcon);
