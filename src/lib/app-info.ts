@@ -6,7 +6,7 @@ import { Platform } from "react-native";
 
 export const GITHUB_URL = "https://github.com/JaroxCraft/SchoolOS";
 export const WEBSITE_URL = "https://schoolos.jarox.dev/";
-export const FEEDBACK_URL = `${WEBSITE_URL}/feedback/`;
+export const FEEDBACK_URL = `${WEBSITE_URL}feedback/`;
 
 export type AppInfoRow = { label: string; value: string };
 
