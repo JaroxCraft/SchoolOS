@@ -4,7 +4,6 @@ import { FormGroup, type FormGroupProps } from "@/components/form-group";
 import { useInk } from "@/hooks/use-ink";
 import { typography } from "@/lib/typography";
 
-// Native grouped list (SwiftUI Form / Compose) filling the screen, see <FormGroup>.
 export function FormList({ children, floatingButton, rowsKey }: Omit<FormGroupProps, "modifiers">) {
   return (
     <Host style={{ flex: 1 }}>
@@ -15,8 +14,6 @@ export function FormList({ children, floatingButton, rowsKey }: Omit<FormGroupPr
   );
 }
 
-// The rowsKey of a list with these rows, one array per section in order: it changes when a row
-// is added, removed or moves to another section, and stays the same otherwise
 export function rowsKey(...sections: { id: number }[][]): number {
   const values = sections.flatMap((section) => [...section.map((row) => row.id), -1]);
   return fnv1a(values);

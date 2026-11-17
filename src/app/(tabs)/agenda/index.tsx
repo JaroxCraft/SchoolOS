@@ -21,7 +21,7 @@ import { findById } from "@/lib/find";
 import { openEntry } from "@/lib/routes";
 
 const ALL = "all";
-// The subject filter "Alle Fächer"; NONE filters the entries without a subject (Allgemein)
+// "Alle Fächer"; NONE instead filters the entries without a subject (Allgemein)
 const ALL_SUBJECTS = -1;
 
 export default function AgendaScreen() {
@@ -30,7 +30,6 @@ export default function AgendaScreen() {
   const lessons = useLessons();
   const [typeFilter, setTypeFilter] = useState<EntryType | typeof ALL>(ALL);
   const [subjectFilter, setSubjectFilter] = useState(ALL_SUBJECTS);
-  // The filtered subject was deleted: show all subjects again, as if no filter was set
   if (subjectFilter > 0 && !subjects.some((subject) => subject.id === subjectFilter)) {
     setSubjectFilter(ALL_SUBJECTS);
   }
@@ -38,9 +37,6 @@ export default function AgendaScreen() {
   const ink = useInk();
   const now = useNow();
 
-  // The choices above the types and subjects, used by the iOS menu and the Android rows alike.
-  // iOS names what "Alle" covers, since its menu lists types and subjects together; the Android
-  // rows already say "Typ" and "Fach".
   const typeOptions: SelectOption<EntryType | typeof ALL>[] = [
     { label: Platform.OS === "ios" ? "Alle Typen" : "Alle", value: ALL },
     ...ENTRY_TYPE_OPTIONS,
@@ -81,8 +77,6 @@ export default function AgendaScreen() {
     (entry) => (typeFilter === ALL || entry.type === typeFilter) && matchesSubject(entry)
   );
 
-  // Every entry stays open until it is checked off, even when overdue. One just checked off or
-  // reopened moves to the other section after a moment, animated.
   const { open, done } = placeEntries(visible);
 
   const sections = [
@@ -110,8 +104,6 @@ export default function AgendaScreen() {
     setSubjectFilter(ALL_SUBJECTS);
   };
 
-  // iOS: the filter is a menu in the navigation bar, like in Mail; its icon is filled while a
-  // filter is on. Android keeps the filter rows at the top of the list.
   const filterMenu = Platform.OS === "ios" && (
     <Stack.Toolbar.Menu
       icon={
@@ -156,7 +148,6 @@ export default function AgendaScreen() {
           </FieldGroup.Section>
         )}
 
-        {/* iOS: what the menu filters by, and the way back to all entries */}
         {Platform.OS === "ios" && filtered && visible.length > 0 && (
           <FieldGroup.Section title={`Gefiltert: ${filterLabel}`}>
             <ActionRow label="Filter zurücksetzen" onPress={resetFilter} />
@@ -178,7 +169,6 @@ export default function AgendaScreen() {
             </FieldGroup.Section>
           ))}
 
-        {/* Only with a filter on: without entries at all the screen shows its empty state */}
         {visible.length === 0 && (
           <FieldGroup.Section>
             <Text textStyle={{ color: ink.secondary }}>

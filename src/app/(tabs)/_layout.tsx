@@ -1,7 +1,5 @@
 import { NativeTabs } from "expo-router/native-tabs";
 
-// The tab bar only switches between the sections. A new entry is added with the "+" in the
-// navigation bar (iOS) or the floating button (Android), see <Screen>.
 export default function TabsLayout() {
   return (
     <NativeTabs>

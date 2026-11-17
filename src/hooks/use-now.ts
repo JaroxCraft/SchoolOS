@@ -4,7 +4,6 @@ import { AppState, type NativeEventSubscription } from "react-native";
 import { toISODate } from "@/lib/dates";
 import type { Now } from "@/lib/schedule";
 
-// One clock reading for both, so date and minutes cannot disagree around midnight
 const readNow = (): Now => {
   const now = new Date();
   return { date: toISODate(now), minutes: now.getHours() * 60 + now.getMinutes() };

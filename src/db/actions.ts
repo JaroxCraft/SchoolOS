@@ -7,14 +7,12 @@ type NewTeacher = typeof teachers.$inferInsert;
 type NewSubject = typeof subjects.$inferInsert;
 type NewEntry = typeof entries.$inferInsert;
 
-// The writes that replace whole tables (reset, period grid, timetable) live in src/db/data.ts
 export const { resetDatabase, savePeriods, saveLessons } = data;
 
 export async function updateSettings(values: Partial<Omit<Settings, "id">>) {
   await db.update(settings).set(values).where(eq(settings.id, SETTINGS_ID));
 }
 
-// Returns the id of the new teacher
 export async function addTeacher(values: NewTeacher): Promise<number> {
   const [added] = await db.insert(teachers).values(values).returning({ id: teachers.id });
   return added.id;
@@ -36,7 +34,6 @@ export async function saveSubject(id: number | null, values: NewSubject) {
   }
 }
 
-// Lessons and grades are removed with the subject, entries become "Allgemein".
 export async function deleteSubject(id: number) {
   await db.delete(subjects).where(eq(subjects.id, id));
 }

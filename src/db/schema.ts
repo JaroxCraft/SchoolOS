@@ -6,7 +6,6 @@ import type { HexColor } from "@/lib/system-colors";
 export const ENTRY_TYPES = ["homework", "exam", "presentation", "submission", "other"] as const;
 export type EntryType = (typeof ENTRY_TYPES)[number];
 
-// Periods are numbered by their start time.
 export const periods = sqliteTable("periods", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   startTime: text("start_time").notNull().$type<ClockTime>(),
@@ -84,7 +83,6 @@ export const settings = sqliteTable("settings", {
   noLessonSummaryTime: text("no_lesson_summary_time").notNull().default("10:00").$type<ClockTime>(),
 });
 
-// The data tables, children before the rows they reference: the order to delete them in.
 export const DATA_TABLES = [grades, entries, lessons, subjects, teachers, periods, semesters];
 
 // Every table: the data tables and the settings

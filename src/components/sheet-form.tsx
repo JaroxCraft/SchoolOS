@@ -11,12 +11,9 @@ export type SheetFormProps = {
   // Android asks via useDiscardGuard before leaving and ignores it.
   dirty: boolean;
   onSave: () => void;
-  // The sections of the form
   children: ReactNode;
 };
 
-// A form opened as a sheet, e.g. an entry. Android: the title and the check icon in the header,
-// the back arrow leaves. iOS: sheet-form.ios.tsx.
 export function SheetForm({ title, canSave, onSave, children }: SheetFormProps) {
   const saveButton = useSaveButton();
 

@@ -17,8 +17,6 @@ export function releaseOpening() {
   clearTimeout(openingLimit);
 }
 
-// Whether a screen may open now; claims the lock if so. A <Link> that opens a screen asks it in
-// its onPress and prevents the default otherwise.
 export function claimOpening(): boolean {
   if (opening) return false;
   opening = true;
@@ -26,7 +24,6 @@ export function claimOpening(): boolean {
   return true;
 }
 
-// Opens a screen or sheet, the one way the app does it (see claimOpening)
 export function openScreen(href: Href) {
   if (claimOpening()) router.push(href);
 }
@@ -46,7 +43,6 @@ export function openEntry({ id, subjectId }: { id: number | "new"; subjectId?: n
   });
 }
 
-// The screen of a subject, pushed onto the stack of the overview or timetable tab it is opened from
 export const subjectHref = (subjectId: number) =>
   ({ pathname: "/subject/[subjectId]", params: { subjectId: String(subjectId) } }) as const;
 
@@ -54,9 +50,6 @@ export function openSubject(subjectId: number) {
   openScreen(subjectHref(subjectId));
 }
 
-// The screens that set up the school (period grid, subjects, timetable and the subject form) exist
-// in two stacks: in the settings sheet, and pushed onto the overview or timetable tab for the
-// first setup, so back always leads to where the user came from.
 export const SCHOOL_ROUTES = {
   settings: {
     periods: "/settings/periods",

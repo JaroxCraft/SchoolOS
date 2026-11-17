@@ -20,7 +20,6 @@ import { parseTransferFile, TransferError, type TransferFile } from "@/db/transf
 
 const TODAY = "2026-11-17";
 
-// A database as after the first launch, with its operations
 function setup() {
   const db = createTestDatabase();
   return { db, ...dataOperations(db) };
@@ -39,7 +38,6 @@ function entry(values: Partial<Entry> & Pick<Entry, "id" | "title">): Entry {
   };
 }
 
-// Two periods, two teachers, Mathe and Deutsch in the timetable, Bio only kept for its grade
 function seedBackup(db: Database) {
   db.insert(periods)
     .values([
@@ -130,7 +128,6 @@ describe("backup", () => {
         entry({ id: 3, title: "Neue Prüfung", type: "exam", date: "2026-11-24" }),
       ])
       .run();
-    // Format 1 still had the study start, which the import drops
     const file = source.exportData("backup") as Extract<TransferFile, { kind: "backup" }>;
     const formatOne = {
       ...file,
@@ -169,7 +166,6 @@ describe("timetable", () => {
     expect("entries" in file).toBe(false);
   });
 
-  // A classmate's timetable: other ids, a new first period, Deutsch and Mathe but no Bio or Chemie
   function classmateTimetable() {
     const classmate = setup();
     classmate.db
@@ -252,13 +248,11 @@ describe("timetable", () => {
         .map((row) => [row.title, row])
     );
 
-    // Mathe in the 08:00 period is subject 2 and period 2 of the file
     expect(byTitle.get("Aufgaben S. 12")).toMatchObject({
       subjectId: 2,
       periodId: 2,
       completed: true,
     });
-    // Deutsch is matched, the 08:50 period is not in the file
     expect(byTitle.get("Aufsatz")).toMatchObject({ subjectId: 1, periodId: null });
   });
 
@@ -270,7 +264,6 @@ describe("timetable", () => {
       .all()
       .find((subject) => subject.name === "Bio");
 
-    // After the imported subjects, without the teacher that was replaced
     expect(bio).toEqual({
       id: 3,
       name: "Bio",

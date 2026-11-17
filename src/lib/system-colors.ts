@@ -1,9 +1,6 @@
 // A color like "#FF3B30"
 export type HexColor = string;
 
-// The iOS system colors (light appearance), the one palette of the app: subject colors, row icons,
-// swipe actions and marks take their values from here instead of repeating hex codes. Text colors
-// that follow light and dark mode come from useInk.
 export const SYSTEM_COLORS = {
   red: "#FF3B30",
   orange: "#FF9500",

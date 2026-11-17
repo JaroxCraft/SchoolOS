@@ -11,7 +11,6 @@ import { fieldFocused } from "@/lib/focused-fields";
 export function TextField({ onFocus, onBlur, ...props }: Omit<TextInputProps, "ref">) {
   const ink = useInk();
   const ref = useRef<TextInputRef>(null);
-  // An unmounted field must not stay registered, or endEditing would blur a dead ref
   useEffect(() => {
     const field = ref.current;
     return () => fieldFocused(field, false);

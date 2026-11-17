@@ -4,8 +4,6 @@ import { StyleSheet } from "react-native";
 import { ActionMenuItems } from "@/components/action-menu-items";
 import type { LessonMenuProps } from "@/components/lesson-menu";
 
-// Android: the Material menu of a long-pressed lesson card, with the actions of the iOS context
-// menu, like the long-press menu of a list row (see <FormGroup>). Hangs at the card's top left.
 export function LessonMenu({ actions, open, onClose }: LessonMenuProps) {
   if (!open) return null;
 

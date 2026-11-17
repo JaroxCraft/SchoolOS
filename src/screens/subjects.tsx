@@ -25,7 +25,6 @@ export default function SubjectsScreen() {
   return (
     <>
       <Stack.Title>Fächer</Stack.Title>
-      {/* Setup: the second step, leading on to the timetable once there is a subject */}
       {routes.setup && (
         <Stack.Toolbar placement="right">
           {nextButton && (
@@ -40,7 +39,6 @@ export default function SubjectsScreen() {
       <FormList>
         <FieldGroup.Section>
           {subjects.length === 0 && <Text textStyle={{ color: ink.secondary }}>Keine Fächer</Text>}
-          {/* iOS: swipe left or long press to delete (asked first), long press to edit */}
           {subjects.map((subject) => {
             const remove = deleteAction(subjectDeletion(subject));
             const menu = [editAction(() => openSubject(String(subject.id))), remove];

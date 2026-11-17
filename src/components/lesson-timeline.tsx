@@ -24,14 +24,11 @@ import { joinDetails } from "@/lib/text";
 
 export const GUTTER_WIDTH = 44;
 export const COLUMN_GAP = 4;
-// Text grows with the system text size, but the cards have the height of their lessons
 const MAX_FONT_SCALE = 1.3;
 
 type LessonTimelineProps = {
-  // All periods (for their numbers) and the ones shown
   periods: Period[];
   visiblePeriods: Period[];
-  // One day (day view) or the five school days (week view)
   days: SchoolDay[];
   lessons: Lesson[];
   subjects: Subject[];
@@ -42,12 +39,8 @@ type LessonTimelineProps = {
   now: Now;
 };
 
-// Spoken after the lesson, since the outline and dimming only show it
 const STATE_LABELS = { past: "vorbei", current: "jetzt", upcoming: undefined } as const;
 
-// The timetable as a time axis, like the day and week views of Calendar: every lesson is a card as
-// tall as it lasts, a double lesson one card across the break, breaks and free periods are space.
-// On today the current lesson is outlined, past ones are dimmed and a red line marks the time.
 export function LessonTimeline({
   periods,
   visiblePeriods,
@@ -153,16 +146,12 @@ function periodsLabelOf(block: LessonBlock): string {
   return `${block.firstNumber}.–${block.lastNumber}. Lektion`;
 }
 
-// A lesson as a card in the subject color. Tapping it opens the subject in this tab; a long press
-// offers the actions of every lesson (lessonActions): iOS as the link's context menu, Android as a
-// Material menu.
 function LessonCard({ block, subject, teacher, compact, top, height, state }: LessonCardProps) {
   const time = `${minutesToTime(block.start)}–${minutesToTime(block.end)}`;
   const details = compact
     ? block.lesson.room
     : joinDetails(time, block.lesson.room, teacher?.abbreviation || undefined);
   const periodsLabel = periodsLabelOf(block);
-  // Short cards put the details next to the name
   const twoLines = compact || height >= 52;
   const actions = lessonActions(subject.id);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -173,7 +162,6 @@ function LessonCard({ block, subject, teacher, compact, top, height, state }: Le
         href={subjectHref(subject.id)}
         push
         asChild
-        // Two cards touched at once open only one subject screen
         onPress={(event) => {
           if (!claimOpening()) event.preventDefault();
         }}>

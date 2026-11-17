@@ -9,7 +9,6 @@ type ToolbarButtonProps = ComponentProps<typeof Stack.Toolbar.Button>;
 
 type HeaderButton = {
   label: string;
-  // iOS: the bold "done" style of the button that ends the screen
   done?: boolean;
   // iOS: an icon instead of the label, as the ✓ and × of the forms in the Apple apps (Music,
   // Calendar); the label stays for VoiceOver. Android toolbars only render icon buttons anyway.
@@ -43,12 +42,8 @@ function useHeaderButton({
   return androidIcon ? { icon: androidIcon, accessibilityLabel: label } : null;
 }
 
-// ✓ "Sichern" of a form
 export const useSaveButton = () => useHeaderButton(BUTTONS.save);
 
-// "Weiter" to the next setup step, "Fertig" on the last one
 export const useStepButton = (step: "next" | "finish") => useHeaderButton(BUTTONS[step]);
 
-// iOS: × "Abbrechen" of a form, at the left of the navigation bar. Android leaves with its back
-// arrow.
 export const CANCEL_BUTTON = { icon: "xmark", accessibilityLabel: "Abbrechen" } as const;

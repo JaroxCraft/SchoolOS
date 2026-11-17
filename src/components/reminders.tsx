@@ -20,9 +20,6 @@ import { scheduleReminders } from "@/lib/notifications";
 import { planReminders } from "@/lib/reminders";
 import { openEntry } from "@/lib/routes";
 
-// A reminder about one entry opens it as a sheet, one about several switches to the agenda. If
-// the entry is done or deleted by now, the tap only opens the app: a sheet with a checked-off entry
-// or "Eintrag nicht gefunden" would be in the way.
 function openReminder(
   response: Notifications.NotificationResponse,
   navigation: NavigationContainerRef<ParamListBase>
@@ -49,15 +46,12 @@ function openReminder(
   if (entry && !entry.completed) openEntry({ id: entryId });
 }
 
-// Keeps the scheduled reminders in step with the data and opens what a tapped reminder is about.
-// Its own component, so the clock it needs for a new day does not render the root layout again.
 export function Reminders() {
   const entries = useEntries();
   const lessons = useLessons();
   const periods = usePeriods();
   const subjects = useSubjects();
   const settings = useSettings();
-  // A new day plans one more day ahead
   const { date } = useNow();
 
   useEffect(() => {
@@ -70,7 +64,6 @@ export function Reminders() {
   useEffect(() => {
     const open = (response: Notifications.NotificationResponse) =>
       openReminder(response, navigation);
-    // The tap that launched the app
     const launched = Notifications.getLastNotificationResponse();
     if (launched) open(launched);
     const subscription = Notifications.addNotificationResponseReceivedListener(open);

@@ -5,8 +5,6 @@ import type { Entry, Subject, Teacher } from "@/db/schema";
 import { confirm } from "@/lib/confirm";
 import type { RowAction } from "@/lib/row-action";
 
-// Asks before deleting the item of the current screen, then closes the screen and deletes it.
-// `allowLeave` lifts the form's discard guard (useDiscardGuard) before the screen closes.
 export function confirmDelete({ title, message, onDelete }: Deletion, allowLeave: () => void) {
   confirm({
     title,
@@ -20,8 +18,6 @@ export function confirmDelete({ title, message, onDelete }: Deletion, allowLeave
   });
 }
 
-// What deleting an entry, subject or teacher does, asked the same way from its form and from its
-// row: the name in the title, what else happens in the message.
 export type Deletion = { title: string; message: string; onDelete: () => Promise<void> };
 
 export const entryDeletion = (entry: Entry): Deletion => ({
@@ -43,7 +39,6 @@ export const teacherDeletion = (teacher: Teacher): Deletion => ({
   onDelete: () => deleteTeacher(teacher.id),
 });
 
-// The "Löschen" action of an entry, subject or teacher row in a list: asks first, then deletes
 export function deleteAction({ title, message, onDelete }: Deletion): RowAction {
   return {
     label: "Löschen",
@@ -54,7 +49,6 @@ export function deleteAction({ title, message, onDelete }: Deletion): RowAction 
   };
 }
 
-// The "Bearbeiten" action of a row in a list
 export function editAction(onPress: () => void, tint?: string): RowAction {
   return { label: "Bearbeiten", icon: "pencil", onPress, tint };
 }

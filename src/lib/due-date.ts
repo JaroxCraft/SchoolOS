@@ -1,5 +1,3 @@
-// When an entry is due (Fälligkeit), suggested by the entry form from the timetable. The same for
-// every type: at the next lesson of its subject, at the one after, or on a chosen date.
 import type { Lesson, Period } from "@/db/schema";
 import { addDays } from "@/lib/dates";
 import {
@@ -11,8 +9,6 @@ import {
 
 export type DueChoice = "next" | "afterNext" | "custom";
 
-// The fields of the entry form the due date follows from. A null subject is "Allgemein", a null
-// period "Keine".
 export type DueFields = {
   subjectId: number | null;
   dueChoice: DueChoice;
@@ -23,12 +19,8 @@ export type DueFields = {
 
 export type Due = { date: string; periodId: number | null };
 
-// The dates behind the choices; null if the subject has no such lesson, so "next" falls back to
-// tomorrow and "afterNext" is not offered.
 export type DueChoiceDates = { next: string | null; afterNext: string | null };
 
-// The next two lessons of the subject after `now`: the lesson in progress does not count (what is
-// given in it is due at the following one), a later one today does
 function nextTwoSubjectLessons(
   subjectId: number | null,
   lessons: Lesson[],
@@ -48,11 +40,6 @@ export function dueChoiceDates(
   return { next: next?.date ?? null, afterNext: afterNext?.date ?? null };
 }
 
-// The date and Lektion that follow from the other fields:
-// - "next" and "afterNext" take the date and Lektion of that lesson of the subject ("afterNext"
-//   the next one if there is none after it), tomorrow without a Lektion if it has no lessons.
-// - A chosen date is kept; its Lektion is the subject's lesson on that date until the user picks
-//   one.
 export function suggestDue(fields: DueFields, lessons: Lesson[], periods: Period[], now: Now): Due {
   const { subjectId, date } = fields;
 

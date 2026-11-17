@@ -19,7 +19,6 @@ import { today } from "@/lib/dates";
 // Exports are a few hundred KB at most; a larger file is not one and would block reading it
 const MAX_EXPORT_FILE_BYTES = 5 * 1024 * 1024;
 
-// Built when sharing, so a backup made after midnight carries the new date
 function fileName(kind: TransferKind) {
   return kind === "timetable" ? "SchoolOS-Stundenplan.json" : `SchoolOS-Backup-${today()}.json`;
 }
@@ -43,8 +42,6 @@ export async function shareExport(kind: TransferKind) {
   }
 }
 
-// Lets the user pick an export file, shows what it contains and replaces the data after
-// confirming.
 export async function pickAndImport() {
   let text;
   try {

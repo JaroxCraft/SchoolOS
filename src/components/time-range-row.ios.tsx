@@ -6,7 +6,6 @@ import type { TimeRangeRowProps } from "@/components/time-range-row";
 import { useInk } from "@/hooks/use-ink";
 import { dateToTime, timeToDate } from "@/lib/dates";
 
-// iOS: a label with two compact time pickers, so start and end are changed right in the list.
 export function TimeRangeRow({ label, start, end, onChange }: TimeRangeRowProps) {
   const ink = useInk();
 

@@ -7,8 +7,6 @@ export type SegmentedControlProps<T extends string | number> = {
   onChange: (value: T) => void;
 };
 
-// Android: a Material single-choice segmented button row. For a few short options that are all
-// worth seeing at once, such as the weekdays.
 export function SegmentedControl<T extends string | number>({
   value,
   options,

@@ -1,7 +1,6 @@
 import type { RowSymbol } from "@/lib/row-action";
 import { SYSTEM_COLORS } from "@/lib/system-colors";
 
-// Icons of the setup screens, shared by the settings and the setup steps of the overview.
 export const SETUP_STEP_ICONS = {
   periods: { sf: "clock", md: "schedule", color: SYSTEM_COLORS.orange },
   subjects: { sf: "books.vertical", md: "menu_book", color: SYSTEM_COLORS.blue },

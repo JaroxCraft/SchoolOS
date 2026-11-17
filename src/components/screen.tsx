@@ -10,7 +10,6 @@ import { openScreen } from "@/lib/routes";
 
 type ScreenProps = {
   title: string;
-  // The button for a new entry: "+" in the navigation bar (iOS), the floating button (Android)
   showAddButton?: boolean;
   // More buttons in the navigation bar, left of the "+" and the gear. Pass <Stack.Toolbar.*> elements
   // themselves: iOS ignores toolbar items wrapped in another component.

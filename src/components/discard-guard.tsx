@@ -4,15 +4,11 @@ import { PanResponder, Platform, StyleSheet, View } from "react-native";
 
 import { CANCEL_BUTTON } from "@/hooks/use-header-button";
 
-// A swipe to the right this far, mostly sideways, counts as the swipe back
 const SWIPE_DISTANCE = 12;
-// Only from the left edge, like the native swipe back: further in, a drag to the right belongs to
-// the form, e.g. a slider
 const EDGE_WIDTH = 30;
 
 type DiscardGuardProps = {
   dirty: boolean;
-  // The content of the form
   children: ReactNode;
 };
 
@@ -32,7 +28,6 @@ export function DiscardGuard({ dirty, children }: DiscardGuardProps) {
         // Capture phase: the form is a native list, which would not hand the touch on
         onMoveShouldSetPanResponderCapture: (_, { x0, dx, dy }) =>
           dirty && x0 < EDGE_WIDTH && dx > SWIPE_DISTANCE && dx > 2 * Math.abs(dy),
-        // Once per swipe: the guard holds the screen back and asks
         onPanResponderGrant: () => router.back(),
         onPanResponderTerminationRequest: () => false,
       }),

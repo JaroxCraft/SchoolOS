@@ -30,9 +30,6 @@ const WEEK_POINTS_PER_MINUTE = 1.1;
 
 type Mode = "day" | "week";
 
-// The timetable in two views. "Tag" (default) shows one day as a time axis with large cards;
-// swiping sideways or tapping a date in the week row changes the day. "Woche" shows all five days
-// side by side; tapping a date there opens that day.
 export default function TimetableScreen() {
   const { width } = useWindowDimensions();
   const periods = usePeriods();
@@ -44,14 +41,11 @@ export default function TimetableScreen() {
   const positioned = useRef<{ pager: ScrollViewInstance | null; width: number }>(null);
   const reducedMotion = useReducedMotion();
 
-  // This week; at the weekend already the coming one
   const days = schoolWeek(now.date);
 
   const [mode, setMode] = useState<Mode>("day");
   const todaySelection = shownWeekday(now.date);
   const [selected, setSelected] = useState(todaySelection);
-  // A new day began while the screen waited in its tab: it opens on today again, as when it was
-  // opened. The pager is keyed by the date, so it scrolls there on its first layout.
   const [selectedOn, setSelectedOn] = useState(now.date);
   if (selectedOn !== now.date) {
     setSelectedOn(now.date);
@@ -68,7 +62,6 @@ export default function TimetableScreen() {
           message="Teile deinen Fächern die Lektionen der Woche zu."
           action={{
             label: "Stundenplan ausfüllen",
-            // The editor of the settings sheet, as from a lesson's menu (lessonActions)
             onPress: () => openScreen(SCHOOL_ROUTES.settings.timetable),
           }}
         />
@@ -139,7 +132,6 @@ export default function TimetableScreen() {
             />
           </Host>
         </View>
-        {/* In the week view the days line up with the columns below */}
         <View style={mode === "week" ? styles.week : styles.header}>
           <WeekStrip
             days={days}

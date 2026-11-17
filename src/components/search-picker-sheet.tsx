@@ -24,11 +24,9 @@ export function SearchPickerSheet<T extends { id: number }>(props: SearchPickerS
   const colors = useMaterialColors();
   const searchIcon = useSymbol("magnifyingglass", "search");
   const sheet = useRef<ModalBottomSheetRef>(null);
-  // Stays mounted while the sheet slides out after isPresented turned false
   const [mounted, setMounted] = useState(props.isPresented);
   if (props.isPresented && !mounted) setMounted(true);
   const [query, setQuery] = useState("");
-  // The form in place of the list: "new" for a new item, or the item it changes
   const [formMode, setFormMode] = useState<"new" | { edit: T } | null>(null);
   const { form } = props;
 

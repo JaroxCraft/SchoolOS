@@ -24,10 +24,6 @@ const minutesBetween = (start: string, end: string) => minutesOf(end) - minutesO
 const gridKey = (grid: PeriodDraft[]) =>
   grid.map(({ id, startTime, endTime }) => `${id}:${startTime}-${endTime}`).join(",");
 
-// Moving the start keeps the length of the period, so a shifted period does not have to be fixed
-// twice; an end before the start is moved behind it. Periods never overlap: a start before the end
-// of the previous period is moved to that end, and following periods that would overlap are pushed
-// back, keeping their length.
 function changePeriod(grid: PeriodDraft[], index: number, start: string, end: string) {
   const period = grid[index];
   const previous = grid[index - 1];
@@ -54,9 +50,6 @@ function changePeriod(grid: PeriodDraft[], index: number, start: string, end: st
   return changed;
 }
 
-// The period grid. Changes stay a draft until they are saved with ✓ (settings) or "Weiter" (setup),
-// like the forms of subjects and teachers; leaving with changes asks to discard them. Saving runs
-// at most once at a time and tells when it fails, like the forms.
 export default function PeriodsEditScreen() {
   const periods = usePeriods();
   const lessons = useLessons();
@@ -76,7 +69,6 @@ export default function PeriodsEditScreen() {
     // Leaving the settings after saving keeps the lock, since ✓ can still be tapped while the
     // screen slides away; the setup step stays below the next one and is used again on the way back
     closesOnSuccess: !routes.setup,
-    // Shows the saved grid again, with the ids of the added periods
     resetsAfterSave: true,
   });
   const last = grid.at(-1);
@@ -109,10 +101,8 @@ export default function PeriodsEditScreen() {
       title="Lektionenraster"
       canSave={dirty && !saving}
       dirty={dirty}
-      // Settings: ✓ saves and goes back. Setup: "Weiter" in the toolbar takes its place.
       onSave={routes.setup ? undefined : () => saveAndLeave(() => router.back())}
       toolbar={
-        // Setup: the first step, leading on to the subjects
         routes.setup &&
         nextButton && (
           <Stack.Toolbar.Button
@@ -128,7 +118,6 @@ export default function PeriodsEditScreen() {
         )}
         {grid.map((period, index) => (
           <TimeRangeRow
-            // Added periods have no id yet; only the last one can be removed
             key={period.id ?? `new-${index}`}
             label={periodLabel(index + 1)}
             start={period.startTime}

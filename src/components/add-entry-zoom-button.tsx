@@ -16,8 +16,6 @@ export function AddEntryZoomButton() {
     <Link
       href={NEW_ENTRY}
       asChild
-      // Not while the last entry still shrinks back into this button (see markSheetClosing), nor
-      // while another screen is still coming in (claimOpening)
       onPress={(event) => {
         if (isSheetClosing() || !claimOpening()) event.preventDefault();
       }}>

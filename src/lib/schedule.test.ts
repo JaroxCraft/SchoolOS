@@ -18,14 +18,12 @@ import {
   visiblePeriods,
 } from "@/lib/schedule";
 
-// 2026-11-16 is a Monday
 const MONDAY = "2026-11-16";
 const TUESDAY = "2026-11-17";
 const THURSDAY = "2026-11-19";
 const MATH = 1;
 const GERMAN = 2;
 
-// The third period follows a break
 const periods: Period[] = [
   { id: 11, startTime: "07:30", endTime: "08:15" },
   { id: 12, startTime: "08:20", endTime: "09:05" },

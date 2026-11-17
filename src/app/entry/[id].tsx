@@ -13,8 +13,6 @@ export default function EntryScreen() {
   const found = useEntries().find((candidate) => String(candidate.id) === id);
   const entry = useLastDefined(found);
 
-  // A link to an entry that does not exist (any more). iOS hides the header of this route (see
-  // src/app/_layout.tsx), so the message itself offers the way out.
   if (id !== "new" && !entry) {
     return (
       <EmptyState

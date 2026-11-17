@@ -26,7 +26,6 @@ export default function TeachersScreen() {
           {teachers.length === 0 && (
             <Text textStyle={{ color: ink.secondary }}>Keine Lehrpersonen</Text>
           )}
-          {/* iOS: swipe left or long press to delete (asked first), long press to edit */}
           {teachers.map((teacher) => {
             const remove = deleteAction(teacherDeletion(teacher));
             const menu = [editAction(() => openTeacher(String(teacher.id))), remove];

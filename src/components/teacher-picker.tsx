@@ -8,7 +8,6 @@ import type { Teacher } from "@/db/schema";
 import { useInk } from "@/hooks/use-ink";
 import { findById } from "@/lib/find";
 
-// The choice for a Fach without a Lehrperson, in the sheet and in the row showing the choice
 const NO_TEACHER_CHOICE: ExtraChoice = { label: "Keine", value: NONE };
 
 type TeacherPickerSheetProps = {
@@ -20,9 +19,6 @@ type TeacherPickerSheetProps = {
   onChange: (value: number) => void;
 };
 
-// The teachers by name, searchable by name or abbreviation, with "Keine" on top. A missing
-// teacher is added right in the sheet ("Lehrperson hinzufügen") and picked at once; a teacher is
-// changed right in the sheet too ("Bearbeiten" in the row actions).
 function TeacherPickerSheet({ teachers, ...props }: TeacherPickerSheetProps) {
   const draft = useTeacherDraft();
 

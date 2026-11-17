@@ -15,9 +15,6 @@ function luminance(hex: HexColor) {
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 }
 
-// Android: the Material Symbol in its color on a round tonal background of the same color, like
-// the settings of Pixel phones. Near-black colors (e.g. the GitHub one) take the label color
-// instead, so the glyph stays visible in dark mode.
 export function RowIcon({ sf, md, color: symbolColor }: RowSymbol) {
   const ink = useInk();
   const source = useSymbol(sf, md);

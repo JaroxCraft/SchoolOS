@@ -2,7 +2,6 @@ import { useSyncExternalStore } from "react";
 
 import type { ConfirmOptions } from "@/lib/confirm";
 
-// The confirmation shown by <ConfirmDialog> on Android, null while none is open.
 let current: ConfirmOptions | null = null;
 const listeners = new Set<() => void>();
 

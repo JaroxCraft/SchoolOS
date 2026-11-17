@@ -53,7 +53,6 @@ test("an open entry is overdue once its date has passed, a done one never", () =
   expect(isOverdue(entry("2026-11-16", true), "2026-11-17")).toBe(false);
 });
 
-// The import of format-1 files and database migration 0005 must complete the same entries
 test("completePastEvents matches migration 0005", () => {
   const today = new Date().toLocaleDateString("sv-SE");
   const rows = ENTRY_TYPES.flatMap((type) => [

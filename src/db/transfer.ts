@@ -55,10 +55,8 @@ export type TransferFile = { app: "SchoolOS"; format: number; exportedAt: string
   ({ kind: "timetable" } & TimetableData) | ({ kind: "backup" } & TimetableData & PersonalData)
 );
 
-// Thrown for files that are not a valid SchoolOS export; the message is shown to the user.
 export class TransferError extends Error {}
 
-// Names the only supported format, since a PDF or photo of a timetable is the obvious first try
 export const NOT_A_SCHOOLOS_FILE =
   "Die Datei ist keine SchoolOS-Datei. Importieren lassen sich nur JSON-Dateien, die SchoolOS mit «Stundenplan teilen» oder «Backup sichern» erstellt hat, keine PDFs oder Bilder.";
 
@@ -80,8 +78,6 @@ function isDate(value: string) {
   return date.toISOString().startsWith(value);
 }
 
-// Checks a row against the columns of its table: required columns need a value of the right
-// type, nullable ones may also be null or missing. `name` says which row it is ("Lektion 4").
 function checkRow(row: unknown, table: Table, name: string) {
   if (!isObject(row)) fail(`${name} ist ungültig.`);
   const fields = row as Record<string, unknown>;
@@ -98,7 +94,6 @@ function checkRow(row: unknown, table: Table, name: string) {
   }
 }
 
-// Checks the rows of a table and that no id appears twice; returns the ids for the references.
 function checkRows<T extends { id: number }>(
   value: unknown,
   table: Table,
@@ -130,7 +125,6 @@ function checkDate(name: string, what: string, value: string | null | undefined)
   }
 }
 
-// `what` names the referenced row, e.g. "Das Fach"
 function checkReference(
   name: string,
   what: string,
@@ -142,8 +136,6 @@ function checkReference(
   }
 }
 
-// Parses and validates the text of an export file, so the import cannot fail on its content.
-// `today` decides which entries of a format 1 backup lie in the past.
 export function parseTransferFile(text: string, today: string = currentDay()): TransferFile {
   let data: unknown;
   try {
@@ -180,7 +172,6 @@ export function parseTransferFile(text: string, today: string = currentDay()): T
       if (period.startTime >= period.endTime) {
         fail(`${name}: Beginn ${period.startTime} liegt nicht vor dem Ende ${period.endTime}.`);
       }
-      // A timetable import matches periods by their start time
       if (startTimes.has(period.startTime)) {
         fail(`${name}: Eine Lektionszeit beginnt bereits um ${period.startTime}.`);
       }
@@ -260,7 +251,6 @@ export function parseTransferFile(text: string, today: string = currentDay()): T
   return data as unknown as TransferFile;
 }
 
-// "11 Lektionszeiten pro Tag, 14 Fächer, 1 Lehrperson und 35 Lektionen im Stundenplan"
 export function describeTransferFile(file: TransferFile): string {
   const parts = [
     `${countOf(file.periods.length, "Lektionszeit", "Lektionszeiten")} pro Tag`,

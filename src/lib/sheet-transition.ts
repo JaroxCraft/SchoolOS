@@ -9,12 +9,10 @@ let closingUntil = 0;
 // makes the closing one jump down and up instead of opening (react-native-screens queues it into
 // the running transition), so the button waits while isSheetClosing() is true.
 
-// Swiping the sheet down has started; closing until releaseSheetClosing
 export function holdSheetClosing() {
   held = true;
 }
 
-// The sheet is gone, or (stillShrinking) it was closed from JS and still shrinks back
 export function releaseSheetClosing(stillShrinking: boolean) {
   held = false;
   closingUntil = stillShrinking ? Date.now() + SHRINKING_MS : 0;

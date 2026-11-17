@@ -8,9 +8,6 @@ import type { SelectRowProps } from "@/components/select-row";
 import { useInk } from "@/hooks/use-ink";
 import { useSymbol } from "@/hooks/use-symbol";
 
-// Android: a list row with the label on the left and the chosen value with a dropdown arrow on the
-// right; tapping it opens a Material menu anchored to the row, the chosen option marked. This
-// replaces the large outlined dropdown field of the universal Picker, which looks like an input.
 export function SelectRow<T extends PickerItemValue>({
   label,
   value,
@@ -57,7 +54,6 @@ export function SelectRow<T extends PickerItemValue>({
                   {option.label}
                 </Text>
               </DropdownMenuItem.Text>
-              {/* The chosen option carries a checkmark in the accent color */}
               {isSelected && check && typeof check !== "string" && (
                 <DropdownMenuItem.TrailingIcon>
                   <Icon source={check} size={20} tint={ink.accent} />

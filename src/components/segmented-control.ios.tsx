@@ -3,7 +3,6 @@ import { pickerStyle, tag } from "@expo/ui/swift-ui/modifiers";
 
 import type { SegmentedControlProps } from "@/components/segmented-control";
 
-// iOS: the native segmented picker.
 export function SegmentedControl<T extends string | number>({
   value,
   options,

@@ -12,8 +12,6 @@ const PER_ROW = 5;
 export type ColorFieldProps = {
   value: HexColor;
   onChange: (color: HexColor) => void;
-  // Colors of other subjects (marked on Android, where the swatches are shown), with a small dot
-  // so a free one is easy to find
   usedColors?: HexColor[];
 };
 

@@ -19,15 +19,9 @@ import { typography } from "@/lib/typography";
 type EntryRowProps = {
   entry: Entry;
   subject: Subject | undefined;
-  // From useNow of the screen, for "overdue" and "morgen"; the row has no hooks (asListItem)
   today: string;
 };
 
-// Every entry gets a checkbox in its subject color: it stays open until checked off, its date only
-// decides whether it is overdue. An entry checked off is dimmed and, like one reopened, stays in
-// its place for a moment before it moves (see useEntryPlacement). Tapping the row opens the entry as
-// a sheet, so it has no disclosure chevron: the chevron promises a screen pushed in the same stack
-// (Apple HIG, lists). Built without hooks, so <FormList> can use it as the list item itself.
 function entryItem({ entry, subject, today }: EntryRowProps, ink: Ink) {
   const overdue = isOverdue(entry, today);
   const details = [
@@ -61,10 +55,6 @@ function entryItem({ entry, subject, today }: EntryRowProps, ink: Ink) {
   );
 }
 
-// Swipe right checks an entry off or reopens it, with the haptic of the checkbox; swipe left
-// deletes it after asking, like a subject or teacher. A long press offers the same and
-// "Bearbeiten" (iOS: swipe actions and context menu; Android: the menu of a long press, see
-// <FormGroup>). Built without hooks, so <FormGroup> can use it as the list item itself.
 function entryRow(props: EntryRowProps, ink: Ink) {
   const { entry } = props;
   const toggle: RowAction = {

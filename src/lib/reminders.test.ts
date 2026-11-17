@@ -6,7 +6,6 @@ import type { Entry, Lesson, Period, Settings, Subject } from "@/db/schema";
 import { addDays, toISODate } from "@/lib/dates";
 import { planReminders } from "@/lib/reminders";
 
-// 2026-11-16 is a Monday
 const MONDAY = "2026-11-16";
 const MATH = 1;
 

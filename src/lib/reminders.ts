@@ -13,19 +13,15 @@ import { nextSchoolDay, schoolEnd } from "@/lib/schedule";
 // Days planned ahead. iOS keeps at most 64 pending notifications per app and a day has at most
 // two; the plan is renewed whenever the data changes or a new day begins in the open app.
 const REMINDER_DAYS = 21;
-// The summary comes this long after the last lesson, once the student is out of school; the
-// settings footer names it
 export const AFTER_SCHOOL_MINUTES = 30;
 // The rest is counted as "und 2 weitere"
 const MAX_LINES_PER_NOTIFICATION = 4;
 
 export type Reminder = {
-  // "summary-2026-11-17" or "second-2026-11-17"
   id: string;
   date: Date;
   title: string;
   body: string;
-  // The entry a tap opens; null opens the agenda
   entryId: number | null;
 };
 
@@ -44,15 +40,6 @@ function joinLines(lines: string[]): string {
   return [...shown, `und ${lines.length - shown.length} weitere`].join("\n");
 }
 
-// The local notifications for the coming days (spec 4.5), both about
-// everything open that is due up to the next school day, of every type (homework, exams,
-// presentations, submissions, other entries); not sent if there is nothing:
-// - The daily summary, 30 minutes after the last lesson, on a day without lessons at
-//   `noLessonSummaryTime`.
-// - The second reminder at `secondReminderTime`, every day including weekends, worded
-//   differently. Dropped on a day whose summary comes later.
-// The plan reflects the data at the time it is made, so it has to be made again on every change;
-// a task checked off in the evening then no longer gets its second reminder.
 export function planReminders({
   entries,
   lessons,
@@ -84,7 +71,6 @@ export function planReminders({
     const due: DueItem[] = dueUntilSchoolDay
       .filter((entry) => entry.type !== "homework")
       .map((entry) => ({ entry, subject: subjectOf(entry) }));
-    // A tap opens the entry if the notification is about a single one
     const entryId = dueUntilSchoolDay.length === 1 ? dueUntilSchoolDay[0].id : null;
     const hasHomework = homework.length > 0;
 
