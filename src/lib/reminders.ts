@@ -1,6 +1,6 @@
 import type { Entry, Lesson, Period, Settings, Subject } from "@/db/schema";
 import { addDays, isoWeekday, parseISODate, toISODate, weekdayName } from "@/lib/dates";
-import { ENTRY_TYPE_INFO, isCheckable } from "@/lib/entry-types";
+import { isCheckable } from "@/lib/entry-types";
 import {
   type DueItem,
   dueLine,
@@ -69,14 +69,15 @@ function joinLines(lines: string[]): string {
   return [...shown, `und ${lines.length - shown.length} weitere`].join("\n");
 }
 
-// The local notifications for the coming days (spec 4.5), at most two a day:
+// The local notifications for the coming days (spec 4.5), at most two a day, both about
+// everything open that is due up to the next school day, of every type (homework, exams,
+// presentations, submissions, other entries); not sent if there is nothing:
 // - The daily summary, 30 minutes after the last lesson, on a day without lessons at
-//   `noLessonSummaryTime`: everything due up to the next school day, i.e. the open homework and
-//   the exams, presentations and open submissions. Not sent if there is nothing to report.
-// - The second reminder at `secondReminderTime`, every day including weekends, if homework for
-//   the next school day is still open. Dropped on a day whose summary comes later.
+//   `noLessonSummaryTime`.
+// - The second reminder at `secondReminderTime`, every day including weekends, worded
+//   differently. Dropped on a day whose summary comes later.
 // The plan reflects the data at the time it is made, so it has to be made again on every change;
-// homework checked off in the evening then no longer gets its second reminder.
+// a task checked off in the evening then no longer gets its second reminder.
 export function planReminders({
   entries,
   lessons,
@@ -101,33 +102,33 @@ export function planReminders({
       ? at(day, end, AFTER_SCHOOL_MINUTES)
       : at(day, settings.noLessonSummaryTime);
 
-    const dueUntilSchoolDay = (entry: Entry) => entry.date > day && entry.date <= schoolDay;
-    const homework = open.filter((entry) => entry.type === "homework" && dueUntilSchoolDay(entry));
+    const dueUntilSchoolDay = open.filter((entry) => entry.date > day && entry.date <= schoolDay);
+    if (dueUntilSchoolDay.length === 0) continue;
+    const homework = dueUntilSchoolDay.filter((entry) => entry.type === "homework");
     const homeworkLines = homework.map((entry) => homeworkLine(entry, subjectOf(entry), schoolDay));
-    const due: DueItem[] = open
-      .filter((entry) => ENTRY_TYPE_INFO[entry.type].gradable && dueUntilSchoolDay(entry))
+    const due: DueItem[] = dueUntilSchoolDay
+      .filter((entry) => entry.type !== "homework")
       .map((entry) => ({ entry, subject: subjectOf(entry) }));
+    // A tap opens the entry if the notification is about a single one
+    const entryId = dueUntilSchoolDay.length === 1 ? dueUntilSchoolDay[0].id : null;
+    const hasHomework = homework.length > 0;
 
-    const mentioned = [...homework, ...due.map((item) => item.entry)];
-    if (mentioned.length > 0) {
-      reminders.push({
-        id: `summary-${day}`,
-        date: summaryDate,
-        title: summaryTitle(dayName, homework.length > 0, schoolDay, day),
-        body: joinLines([...homeworkLines, ...due.map((item) => dueLine(item, day))]),
-        // A tap opens the entry if the notification is about a single one
-        entryId: mentioned.length === 1 ? mentioned[0].id : null,
-      });
-    }
+    reminders.push({
+      id: `summary-${day}`,
+      date: summaryDate,
+      title: summaryTitle(dayName, hasHomework, schoolDay, day),
+      body: joinLines([...homeworkLines, ...due.map((item) => dueLine(item, day))]),
+      entryId,
+    });
 
     const secondDate = at(day, settings.secondReminderTime);
-    if (homework.length > 0 && secondDate > summaryDate) {
+    if (secondDate > summaryDate) {
       reminders.push({
         id: `second-${day}`,
         date: secondDate,
-        title: secondReminderTitle(dayName, day),
-        body: joinLines(homeworkLines),
-        entryId: homework.length === 1 ? homework[0].id : null,
+        title: secondReminderTitle(dayName, hasHomework, schoolDay, day),
+        body: joinLines([...homeworkLines, ...due.map((item) => dueLine(item, day, 1))]),
+        entryId,
       });
     }
   }

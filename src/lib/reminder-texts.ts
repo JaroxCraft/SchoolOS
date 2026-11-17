@@ -5,12 +5,13 @@ import { ENTRY_TYPE_INFO } from "@/lib/entry-types";
 // The wording of the reminders (spec 4.5): several variants per text, so the same notification
 // never reads the same on two days in a row, worded per type. Motivating, without pressure.
 
-// An exam, presentation or submission due up to the next school day
+// An exam, presentation, submission or other entry due up to the next school day
 export type DueItem = { entry: Entry; subject: Subject | undefined };
 
-// Variants change from one day to the next: consecutive days get consecutive variants
-function pick(variants: string[], day: string): string {
-  return variants[daysBetween("2000-01-01", day) % variants.length];
+// Variants change from one day to the next: consecutive days get consecutive variants. `shift`
+// gives the second reminder of a day other variants than its summary.
+function pick(variants: string[], day: string, shift = 0): string {
+  return variants[(daysBetween("2000-01-01", day) + shift) % variants.length];
 }
 
 const capitalize = (text: string) => text[0].toUpperCase() + text.slice(1);
@@ -20,9 +21,12 @@ export function whenText(date: string, day: string): string {
   return daysBetween(day, date) === 1 ? "morgen" : `am ${weekdayName(isoWeekday(date))}`;
 }
 
-// «Prüfung Französisch «Voci»», «Abgabe «Laborbericht»» for an entry without subject
+// «Prüfung Französisch «Voci»», «Abgabe «Laborbericht»» without subject, «Deutsch «Exkursion»» for
+// an other entry, whose type label ("Sonstiges") says nothing
 function dueWhat({ entry, subject }: DueItem): string {
-  return `${[ENTRY_TYPE_INFO[entry.type].label, subject?.name].filter(Boolean).join(" ")} «${entry.title}»`;
+  const label = entry.type === "other" ? null : ENTRY_TYPE_INFO[entry.type].label;
+  const prefix = [label, subject?.name].filter(Boolean).join(" ");
+  return prefix ? `${prefix} «${entry.title}»` : `«${entry.title}»`;
 }
 
 const DUE_LINES: Record<string, string[]> = {
@@ -41,13 +45,14 @@ const DUE_LINES: Record<string, string[]> = {
     "{what} ist {when} fällig – fehlt noch etwas?",
     "{When} ist es so weit: {what}. Fast geschafft!",
   ],
+  other: ["{When}: {what}", "Nicht vergessen: {what} ist {when}", "{what} ist {when}"],
 };
 
-// One line of an exam, presentation or submission, e.g. "Morgen: Prüfung Französisch «Voci» –
-// letzte Wiederholung?"
-export function dueLine(item: DueItem, day: string): string {
+// One line of an exam, presentation, submission or other entry, e.g. "Morgen: Prüfung
+// Französisch «Voci» – letzte Wiederholung?"
+export function dueLine(item: DueItem, day: string, shift = 0): string {
   const when = whenText(item.entry.date, day);
-  return pick(DUE_LINES[item.entry.type] ?? DUE_LINES.exam, day)
+  return pick(DUE_LINES[item.entry.type] ?? DUE_LINES.other, day, shift)
     .replace("{When}", capitalize(when))
     .replace("{when}", when)
     .replace("{what}", dueWhat(item));
@@ -66,23 +71,32 @@ export function summaryTitle(
   schoolDay: string,
   day: string
 ): string {
+  const when = whenText(schoolDay, day);
+  if (hasHomework) {
+    return pick([`Für ${dayName}`, `Das steht ${when} an`, `Bis ${dayName} zu erledigen`], day);
+  }
+  return pick([`${capitalize(when)} ist es so weit`, "Endspurt", "Letzte Vorbereitung"], day);
+}
+
+export function secondReminderTitle(
+  dayName: string,
+  hasHomework: boolean,
+  schoolDay: string,
+  day: string
+): string {
+  const when = whenText(schoolDay, day);
   if (hasHomework) {
     return pick(
-      [`Für ${dayName}`, `Hausaufgaben für ${dayName}`, `Das ist bis ${dayName} zu tun`],
+      [
+        `Noch offen für ${dayName}`,
+        `Schon alles bereit für ${dayName}?`,
+        `Zur Erinnerung: ${when}`,
+      ],
       day
     );
   }
-  const when = capitalize(whenText(schoolDay, day));
-  return pick([`${when} ist es so weit`, "Endspurt", "Letzte Vorbereitung"], day);
-}
-
-export function secondReminderTitle(dayName: string, day: string): string {
   return pick(
-    [
-      `Noch offen für ${dayName}`,
-      `Schon alles erledigt für ${dayName}?`,
-      `Bis ${dayName} zu erledigen`,
-    ],
+    [`Bereit für ${dayName}?`, "Noch einmal zur Erinnerung", `${capitalize(when)} gilt es`],
     day
   );
 }
