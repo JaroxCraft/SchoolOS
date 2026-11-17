@@ -29,7 +29,7 @@ export default function SettingsScreen() {
     ? "Keine Erinnerungen an Aufgaben, Prüfungen und den Lernbeginn."
     : permission === "denied"
       ? "Mitteilungen sind für SchoolOS in den Systemeinstellungen ausgeschaltet, deshalb kommen keine Erinnerungen."
-      : `Nach der letzten Lektion zeigt eine Übersicht, was bis zum nächsten Schultag fällig ist und wofür das Lernen beginnt, an Tagen ohne Unterricht um ${settings.noLessonSummaryTime}. Die zweite Erinnerung nennt die Aufgaben, die dann noch offen sind.`;
+      : `30 Minuten nach der letzten Lektion fasst eine Übersicht die Hausaufgaben für den nächsten Schultag und die anstehenden Prüfungen, Präsentationen und Abgaben ab dem Lernbeginn zusammen, an Tagen ohne Unterricht um ${settings.noLessonSummaryTime}. Die zweite Erinnerung kommt nur, wenn Hausaufgaben für den nächsten Schultag noch offen sind.`;
 
   return (
     <>
