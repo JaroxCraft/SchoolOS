@@ -25,11 +25,21 @@ export default function SettingsScreen() {
   const [permission, setPermission] = useNotificationPermission();
   const reminders = useScheduledReminders();
 
-  const notificationsFooter = !settings.notificationsEnabled
-    ? "Keine Erinnerungen an Aufgaben, Prüfungen und den Lernbeginn."
-    : permission === "denied"
-      ? "Mitteilungen sind für SchoolOS in den Systemeinstellungen ausgeschaltet, deshalb kommen keine Erinnerungen."
-      : `30 Minuten nach der letzten Lektion fasst eine Übersicht die Hausaufgaben für den nächsten Schultag und die anstehenden Prüfungen, Präsentationen und Abgaben ab dem Lernbeginn zusammen, an Tagen ohne Unterricht um ${settings.noLessonSummaryTime}. Die zweite Erinnerung kommt nur, wenn Hausaufgaben für den nächsten Schultag noch offen sind.`;
+  // Without the system permission the switch shows off, whatever is saved: no reminder arrives.
+  // Switching it on asks for the permission, or opens the system settings once the system no
+  // longer shows its dialog (allowNotifications).
+  const denied = permission === "denied";
+  const remindersOn = settings.notificationsEnabled && !denied;
+  const setRemindersOn = (on: boolean) => {
+    updateSettings({ notificationsEnabled: on });
+    if (on && permission !== "granted") allowNotifications().then(setPermission);
+  };
+
+  const notificationsFooter = remindersOn
+    ? `30 Minuten nach der letzten Lektion fasst eine Übersicht die Hausaufgaben für den nächsten Schultag und die anstehenden Prüfungen, Präsentationen und Abgaben ab dem Lernbeginn zusammen, an Tagen ohne Unterricht um ${settings.noLessonSummaryTime}. Die zweite Erinnerung kommt nur, wenn Hausaufgaben für den nächsten Schultag noch offen sind.`
+    : denied
+      ? "Mitteilungen sind für SchoolOS in den Systemeinstellungen ausgeschaltet. Beim Einschalten öffnen sich die Einstellungen, um sie zu erlauben."
+      : "Keine Erinnerungen an Aufgaben, Prüfungen und den Lernbeginn.";
 
   return (
     <>
@@ -94,18 +104,8 @@ export default function SettingsScreen() {
         </FieldGroup.Section>
 
         <FieldGroup.Section title="Mitteilungen">
-          <Switch
-            label="Erinnerungen"
-            value={settings.notificationsEnabled}
-            onValueChange={(notificationsEnabled) => updateSettings({ notificationsEnabled })}
-          />
-          {settings.notificationsEnabled && permission === "denied" && (
-            <ActionRow
-              label="Mitteilungen erlauben"
-              onPress={() => allowNotifications().then(setPermission)}
-            />
-          )}
-          {settings.notificationsEnabled && (
+          <Switch label="Erinnerungen" value={remindersOn} onValueChange={setRemindersOn} />
+          {remindersOn && (
             <DateField
               mode="time"
               label="Zweite Erinnerung"
@@ -113,7 +113,7 @@ export default function SettingsScreen() {
               onChange={(secondReminderTime) => updateSettings({ secondReminderTime })}
             />
           )}
-          {settings.notificationsEnabled && (
+          {remindersOn && (
             <DateField
               mode="time"
               label="Übersicht an freien Tagen"
