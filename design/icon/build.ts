@@ -65,6 +65,8 @@ const FREE_PERIODS: Block[] = [
 // Android masks the adaptive icon to a circle of 72/108 and keeps 66/108 safe:
 // the whole grid has to fit into that circle.
 const ANDROID_SCALE = (0.6 * CANVAS) / Math.hypot(GRID_W, GRID_H);
+// The notification icon (24 dp) keeps a margin of 2 dp, so the grid fills 20/24 of it
+const NOTIFICATION_SCALE = ((20 / 24) * CANVAS) / Math.max(GRID_W, GRID_H);
 
 function rects(blocks: Block[], fill: string, scale = 1) {
   const x0 = (CANVAS - GRID_W * scale) / 2;
@@ -84,6 +86,13 @@ function grid(mode: Mode, scale = 1) {
     .map((subject) => rects(LESSONS[subject], SUBJECTS[subject][mode], scale))
     .join("");
   return rects(FREE_PERIODS, FREE[mode], scale) + lessons;
+}
+
+// White on transparent, free periods dimmed: Android tints it and only uses the alpha
+function silhouette(scale: number) {
+  return (
+    rects(FREE_PERIODS, "#FFFFFF59", scale) + rects(Object.values(LESSONS).flat(), "#FFFFFF", scale)
+  );
 }
 
 function background(mode: Mode) {
@@ -177,15 +186,9 @@ function buildAppImages() {
   // Android adaptive icon
   write(join(IMAGES, "android-icon-background.png"), png(svg(background("light"))));
   write(join(IMAGES, "android-icon-foreground.png"), png(svg(grid("light", ANDROID_SCALE))));
-  write(
-    join(IMAGES, "android-icon-monochrome.png"),
-    png(
-      svg(
-        rects(FREE_PERIODS, "#FFFFFF59", ANDROID_SCALE) +
-          rects(Object.values(LESSONS).flat(), "#FFFFFF", ANDROID_SCALE)
-      )
-    )
-  );
+  write(join(IMAGES, "android-icon-monochrome.png"), png(svg(silhouette(ANDROID_SCALE))));
+  // Status bar and notifications; the config plugin of expo-notifications wants 96×96 px
+  write(join(IMAGES, "notification-icon.png"), png(svg(silhouette(NOTIFICATION_SCALE)), 96));
 
   // Splash screen: Android shows the image in a circle like the adaptive icon
   write(join(IMAGES, "splash-icon.png"), png(svg(grid("light", ANDROID_SCALE))));
