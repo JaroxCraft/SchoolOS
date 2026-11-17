@@ -13,7 +13,7 @@ A school planner for iOS and Android that replaces the "Semesterheft": timetable
 
 ## Getting started
 
-Requirements: [bun](https://bun.sh) and a device or simulator with a development build of the app.
+Requirements: [bun](https://bun.sh), [Node.js](https://nodejs.org) LTS (EAS CLI runs the project's Expo CLI with `node`, even when installed with bun) and a device or simulator with a development build of the app.
 
 ```bash
 bun install
