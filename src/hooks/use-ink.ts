@@ -1,5 +1,7 @@
 import { useColorScheme } from "react-native";
 
+import { SYSTEM_COLORS } from "@/lib/system-colors";
+
 export type Ink = {
   label: string;
   secondary: string;
@@ -20,7 +22,7 @@ export function useInk(): Ink {
     label: dark ? "#FFFFFF" : "#000000",
     secondary: dark ? "#98989F" : "#6C6C70",
     tertiary: dark ? "#5A5A5F" : "#BCBCC0",
-    danger: dark ? "#FF453A" : "#FF3B30",
-    accent: dark ? "#0A84FF" : "#007AFF",
+    danger: dark ? "#FF453A" : SYSTEM_COLORS.red,
+    accent: dark ? "#0A84FF" : SYSTEM_COLORS.blue,
   };
 }

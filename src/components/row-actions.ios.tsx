@@ -1,7 +1,8 @@
 import { Button, ContextMenu, SwipeActions } from "@expo/ui/swift-ui";
 import { tint } from "@expo/ui/swift-ui/modifiers";
 
-import type { RowAction, RowActionsProps } from "@/components/row-actions";
+import type { RowActionsProps } from "@/components/row-actions";
+import type { RowAction } from "@/lib/row-action";
 import { SYSTEM_COLORS } from "@/lib/system-colors";
 
 // A button of the context menu, or of a swipe group (`swipe`). A destructive swipe button with the

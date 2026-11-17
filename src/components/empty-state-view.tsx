@@ -1,8 +1,8 @@
 import { Button, Host } from "@expo/ui";
 import { SymbolView, type SymbolViewProps } from "expo-symbols";
-import { StyleSheet, Text, useColorScheme, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
-import { colors } from "@/constants/colors";
+import { colors, useNativeColorsRefresh } from "@/constants/colors";
 
 export type EmptyStateProps = {
   // SF Symbol on iOS, Material Symbol on Android
@@ -17,8 +17,7 @@ export type EmptyStateProps = {
 // Android and on iOS 16, where the system's ContentUnavailableView does not exist yet (see
 // empty-state.ios.tsx).
 export function EmptyStateView({ icon, title, message, action }: EmptyStateProps) {
-  // Re-renders on light/dark changes, so Android resolves the native colors again
-  useColorScheme();
+  useNativeColorsRefresh();
 
   return (
     <View style={styles.container}>

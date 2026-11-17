@@ -1,6 +1,6 @@
 import { FieldGroup, Text } from "@expo/ui";
 import { router, Stack, useLocalSearchParams, useNavigation } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 import { EntryRow } from "@/components/entry-row";
 import { FormList, rowsKey } from "@/components/form-list";
@@ -9,22 +9,21 @@ import { ActionRow } from "@/components/rows";
 import { useEntries, useLessons, usePeriods, useSubjects, useTeachers } from "@/db/queries";
 import { useEntryPlacement } from "@/hooks/use-entry-placement";
 import { useInk } from "@/hooks/use-ink";
+import { useLastDefined } from "@/hooks/use-last-defined";
 import { useNow } from "@/hooks/use-now";
 import { weekdayName } from "@/lib/dates";
+import { findById } from "@/lib/find";
 import { openEntry } from "@/lib/routes";
-import { periodNumber } from "@/lib/schedule";
+import { periodLabel, periodNumber } from "@/lib/schedule";
 import { joinDetails } from "@/lib/text";
 
 export default function SubjectDetailScreen() {
   const ink = useInk();
   const { subjectId } = useLocalSearchParams<{ subjectId: string }>();
   const id = Number(subjectId);
-  const current = useSubjects().find((candidate) => candidate.id === id);
-  // The subject stays on screen while the screen closes after it was deleted (see below), so the
-  // title does not fall back to the route name during the transition
-  const [subject, setSubject] = useState(current);
-  if (current && current !== subject) setSubject(current);
-  const teacher = useTeachers().find((candidate) => candidate.id === subject?.teacherId);
+  const current = findById(useSubjects(), id);
+  const subject = useLastDefined(current);
+  const teacher = findById(useTeachers(), subject?.teacherId);
   const periods = usePeriods();
   const lessons = useLessons()
     .filter((lesson) => lesson.subjectId === id)
@@ -77,11 +76,11 @@ export default function SubjectDetailScreen() {
             <Text textStyle={{ color: ink.secondary }}>Keine Lektionen</Text>
           )}
           {lessons.map((lesson) => {
-            const period = periods.find((candidate) => candidate.id === lesson.periodId);
+            const period = findById(periods, lesson.periodId);
             return (
               <LabeledRow
                 key={lesson.id}
-                label={`${weekdayName(lesson.weekday)}, ${periodNumber(periods, lesson.periodId)}. Lektion`}>
+                label={`${weekdayName(lesson.weekday)}, ${periodLabel(periodNumber(periods, lesson.periodId))}`}>
                 <Text textStyle={{ color: ink.secondary }}>
                   {joinDetails(period?.startTime, lesson.room)}
                 </Text>

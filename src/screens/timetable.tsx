@@ -6,7 +6,7 @@ import { Platform } from "react-native";
 import { DiscardGuard } from "@/components/discard-guard";
 import { EmptyState } from "@/components/empty-state";
 import { FooterText, FormList } from "@/components/form-list";
-import { type RowAction, RowActions } from "@/components/row-actions";
+import { RowActions } from "@/components/row-actions";
 import { ActionRow } from "@/components/rows";
 import { NONE } from "@/components/search-picker";
 import { SegmentedControl } from "@/components/segmented-control";
@@ -21,10 +21,12 @@ import { useSaveButton, useStepButton } from "@/hooks/use-header-button";
 import { type Ink, useInk } from "@/hooks/use-ink";
 import { useSaving } from "@/hooks/use-saving";
 import { SCHOOL_WEEKDAYS, today, weekdayName, weekdayShort } from "@/lib/dates";
+import { findById } from "@/lib/find";
 import { endEditing } from "@/lib/focused-fields";
 import { openScreen, useSchoolRoutes } from "@/lib/routes";
+import type { RowAction } from "@/lib/row-action";
 import { saveFailed } from "@/lib/save-failed";
-import { lessonAt, periodNumber, periodRange, shownWeekday } from "@/lib/schedule";
+import { lessonAt, periodLabel, periodNumber, periodRange, shownWeekday } from "@/lib/schedule";
 import { countOf } from "@/lib/text";
 import { typography } from "@/lib/typography";
 
@@ -105,7 +107,7 @@ function lessonRows({
           </Text>
         </Row>
       }>
-      {`${number}. Lektion`}
+      {periodLabel(number)}
     </ListItem>
   );
 
@@ -215,12 +217,11 @@ export default function TimetableEditScreen() {
     );
   }
 
-  const subjectOf = (lesson: LessonSlot | undefined) =>
-    subjects.find((subject) => subject.id === lesson?.subjectId);
+  const subjectOf = (lesson: LessonSlot | undefined) => findById(subjects, lesson?.subjectId);
   const lessonCount = timetable.filter((lesson) => lesson.weekday === weekday).length;
   const editedLesson = editing ? lessonAt(timetable, weekday, editing.id) : undefined;
   const editedTitle = editing
-    ? `${weekdayName(weekday)}, ${periodNumber(periods, editing.id)}. Lektion`
+    ? `${weekdayName(weekday)}, ${periodLabel(periodNumber(periods, editing.id))}`
     : "";
 
   return (

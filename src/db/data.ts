@@ -14,10 +14,9 @@ import {
   type LessonSlot,
   type PeriodDraft,
   type Subject,
+  type Table,
 } from "@/db/schema";
 import { TRANSFER_FORMAT, type TransferFile, type TransferKind } from "@/db/transfer";
-
-type Table = (typeof DATA_TABLES)[number] | typeof settings;
 
 // Rows per insert statement, so a large file stays below SQLite's limit of bound variables
 const INSERT_CHUNK_SIZE = 500;
@@ -77,7 +76,7 @@ export function dataOperations(db: Database) {
 
   function exportData(kind: TransferKind): TransferFile {
     const header = {
-      app: "SchoolOS",
+      app: "SchoolOS" as const,
       format: TRANSFER_FORMAT,
       exportedAt: new Date().toISOString(),
     };
@@ -98,7 +97,7 @@ export function dataOperations(db: Database) {
         teachers: allTeachers.filter((teacher) => usedTeacherIds.has(teacher.id)),
         subjects: sharedSubjects,
         lessons: allLessons,
-      } as TransferFile;
+      };
     }
     return {
       ...header,
@@ -111,7 +110,7 @@ export function dataOperations(db: Database) {
       grades: db.select().from(grades).all(),
       semesters: db.select().from(semesters).all(),
       settings: db.select().from(settings).all()[0],
-    } as TransferFile;
+    };
   }
 
   // Replaces the data with the content of a file checked by parseTransferFile, in one

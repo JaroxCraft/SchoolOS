@@ -1,19 +1,22 @@
 import * as Haptics from "expo-haptics";
 import { Link } from "expo-router";
 import { useState } from "react";
-import { Platform, Pressable, StyleSheet, Text, useColorScheme, View } from "react-native";
+import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { LessonMenu } from "@/components/lesson-menu";
-import { colors } from "@/constants/colors";
+import { colors, useNativeColorsRefresh } from "@/constants/colors";
 import type { Lesson, Period, Subject, Teacher } from "@/db/schema";
 import { minutesOf, minutesToTime } from "@/lib/dates";
-import { claimOpening, lessonActions, subjectHref } from "@/lib/routes";
+import { findById } from "@/lib/find";
+import { lessonActions } from "@/lib/lesson-actions";
+import { claimOpening, subjectHref } from "@/lib/routes";
 import {
   lessonBlocks,
   type LessonBlock,
   type LessonState,
   lessonState,
   type Now,
+  periodLabel,
   periodNumber,
   type SchoolDay,
 } from "@/lib/schedule";
@@ -58,8 +61,7 @@ export function LessonTimeline({
   compact,
   now,
 }: LessonTimelineProps) {
-  // Re-renders on light/dark changes, so Android resolves the native colors again
-  useColorScheme();
+  useNativeColorsRefresh();
   const start = minutesOf(visiblePeriods[0].startTime);
   // The latest end, not the last period's: an earlier period may end later and must not be clipped
   const end = Math.max(...visiblePeriods.map((period) => minutesOf(period.endTime)));
@@ -102,14 +104,14 @@ export function LessonTimeline({
               compact && isToday && styles.todayColumn,
             ]}>
             {blocks.map((block) => {
-              const subject = subjects.find((candidate) => candidate.id === block.lesson.subjectId);
+              const subject = findById(subjects, block.lesson.subjectId);
               if (!subject) return null;
               return (
                 <LessonCard
                   key={block.key}
                   block={block}
                   subject={subject}
-                  teacher={teachers.find((teacher) => teacher.id === subject.teacherId)}
+                  teacher={findById(teachers, subject.teacherId)}
                   compact={compact}
                   top={y(block.start)}
                   height={(block.end - block.start) * scale}
@@ -154,7 +156,7 @@ function LessonCard({ block, subject, teacher, compact, top, height, state }: Le
     : joinDetails(time, block.lesson.room, teacher?.abbreviation || undefined);
   const periodsLabel =
     block.firstNumber === block.lastNumber
-      ? `${block.firstNumber}. Lektion`
+      ? periodLabel(block.firstNumber)
       : block.lastNumber - block.firstNumber === 1
         ? `${block.firstNumber}. und ${block.lastNumber}. Lektion`
         : `${block.firstNumber}.–${block.lastNumber}. Lektion`;

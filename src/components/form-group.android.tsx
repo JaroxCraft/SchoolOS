@@ -28,9 +28,10 @@ import {
 } from "react";
 
 import type { FormGroupProps } from "@/components/form-group";
-import type { RowAction, RowActionsProps } from "@/components/row-actions";
+import type { RowActionsProps } from "@/components/row-actions";
 import { type Ink, useInk } from "@/hooks/use-ink";
 import { endEditing } from "@/lib/focused-fields";
+import type { RowAction } from "@/lib/row-action";
 
 // Space between the sections, as in the FieldGroup of @expo/ui
 const SECTION_GAP = 24;

@@ -16,6 +16,7 @@ import {
   type Semester,
   type Settings,
   type Subject,
+  type Table,
   type Teacher,
 } from "@/db/schema";
 import { today as currentDay } from "@/lib/dates";
@@ -53,16 +54,6 @@ type PersonalData = {
 export type TransferFile = { app: "SchoolOS"; format: number; exportedAt: string } & (
   ({ kind: "timetable" } & TimetableData) | ({ kind: "backup" } & TimetableData & PersonalData)
 );
-
-type Table =
-  | typeof periods
-  | typeof teachers
-  | typeof subjects
-  | typeof lessons
-  | typeof semesters
-  | typeof entries
-  | typeof grades
-  | typeof settings;
 
 // Thrown for files that are not a valid SchoolOS export; the message is shown to the user.
 export class TransferError extends Error {}

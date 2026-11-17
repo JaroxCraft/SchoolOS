@@ -16,7 +16,8 @@ import type { EntryType } from "@/db/schema";
 import { useEntryPlacement } from "@/hooks/use-entry-placement";
 import { useInk } from "@/hooks/use-ink";
 import { useNow } from "@/hooks/use-now";
-import { ENTRY_TYPE_OPTIONS } from "@/lib/entry-types";
+import { ENTRY_TYPE_OPTIONS, NO_SUBJECT_LABEL } from "@/lib/entry-types";
+import { findById } from "@/lib/find";
 import { openEntry } from "@/lib/routes";
 
 const ALL = "all";
@@ -46,7 +47,7 @@ export default function AgendaScreen() {
   ];
   const subjectChoices = [
     { label: Platform.OS === "ios" ? "Alle Fächer" : "Alle", value: ALL_SUBJECTS },
-    { label: "Allgemein", value: NONE },
+    { label: NO_SUBJECT_LABEL, value: NONE },
   ];
   const subjectPicker = useSubjectPicker({
     label: "Fach",
@@ -57,8 +58,6 @@ export default function AgendaScreen() {
     extraChoices: subjectChoices,
     onChange: setSubjectFilter,
   });
-
-  const subjectById = (id: number | null) => subjects.find((subject) => subject.id === id);
 
   if (entries.length === 0) {
     return (
@@ -170,7 +169,7 @@ export default function AgendaScreen() {
                 <EntryRow
                   key={entry.id}
                   entry={entry}
-                  subject={subjectById(entry.subjectId)}
+                  subject={findById(subjects, entry.subjectId)}
                   today={now.date}
                 />
               ))}

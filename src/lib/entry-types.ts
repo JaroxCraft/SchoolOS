@@ -28,3 +28,6 @@ export const ENTRY_TYPE_OPTIONS = ENTRY_TYPES.map((type) => ({
   label: ENTRY_TYPE_INFO[type].label,
   value: type,
 }));
+
+// The subject shown for an entry without one
+export const NO_SUBJECT_LABEL = "Allgemein";

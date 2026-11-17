@@ -12,7 +12,9 @@ import { useEntryPlacement } from "@/hooks/use-entry-placement";
 import { useInk } from "@/hooks/use-ink";
 import { useNow } from "@/hooks/use-now";
 import { formatDate, relativeDay } from "@/lib/dates";
-import { lessonActions, openScreen, openSubject, SCHOOL_ROUTES } from "@/lib/routes";
+import { findById } from "@/lib/find";
+import { lessonActions } from "@/lib/lesson-actions";
+import { openScreen, openSubject, SCHOOL_ROUTES } from "@/lib/routes";
 import { nextLessons, periodNumber, periodRange } from "@/lib/schedule";
 import { SETUP_STEP_ICONS } from "@/lib/setup";
 import { NEUTRAL_COLOR } from "@/lib/subject-colors";
@@ -98,8 +100,6 @@ export default function OverviewScreen() {
   const placeEntries = useEntryPlacement();
   const now = useNow();
 
-  const subjectById = (id: number | null) => subjects.find((subject) => subject.id === id);
-
   if (lessons.length === 0) {
     return (
       <Screen title="Übersicht" showAddButton>
@@ -129,7 +129,7 @@ export default function OverviewScreen() {
           )}
           {/* A long press offers the actions of every lesson, as on the timetable cards */}
           {upcomingLessons.map(({ lesson, period }) => {
-            const subject = subjectById(lesson.subjectId);
+            const subject = findById(subjects, lesson.subjectId);
             return (
               <RowActions key={lesson.id} menu={lessonActions(lesson.subjectId)}>
                 <NavigationRow
@@ -151,7 +151,7 @@ export default function OverviewScreen() {
             <EntryRow
               key={entry.id}
               entry={entry}
-              subject={subjectById(entry.subjectId)}
+              subject={findById(subjects, entry.subjectId)}
               today={now.date}
             />
           ))}

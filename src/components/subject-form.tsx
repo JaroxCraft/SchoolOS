@@ -7,7 +7,7 @@ import { ColorField } from "@/components/color-field";
 import { DiscardGuard } from "@/components/discard-guard";
 import { FooterText, FormList } from "@/components/form-list";
 import { DestructiveRow } from "@/components/rows";
-import { NONE } from "@/components/search-picker";
+import { NONE, noneToNull } from "@/components/search-picker";
 import { useTeacherPicker } from "@/components/teacher-picker";
 import { TextField } from "@/components/text-field";
 import { saveSubject } from "@/db/actions";
@@ -62,7 +62,7 @@ export function SubjectForm({ subject, usedColors, teachers }: SubjectFormProps)
         // Left empty, the Kürzel is made from the name, as its placeholder shows
         abbreviation: abbreviation.trim() || subjectAbbreviation(trimmedName),
         color,
-        teacherId: teacherId === NONE ? null : teacherId,
+        teacherId: noneToNull(teacherId),
       });
     });
 

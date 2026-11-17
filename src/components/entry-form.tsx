@@ -3,7 +3,7 @@ import { useState } from "react";
 
 import { DateField } from "@/components/date-field";
 import { DestructiveRow } from "@/components/rows";
-import { NONE } from "@/components/search-picker";
+import { NONE, noneToNull } from "@/components/search-picker";
 import { SelectRow } from "@/components/select-row";
 import { SheetForm } from "@/components/sheet-form";
 import { useSubjectPicker } from "@/components/subject-picker";
@@ -18,7 +18,9 @@ import { useNow } from "@/hooks/use-now";
 import { entryDeletion } from "@/lib/confirm-delete";
 import { formatDate } from "@/lib/dates";
 import { type DueChoice, dueChoiceDates, suggestDue } from "@/lib/due-date";
-import { ENTRY_TYPE_INFO, ENTRY_TYPE_OPTIONS } from "@/lib/entry-types";
+import { ENTRY_TYPE_INFO, ENTRY_TYPE_OPTIONS, NO_SUBJECT_LABEL } from "@/lib/entry-types";
+import { findById } from "@/lib/find";
+import { periodLabel } from "@/lib/schedule";
 import { NEUTRAL_COLOR } from "@/lib/subject-colors";
 
 type FormState = {
@@ -45,12 +47,11 @@ type EntryFormProps = {
 
 export function EntryForm({ entry, initialSubjectId, subjects, periods, lessons }: EntryFormProps) {
   const now = useNow();
-  const orNull = (id: number) => (id === NONE ? null : id);
 
   // Fills in the due date and period that follow from the other fields.
   const derive = (state: FormState): FormState => {
     const due = suggestDue(
-      { ...state, subjectId: orNull(state.subjectId), periodId: orNull(state.periodId) },
+      { ...state, subjectId: noneToNull(state.subjectId), periodId: noneToNull(state.periodId) },
       lessons,
       periods,
       now
@@ -93,7 +94,7 @@ export function EntryForm({ entry, initialSubjectId, subjects, periods, lessons 
     setForm((state) => ({ ...state, ...changes }));
 
   const info = ENTRY_TYPE_INFO[form.type];
-  const choiceDates = dueChoiceDates(orNull(form.subjectId), lessons, periods, now);
+  const choiceDates = dueChoiceDates(noneToNull(form.subjectId), lessons, periods, now);
   // The form as it was opened, to tell whether anything was changed
   const [initialForm] = useState(form);
   const dirty = (
@@ -109,7 +110,7 @@ export function EntryForm({ entry, initialSubjectId, subjects, periods, lessons 
     subjects,
     teachers: useTeachers(),
     lessons,
-    extraChoices: [{ label: "Allgemein", value: NONE }],
+    extraChoices: [{ label: NO_SUBJECT_LABEL, value: NONE }],
     onChange: (subjectId) => change({ subjectId }),
   });
 
@@ -124,9 +125,9 @@ export function EntryForm({ entry, initialSubjectId, subjects, periods, lessons 
         type: form.type,
         title: form.title.trim(),
         description: form.description.trim() || null,
-        subjectId: form.subjectId === NONE ? null : form.subjectId,
+        subjectId: noneToNull(form.subjectId),
         date: form.date,
-        periodId: form.periodId === NONE ? null : form.periodId,
+        periodId: noneToNull(form.periodId),
         completed: form.completed,
         topic: info.gradable ? form.topic.trim() || null : null,
       });
@@ -196,7 +197,7 @@ export function EntryForm({ entry, initialSubjectId, subjects, periods, lessons 
             options={[
               { label: "Keine", value: NONE },
               ...periods.map((period, index) => ({
-                label: `${index + 1}. Lektion (${period.startTime})`,
+                label: `${periodLabel(index + 1)} (${period.startTime})`,
                 value: period.id,
               })),
             ]}
@@ -205,9 +206,7 @@ export function EntryForm({ entry, initialSubjectId, subjects, periods, lessons 
             <TaskCheckbox
               label="Erledigt"
               value={form.completed}
-              color={
-                subjects.find((subject) => subject.id === form.subjectId)?.color ?? NEUTRAL_COLOR
-              }
+              color={findById(subjects, form.subjectId)?.color ?? NEUTRAL_COLOR}
               onValueChange={(completed) => change({ completed })}
             />
           )}

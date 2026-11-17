@@ -1,17 +1,6 @@
 import { useSyncExternalStore } from "react";
 
-export type ConfirmOptions = {
-  title: string;
-  message: string;
-  // Label of the button that carries out the action, e.g. "Löschen"
-  confirmLabel: string;
-  onConfirm: () => void;
-  // An action the user started that deletes or discards data: an action sheet on iOS instead of
-  // an alert (default true); Android shows the same dialog either way
-  destructive?: boolean;
-  // A plain message with a single button, without "Abbrechen"
-  messageOnly?: boolean;
-};
+import type { ConfirmOptions } from "@/lib/confirm";
 
 // The confirmation shown by <ConfirmDialog> on Android, null while none is open.
 let current: ConfirmOptions | null = null;

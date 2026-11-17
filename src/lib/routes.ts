@@ -1,6 +1,5 @@
 import { type Href, router, useRoute } from "expo-router";
 
-import type { RowAction } from "@/components/row-actions";
 import { isSheetClosing } from "@/lib/sheet-transition";
 
 // Only one screen or sheet opens at a time. Two rows touched at the same moment, or one tapped
@@ -53,21 +52,6 @@ export const subjectHref = (subjectId: number) =>
 
 export function openSubject(subjectId: number) {
   openScreen(subjectHref(subjectId));
-}
-
-// The long-press actions of a lesson, the same in the overview and on the timetable cards.
-// "Stundenplan bearbeiten" opens the editor of the settings sheet (✓ "Sichern" and back), not the
-// one of the first setup.
-export function lessonActions(subjectId: number): RowAction[] {
-  return [
-    { label: "Neuer Eintrag", icon: "plus", onPress: () => openEntry({ id: "new", subjectId }) },
-    { label: "Fach anzeigen", icon: "book", onPress: () => openSubject(subjectId) },
-    {
-      label: "Stundenplan bearbeiten",
-      icon: "pencil",
-      onPress: () => openScreen(SCHOOL_ROUTES.settings.timetable),
-    },
-  ];
 }
 
 // The screens that set up the school (period grid, subjects, timetable and the subject form) exist

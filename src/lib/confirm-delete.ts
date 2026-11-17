@@ -3,6 +3,7 @@ import { router } from "expo-router";
 import { deleteEntry, deleteSubject, deleteTeacher } from "@/db/actions";
 import type { Entry, Subject, Teacher } from "@/db/schema";
 import { confirm } from "@/lib/confirm";
+import type { RowAction } from "@/lib/row-action";
 
 // Asks before deleting the item of the current screen, then closes the screen and deletes it.
 // `allowLeave` lifts the form's discard guard (useDiscardGuard) before the screen closes.
@@ -42,7 +43,18 @@ export const teacherDeletion = (teacher: Teacher): Deletion => ({
   onDelete: () => deleteTeacher(teacher.id),
 });
 
-// Asks before deleting an entry, subject or teacher from its row in a list
-export function confirmRowDelete({ title, message, onDelete }: Deletion) {
-  confirm({ title, message, confirmLabel: "Löschen", onConfirm: onDelete });
+// The "Löschen" action of an entry, subject or teacher row in a list: asks first, then deletes
+export function deleteAction({ title, message, onDelete }: Deletion): RowAction {
+  return {
+    label: "Löschen",
+    icon: "trash",
+    destructive: true,
+    asksFirst: true,
+    onPress: () => confirm({ title, message, confirmLabel: "Löschen", onConfirm: onDelete }),
+  };
+}
+
+// The "Bearbeiten" action of a row in a list
+export function editAction(onPress: () => void, tint?: string): RowAction {
+  return { label: "Bearbeiten", icon: "pencil", onPress, tint };
 }

@@ -13,8 +13,6 @@ export type DateFieldProps = {
   mode?: "date" | "time";
 };
 
-const pad = (value: number) => String(value).padStart(2, "0");
-
 // Android: a row that opens the Material date or time dialog.
 export function DateField({ label, value, onChange, mode = "date" }: DateFieldProps) {
   const [open, setOpen] = useState(false);
@@ -33,9 +31,8 @@ export function DateField({ label, value, onChange, mode = "date" }: DateFieldPr
           showVariantToggle={false}
           onDateSelected={(date) => {
             setOpen(false);
-            onChange(
-              `${date.getUTCFullYear()}-${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())}`
-            );
+            // The Material picker returns UTC midnight, so the UTC date is the picked day
+            onChange(date.toISOString().slice(0, 10));
           }}
           confirmButtonLabel="OK"
           dismissButtonLabel="Abbrechen"

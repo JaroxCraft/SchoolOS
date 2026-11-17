@@ -1,17 +1,6 @@
-import type { SFSymbol } from "expo-symbols";
 import type { ReactElement } from "react";
 
-export type RowAction = {
-  label: string;
-  icon: SFSymbol;
-  onPress: () => void;
-  destructive?: boolean;
-  // The action asks before it deletes (entries, subjects, teachers). Its swipe button is red without the
-  // destructive role: with that role iOS removes the row at once, even if the user cancels.
-  asksFirst?: boolean;
-  // Background of the swipe button, e.g. green for "Erledigt"
-  tint?: string;
-};
+import type { RowAction } from "@/lib/row-action";
 
 export type RowActionsProps = {
   // Revealed by swiping right; a full swipe runs the first one
