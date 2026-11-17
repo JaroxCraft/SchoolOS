@@ -3,14 +3,13 @@ import { TimePickerDialog } from "@expo/ui/jetpack-compose";
 import { useState } from "react";
 
 import { useInk } from "@/hooks/use-ink";
-import { dateToTime } from "@/lib/dates";
+import { type ClockTime, dateToTime } from "@/lib/dates";
 
 export type TimeRangeRowProps = {
   label: string;
-  // "HH:MM"
-  start: string;
-  end: string;
-  onChange: (start: string, end: string) => void;
+  start: ClockTime;
+  end: ClockTime;
+  onChange: (start: ClockTime, end: ClockTime) => void;
 };
 
 // Android: a label with the start and end time as buttons that open the Material time dialog.

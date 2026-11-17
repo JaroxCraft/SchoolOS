@@ -12,7 +12,7 @@ import { isOverdue } from "@/lib/entry-status";
 import { ENTRY_TYPE_INFO, NO_SUBJECT_LABEL } from "@/lib/entry-types";
 import { openEntry } from "@/lib/routes";
 import type { RowAction } from "@/lib/row-action";
-import { NEUTRAL_COLOR } from "@/lib/subject-colors";
+import { ALLGEMEIN_COLOR } from "@/lib/subject-colors";
 import { SYSTEM_COLORS } from "@/lib/system-colors";
 import { typography } from "@/lib/typography";
 
@@ -43,7 +43,7 @@ function entryItem({ entry, subject, today }: EntryRowProps, ink: Ink) {
         <TaskCheckbox
           value={entry.completed}
           accessibilityLabel={entry.title}
-          color={subject?.color ?? NEUTRAL_COLOR}
+          color={subject?.color ?? ALLGEMEIN_COLOR}
           onValueChange={(completed) => checkOffEntry(entry, completed)}
         />
       }

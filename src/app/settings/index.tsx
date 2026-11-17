@@ -38,11 +38,11 @@ export default function SettingsScreen() {
     if (on && permission !== "granted") allowNotifications().then(setPermission);
   };
 
-  const notificationsFooter = remindersOn
-    ? `${AFTER_SCHOOL_MINUTES} Minuten nach der letzten Lektion kommt eine Zusammenfassung von allem, was bis zum nächsten Schultag ansteht: Hausaufgaben, Prüfungen, Präsentationen, Abgaben und andere Einträge. An freien Tagen kommt sie um ${settings.noLessonSummaryTime}. Die zweite Erinnerung wiederholt das am Abend, solange noch etwas offen ist.`
-    : denied
-      ? "Mitteilungen sind für SchoolOS in den Systemeinstellungen ausgeschaltet. Beim Einschalten öffnen sich die Einstellungen, um sie zu erlauben."
-      : "Keine Erinnerungen an Hausaufgaben, Prüfungen und andere Einträge.";
+  const notificationsFooter = notificationsFooterText(
+    remindersOn,
+    denied,
+    settings.noLessonSummaryTime
+  );
 
   return (
     <>
@@ -183,4 +183,14 @@ export default function SettingsScreen() {
       </FormList>
     </>
   );
+}
+
+function notificationsFooterText(remindersOn: boolean, denied: boolean, noLessonTime: string) {
+  if (remindersOn) {
+    return `${AFTER_SCHOOL_MINUTES} Minuten nach der letzten Lektion kommt eine Zusammenfassung von allem, was bis zum nächsten Schultag ansteht: Hausaufgaben, Prüfungen, Präsentationen, Abgaben und andere Einträge. An freien Tagen kommt sie um ${noLessonTime}. Die zweite Erinnerung wiederholt das am Abend, solange noch etwas offen ist.`;
+  }
+  if (denied) {
+    return "Mitteilungen sind für SchoolOS in den Systemeinstellungen ausgeschaltet. Beim Einschalten öffnen sich die Einstellungen, um sie zu erlauben.";
+  }
+  return "Keine Erinnerungen an Hausaufgaben, Prüfungen und andere Einträge.";
 }

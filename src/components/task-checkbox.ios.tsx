@@ -15,6 +15,7 @@ import {
 import * as Haptics from "expo-haptics";
 
 import type { TaskCheckboxProps } from "@/components/task-checkbox";
+import { MIN_TAP_TARGET } from "@/constants/layout";
 import { useInk } from "@/hooks/use-ink";
 import { SYSTEM_COLORS } from "@/lib/system-colors";
 
@@ -38,7 +39,9 @@ export function TaskCheckbox({
   const spokenLabel = accessibilityLabel ?? label;
   // A visible label names the state itself ("Erledigt"), so VoiceOver answers it with yes or no
   // instead of reading "Erledigt, Erledigt"; next to a task's title it reads the state
-  const spokenValue = label ? (value ? "Ja" : "Nein") : value ? "Erledigt" : "Offen";
+  const yesOrNo = value ? "Ja" : "Nein";
+  const doneOrOpen = value ? "Erledigt" : "Offen";
+  const spokenValue = label ? yesOrNo : doneOrOpen;
 
   const toggle = () => {
     toggleHaptic(!value);
@@ -50,9 +53,8 @@ export function TaskCheckbox({
       onPress={toggle}
       modifiers={[
         buttonStyle("borderless"),
-        // The circle is 22 pt; the whole 44 pt frame takes the tap (Apple HIG), with the circle
-        // staying at the leading edge where it was
-        frame({ minWidth: 44, minHeight: 44, alignment: "leading" }),
+        // The whole frame takes the tap, with the circle staying at the leading edge
+        frame({ minWidth: MIN_TAP_TARGET, minHeight: MIN_TAP_TARGET, alignment: "leading" }),
         contentShape(shapes.rectangle()),
         accessibilityAddTraits(["isToggle"]),
         accessibilityValue(spokenValue),

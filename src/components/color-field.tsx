@@ -4,17 +4,17 @@ import { SymbolView } from "expo-symbols";
 import { Pressable, StyleSheet, View } from "react-native";
 
 import { SUBJECT_COLORS } from "@/lib/subject-colors";
+import type { HexColor } from "@/lib/system-colors";
 
 const SIZE = 34;
 const PER_ROW = 5;
 
 export type ColorFieldProps = {
-  // "#RRGGBB"
-  value: string;
-  onChange: (color: string) => void;
+  value: HexColor;
+  onChange: (color: HexColor) => void;
   // Colors of other subjects (marked on Android, where the swatches are shown), with a small dot
   // so a free one is easy to find
-  usedColors?: string[];
+  usedColors?: HexColor[];
 };
 
 // Android: Material has no system color picker, so the subject colors are offered as round

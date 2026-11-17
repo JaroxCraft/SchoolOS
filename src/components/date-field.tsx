@@ -3,13 +3,13 @@ import { DatePickerDialog, TimePickerDialog } from "@expo/ui/jetpack-compose";
 import { useState } from "react";
 
 import { LabeledRow } from "@/components/labeled-row";
-import { dateToTime, formatDate } from "@/lib/dates";
+import { type ClockTime, dateToTime, formatDate, type IsoDate } from "@/lib/dates";
 
 export type DateFieldProps = {
   label: string;
-  // ISO date ("2026-11-02") in date mode, "HH:MM" in time mode
-  value: string;
-  onChange: (value: string) => void;
+  // An IsoDate in date mode, a ClockTime in time mode
+  value: IsoDate | ClockTime;
+  onChange: (value: IsoDate | ClockTime) => void;
   mode?: "date" | "time";
 };
 

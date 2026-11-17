@@ -36,8 +36,7 @@ type LessonTimelineProps = {
   lessons: Lesson[];
   subjects: Subject[];
   teachers: Teacher[];
-  // Points per minute
-  scale: number;
+  pointsPerMinute: number;
   width: number;
   compact: boolean;
   now: Now;
@@ -56,23 +55,22 @@ export function LessonTimeline({
   lessons,
   subjects,
   teachers,
-  scale,
+  pointsPerMinute,
   width,
   compact,
   now,
 }: LessonTimelineProps) {
   useNativeColorsRefresh();
   const start = minutesOf(visiblePeriods[0].startTime);
-  // The latest end, not the last period's: an earlier period may end later and must not be clipped
-  const end = Math.max(...visiblePeriods.map((period) => minutesOf(period.endTime)));
-  const y = (minutes: number) => (minutes - start) * scale;
+  const latestEnd = Math.max(...visiblePeriods.map((period) => minutesOf(period.endTime)));
+  const y = (minutes: number) => (minutes - start) * pointsPerMinute;
   const columnWidth = (width - GUTTER_WIDTH - COLUMN_GAP * days.length) / days.length;
   const columnLeft = (index: number) =>
     GUTTER_WIDTH + COLUMN_GAP + index * (columnWidth + COLUMN_GAP);
-  const nowVisible = now.minutes >= start && now.minutes <= end;
+  const nowVisible = now.minutes >= start && now.minutes <= latestEnd;
 
   return (
-    <View style={{ width, height: y(end) + 8 }}>
+    <View style={{ width, height: y(latestEnd) + 8 }}>
       {visiblePeriods.map((period) => {
         const number = periodNumber(periods, period.id);
         return (
@@ -100,7 +98,7 @@ export function LessonTimeline({
             key={day.weekday}
             style={[
               styles.column,
-              { left: columnLeft(index), width: columnWidth, height: y(end) },
+              { left: columnLeft(index), width: columnWidth, height: y(latestEnd) },
               compact && isToday && styles.todayColumn,
             ]}>
             {blocks.map((block) => {
@@ -114,7 +112,7 @@ export function LessonTimeline({
                   teacher={findById(teachers, subject.teacherId)}
                   compact={compact}
                   top={y(block.start)}
-                  height={(block.end - block.start) * scale}
+                  height={(block.end - block.start) * pointsPerMinute}
                   state={lessonState(day.date, block, now)}
                 />
               );
@@ -146,6 +144,15 @@ type LessonCardProps = {
   state: LessonState;
 };
 
+// "3. Lektion", "3. und 4. Lektion" or "3.–5. Lektion"
+function periodsLabelOf(block: LessonBlock): string {
+  if (block.firstNumber === block.lastNumber) return periodLabel(block.firstNumber);
+  if (block.lastNumber - block.firstNumber === 1) {
+    return `${block.firstNumber}. und ${block.lastNumber}. Lektion`;
+  }
+  return `${block.firstNumber}.–${block.lastNumber}. Lektion`;
+}
+
 // A lesson as a card in the subject color. Tapping it opens the subject in this tab; a long press
 // offers the actions of every lesson (lessonActions): iOS as the link's context menu, Android as a
 // Material menu.
@@ -154,12 +161,7 @@ function LessonCard({ block, subject, teacher, compact, top, height, state }: Le
   const details = compact
     ? block.lesson.room
     : joinDetails(time, block.lesson.room, teacher?.abbreviation || undefined);
-  const periodsLabel =
-    block.firstNumber === block.lastNumber
-      ? periodLabel(block.firstNumber)
-      : block.lastNumber - block.firstNumber === 1
-        ? `${block.firstNumber}. und ${block.lastNumber}. Lektion`
-        : `${block.firstNumber}.–${block.lastNumber}. Lektion`;
+  const periodsLabel = periodsLabelOf(block);
   // Short cards put the details next to the name
   const twoLines = compact || height >= 52;
   const actions = lessonActions(subject.id);
@@ -280,7 +282,7 @@ const styles = StyleSheet.create({
     top: 0,
   },
   todayColumn: {
-    backgroundColor: colors.highlight,
+    backgroundColor: colors.todayColumn,
     borderRadius: 8,
     borderCurve: "continuous",
   },
@@ -344,7 +346,7 @@ const styles = StyleSheet.create({
     left: -4,
     right: 0,
     height: 2,
-    backgroundColor: colors.now,
+    backgroundColor: colors.currentTimeLine,
     justifyContent: "center",
   },
   nowDot: {
@@ -352,6 +354,6 @@ const styles = StyleSheet.create({
     height: 10,
     borderRadius: 5,
     marginLeft: -4,
-    backgroundColor: colors.now,
+    backgroundColor: colors.currentTimeLine,
   },
 });

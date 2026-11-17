@@ -16,7 +16,8 @@ import {
 import { confirm, showError } from "@/lib/confirm";
 import { today } from "@/lib/dates";
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024;
+// Exports are a few hundred KB at most; a larger file is not one and would block reading it
+const MAX_EXPORT_FILE_BYTES = 5 * 1024 * 1024;
 
 // Built when sharing, so a backup made after midnight carries the new date
 function fileName(kind: TransferKind) {
@@ -60,8 +61,7 @@ export async function pickAndImport() {
     });
     if (result.canceled) return;
     const picked = result.assets[0];
-    // Exports are a few hundred KB at most; a large file is not one and would block reading it
-    if ((picked.size ?? new File(picked.uri).size) > MAX_FILE_SIZE) {
+    if ((picked.size ?? new File(picked.uri).size) > MAX_EXPORT_FILE_BYTES) {
       showError("Import nicht möglich", NOT_A_SCHOOLOS_FILE);
       return;
     }

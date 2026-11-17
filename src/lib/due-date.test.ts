@@ -31,7 +31,7 @@ const fields = (changes: Partial<DueFields>): DueFields => ({
   dueChoice: "next",
   date: MONDAY,
   periodId: null,
-  periodTouched: false,
+  periodPickedByUser: false,
   ...changes,
 });
 
@@ -89,7 +89,7 @@ test("a Lektion picked for a chosen date is kept", () => {
     dueChoice: "custom",
     date: "2026-12-01",
     periodId: 11,
-    periodTouched: true,
+    periodPickedByUser: true,
   });
   expect(suggestDue(picked, lessons, periods, at(MONDAY, "07:00"))).toEqual({
     date: "2026-12-01",

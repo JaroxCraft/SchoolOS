@@ -12,7 +12,7 @@ import { NONE } from "@/components/search-picker";
 import { type SelectOption, SelectRow } from "@/components/select-row";
 import { sortSubjectsByUse, useSubjectPicker } from "@/components/subject-picker";
 import { useEntries, useLessons, useSubjects, useTeachers } from "@/db/queries";
-import type { EntryType } from "@/db/schema";
+import type { Entry, EntryType } from "@/db/schema";
 import { useEntryPlacement } from "@/hooks/use-entry-placement";
 import { useInk } from "@/hooks/use-ink";
 import { useNow } from "@/hooks/use-now";
@@ -72,11 +72,13 @@ export default function AgendaScreen() {
     );
   }
 
+  const matchesSubject = (entry: Entry) => {
+    if (subjectFilter === ALL_SUBJECTS) return true;
+    if (subjectFilter === NONE) return entry.subjectId === null;
+    return entry.subjectId === subjectFilter;
+  };
   const visible = entries.filter(
-    (entry) =>
-      (typeFilter === ALL || entry.type === typeFilter) &&
-      (subjectFilter === ALL_SUBJECTS ||
-        (subjectFilter === NONE ? entry.subjectId === null : entry.subjectId === subjectFilter))
+    (entry) => (typeFilter === ALL || entry.type === typeFilter) && matchesSubject(entry)
   );
 
   // Every entry stays open until it is checked off, even when overdue. One just checked off or

@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { DateField } from "@/components/date-field";
 import { DestructiveRow } from "@/components/rows";
 import { NONE, noneToNull } from "@/components/search-picker";
-import { SelectRow } from "@/components/select-row";
+import { type SelectOption, SelectRow } from "@/components/select-row";
 import { SheetForm } from "@/components/sheet-form";
 import { useSubjectPicker } from "@/components/subject-picker";
 import { TaskCheckbox } from "@/components/task-checkbox";
@@ -17,24 +17,21 @@ import { checkOffEntry } from "@/hooks/use-entry-placement";
 import { useNow } from "@/hooks/use-now";
 import { entryDeletion } from "@/lib/confirm-delete";
 import { formatDate } from "@/lib/dates";
-import { type DueChoice, dueChoiceDates, suggestDue } from "@/lib/due-date";
+import { type DueChoice, dueChoiceDates, type DueFields, suggestDue } from "@/lib/due-date";
 import { ENTRY_TYPE_INFO, ENTRY_TYPE_OPTIONS, NO_SUBJECT_LABEL } from "@/lib/entry-types";
 import { findById } from "@/lib/find";
 import { periodLabel } from "@/lib/schedule";
-import { NEUTRAL_COLOR } from "@/lib/subject-colors";
+import { ALLGEMEIN_COLOR } from "@/lib/subject-colors";
 
-type FormState = {
+// The subject and Lektion are NONE instead of null, as the pickers need a value
+type FormState = Omit<DueFields, "subjectId" | "periodId"> & {
   type: EntryType;
   title: string;
   description: string;
   subjectId: number;
-  date: string;
   periodId: number;
-  dueChoice: DueChoice;
   completed: boolean;
   topic: string;
-  // Set once the user picks the Lektion of a chosen date, so it is no longer suggested
-  periodTouched: boolean;
 };
 
 type EntryFormProps = {
@@ -71,7 +68,7 @@ export function EntryForm({ entry, initialSubjectId, subjects, periods, lessons 
           dueChoice: "custom",
           completed: entry.completed,
           topic: entry.topic ?? "",
-          periodTouched: true,
+          periodPickedByUser: true,
         }
       : derive({
           type: "homework",
@@ -83,7 +80,7 @@ export function EntryForm({ entry, initialSubjectId, subjects, periods, lessons 
           dueChoice: "next",
           completed: false,
           topic: "",
-          periodTouched: false,
+          periodPickedByUser: false,
         })
   );
 
@@ -108,6 +105,20 @@ export function EntryForm({ entry, initialSubjectId, subjects, periods, lessons 
   // ✓ only while there is something to save
   const canSave = dirty && form.title.trim().length > 0;
   const { saving, saveAndClose, deleteAndClose } = useClosingForm(dirty);
+
+  const dueOptions: SelectOption<DueChoice>[] = [
+    {
+      label: choiceDates.next ? `Nächste Lektion (${formatDate(choiceDates.next)})` : "Morgen",
+      value: "next",
+    },
+  ];
+  if (choiceDates.afterNext) {
+    dueOptions.push({
+      label: `Übernächste Lektion (${formatDate(choiceDates.afterNext)})`,
+      value: "afterNext",
+    });
+  }
+  dueOptions.push({ label: "Datum wählen", value: "custom" });
 
   const subjectPicker = useSubjectPicker({
     label: "Fach",
@@ -171,24 +182,8 @@ export function EntryForm({ entry, initialSubjectId, subjects, periods, lessons 
           <SelectRow
             label="Wann"
             value={form.dueChoice}
-            onChange={(dueChoice) => change({ dueChoice, periodTouched: false })}
-            options={[
-              {
-                label: choiceDates.next
-                  ? `Nächste Lektion (${formatDate(choiceDates.next)})`
-                  : "Morgen",
-                value: "next",
-              },
-              ...(choiceDates.afterNext
-                ? [
-                    {
-                      label: `Übernächste Lektion (${formatDate(choiceDates.afterNext)})`,
-                      value: "afterNext" as const,
-                    },
-                  ]
-                : []),
-              { label: "Datum wählen", value: "custom" },
-            ]}
+            onChange={(dueChoice) => change({ dueChoice, periodPickedByUser: false })}
+            options={dueOptions}
           />
           <DateField
             label="Datum"
@@ -198,7 +193,9 @@ export function EntryForm({ entry, initialSubjectId, subjects, periods, lessons 
           <SelectRow
             label="Lektion"
             value={form.periodId}
-            onChange={(periodId) => change({ periodId, periodTouched: true, dueChoice: "custom" })}
+            onChange={(periodId) =>
+              change({ periodId, periodPickedByUser: true, dueChoice: "custom" })
+            }
             options={[
               { label: "Keine", value: NONE },
               ...periods.map((period, index) => ({
@@ -211,7 +208,7 @@ export function EntryForm({ entry, initialSubjectId, subjects, periods, lessons 
             <TaskCheckbox
               label="Erledigt"
               value={form.completed}
-              color={findById(subjects, form.subjectId)?.color ?? NEUTRAL_COLOR}
+              color={findById(subjects, form.subjectId)?.color ?? ALLGEMEIN_COLOR}
               onValueChange={(completed) => change({ completed })}
             />
           )}

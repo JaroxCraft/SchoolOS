@@ -4,14 +4,14 @@ import { useState } from "react";
 import type { ExtraChoice } from "@/components/search-picker";
 import { SearchPickerSheet } from "@/components/search-picker-sheet";
 import { SubjectDot } from "@/components/subject-dot";
-import type { LessonSlot, Subject, Teacher } from "@/db/schema";
+import type { LessonDraft, Subject, Teacher } from "@/db/schema";
 import { useInk } from "@/hooks/use-ink";
 import { findById } from "@/lib/find";
-import { NEUTRAL_COLOR } from "@/lib/subject-colors";
+import { ALLGEMEIN_COLOR } from "@/lib/subject-colors";
 import { joinDetails } from "@/lib/text";
 
 // The subjects with the most lessons first (the ones picked most often), then by name.
-export function sortSubjectsByUse(subjects: Subject[], lessons: LessonSlot[]): Subject[] {
+export function sortSubjectsByUse(subjects: Subject[], lessons: LessonDraft[]): Subject[] {
   const counts = new Map<number, number>();
   for (const lesson of lessons) {
     counts.set(lesson.subjectId, (counts.get(lesson.subjectId) ?? 0) + 1);
@@ -28,7 +28,7 @@ type SubjectPickerSheetProps = {
   value: number;
   subjects: Subject[];
   teachers: Teacher[];
-  lessons: LessonSlot[];
+  lessons: LessonDraft[];
   extraChoices: ExtraChoice[];
   onChange: (value: number) => void;
 };
@@ -58,7 +58,7 @@ export function SubjectPickerSheet({
       ]}
       renderLeading={(subject) => <SubjectDot color={subject.color} />}
       getSupportingText={(subject) => joinDetails(subject.abbreviation, teacherOf(subject)?.name)}
-      extraLeading={<SubjectDot color={NEUTRAL_COLOR} />}
+      extraLeading={<SubjectDot color={ALLGEMEIN_COLOR} />}
     />
   );
 }

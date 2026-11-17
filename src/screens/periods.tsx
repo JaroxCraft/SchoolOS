@@ -94,9 +94,11 @@ export default function PeriodsEditScreen() {
       remove();
       return;
     }
+    const lessonsText = used === 1 ? "Eine Lektion" : `${used} Lektionen`;
+    const verb = used === 1 ? "wird" : "werden";
     confirm({
       title: "Letzte Lektionszeit entfernen?",
-      message: `${used === 1 ? "Eine Lektion" : `${used} Lektionen`} im Stundenplan zu dieser Zeit ${used === 1 ? "wird" : "werden"} beim Sichern ebenfalls entfernt.`,
+      message: `${lessonsText} im Stundenplan zu dieser Zeit ${verb} beim Sichern ebenfalls entfernt.`,
       confirmLabel: "Entfernen",
       onConfirm: remove,
     });

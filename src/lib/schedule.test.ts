@@ -3,7 +3,7 @@
 import { describe, expect, test } from "bun:test";
 
 import type { Lesson, Period } from "@/db/schema";
-import { minutesOf } from "@/lib/dates";
+import { minutesOf, type Weekday } from "@/lib/dates";
 import {
   lessonBlocks,
   lessonState,
@@ -34,7 +34,7 @@ const periods: Period[] = [
 ];
 
 let nextId = 1;
-const lesson = (weekday: number, periodId: number, subjectId: number, room: string | null) => ({
+const lesson = (weekday: Weekday, periodId: number, subjectId: number, room: string | null) => ({
   id: nextId++,
   weekday,
   periodId,

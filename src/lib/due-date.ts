@@ -18,8 +18,7 @@ export type DueFields = {
   dueChoice: DueChoice;
   date: string;
   periodId: number | null;
-  // Set once the user picks the Lektion of a chosen date, so it is no longer suggested
-  periodTouched: boolean;
+  periodPickedByUser: boolean;
 };
 
 export type Due = { date: string; periodId: number | null };
@@ -63,7 +62,7 @@ export function suggestDue(fields: DueFields, lessons: Lesson[], periods: Period
     return { date: pick?.date ?? addDays(now.date, 1), periodId: pick?.period.id ?? null };
   }
 
-  if (fields.periodTouched) return { date, periodId: fields.periodId };
+  if (fields.periodPickedByUser) return { date, periodId: fields.periodId };
   const lesson =
     subjectId === null ? undefined : subjectLessonOn(subjectId, date, lessons, periods);
   return { date, periodId: lesson?.period.id ?? null };
