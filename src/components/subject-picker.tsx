@@ -10,7 +10,6 @@ import { findById } from "@/lib/find";
 import { ALLGEMEIN_COLOR } from "@/lib/subject-colors";
 import { joinDetails } from "@/lib/text";
 
-// The subjects with the most lessons first (the ones picked most often), then by name.
 export function sortSubjectsByUse(subjects: Subject[], lessons: LessonDraft[]): Subject[] {
   const counts = new Map<number, number>();
   for (const lesson of lessons) {
@@ -33,8 +32,6 @@ type SubjectPickerSheetProps = {
   onChange: (value: number) => void;
 };
 
-// The subjects with color, abbreviation and teacher, the most used first, searchable by subject
-// name, abbreviation or teacher. Picking one closes the sheet.
 export function SubjectPickerSheet({
   subjects,
   teachers,

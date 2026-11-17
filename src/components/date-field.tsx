@@ -13,7 +13,6 @@ export type DateFieldProps = {
   mode?: "date" | "time";
 };
 
-// Android: a row that opens the Material date or time dialog.
 export function DateField({ label, value, onChange, mode = "date" }: DateFieldProps) {
   const [open, setOpen] = useState(false);
 

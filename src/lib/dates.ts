@@ -70,13 +70,11 @@ export function weekdayShort(weekday: number): string {
   return WEEKDAYS_SHORT[weekday % 7];
 }
 
-// "Mo, 2. Nov."
 export function formatDate(value: IsoDate): string {
   const date = parseISODate(value);
   return `${WEEKDAYS_SHORT[date.getDay()]}, ${date.getDate()}. ${MONTHS_SHORT[date.getMonth()]}`;
 }
 
-// "heute", "morgen", "in 3 Tagen", "gestern", "vor 4 Tagen", counted from `from` (today)
 export function relativeDay(value: IsoDate, from: IsoDate): string {
   const days = daysBetween(from, value);
   if (days === 0) return "heute";
@@ -95,14 +93,12 @@ export function minutesToTime(minutes: number): ClockTime {
   return `${pad(Math.floor(minutes / 60))}:${pad(minutes % 60)}`;
 }
 
-// The moment `minutes` after midnight of a date (wall-clock time), for notifications
 export function dateAt(value: IsoDate, minutes: number): Date {
   const result = parseISODate(value);
   result.setHours(0, minutes, 0, 0);
   return result;
 }
 
-// Today at the time, for the time pickers
 export function timeToDate(value: ClockTime): Date {
   return dateAt(today(), minutesOf(value));
 }

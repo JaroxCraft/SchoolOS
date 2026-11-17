@@ -4,7 +4,6 @@ type EntryTypeInfo = {
   label: string;
   // Not "Titel": iOS reads that as a contact field and offers the own phone number as AutoFill
   titlePlaceholder: string;
-  // The topic ("Stoff") and later a grade only apply to exams, presentations and submissions
   gradable: boolean;
 };
 
@@ -29,5 +28,4 @@ export const ENTRY_TYPE_OPTIONS = ENTRY_TYPES.map((type) => ({
   value: type,
 }));
 
-// The subject shown for an entry without one
 export const NO_SUBJECT_LABEL = "Allgemein";

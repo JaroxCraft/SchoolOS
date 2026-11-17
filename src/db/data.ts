@@ -22,8 +22,6 @@ import { TRANSFER_FORMAT, type TransferFile, type TransferKind } from "@/db/tran
 // Rows per insert statement, so a large file stays below SQLite's limit of bound variables
 const INSERT_CHUNK_SIZE = 500;
 
-// The values of a row for its table: fields the table does not have are dropped, missing
-// nullable ones become null.
 function columnValues<T extends Table>(table: T, row: object): T["$inferInsert"] {
   return Object.fromEntries(
     Object.keys(getTableColumns(table)).map((key) => [
@@ -33,12 +31,7 @@ function columnValues<T extends Table>(table: T, row: object): T["$inferInsert"]
   ) as T["$inferInsert"];
 }
 
-// The operations that replace whole tables at once: saving the period grid and the timetable,
-// resetting, export and import. Each one is a single transaction, so it happens completely or not
-// at all. Bound to a database once: the app binds them to its database in src/db/client.ts.
 export function dataOperations(db: Database) {
-  // Deletes all data, children before the rows they reference, and creates the settings row again
-  // like on a new installation. One transaction: an interrupted reset leaves the data untouched.
   function resetDatabase() {
     db.transaction((tx) => {
       for (const table of [...DATA_TABLES, settings]) {
@@ -48,8 +41,6 @@ export function dataOperations(db: Database) {
     });
   }
 
-  // Saves the edited period grid all at once, all or nothing: periods missing from it are deleted
-  // with their lessons, periods without an id are added.
   function savePeriods(grid: PeriodDraft[]) {
     db.transaction((tx) => {
       const kept = new Set(grid.map((period) => period.id));
@@ -66,8 +57,6 @@ export function dataOperations(db: Database) {
     });
   }
 
-  // Replaces the whole timetable with the edited one, all or nothing. Nothing references a lesson,
-  // so new ids do no harm.
   function saveLessons(timetable: LessonDraft[]) {
     db.transaction((tx) => {
       tx.delete(lessons).run();
@@ -87,7 +76,6 @@ export function dataOperations(db: Database) {
     const allPeriods = db.select().from(periods).all();
 
     if (kind === "timetable") {
-      // Classmates get the subjects of the timetable only, not the ones someone keeps for grades
       const usedSubjectIds = new Set(allLessons.map((lesson) => lesson.subjectId));
       const sharedSubjects = allSubjects.filter((subject) => usedSubjectIds.has(subject.id));
       const usedTeacherIds = new Set(sharedSubjects.map((subject) => subject.teacherId));
@@ -114,12 +102,6 @@ export function dataOperations(db: Database) {
     };
   }
 
-  // Replaces the data with the content of a file checked by parseTransferFile, in one
-  // transaction, so a failing import leaves everything as it was. A timetable file keeps entries,
-  // grades and semesters: entries and grades move to the imported subject and period with the
-  // same name and start time. Old subjects that are not in the file but still have grades stay
-  // (without lessons), so no grade is lost; other entries lose their subject or period
-  // ("Allgemein").
   function importData(file: TransferFile) {
     db.transaction((tx) => {
       const insert = <T extends Table>(table: T, rows: object[]) => {
@@ -150,7 +132,6 @@ export function dataOperations(db: Database) {
         return;
       }
 
-      // Matched before the old rows are deleted
       const oldEntries = tx.select().from(entries).all();
       const oldGrades = tx.select().from(grades).all();
       const gradedSubjectIds = new Set(oldGrades.map((grade) => grade.subjectId));
@@ -161,8 +142,6 @@ export function dataOperations(db: Database) {
         file.periods.map((period) => [period.startTime, period.id])
       );
 
-      // Old subject id → id after the import. Kept subjects get ids after the imported ones and
-      // lose their teacher, since all old teachers are replaced.
       const subjectIds = new Map<number, number>();
       const keptSubjects: Subject[] = [];
       let nextSubjectId = Math.max(0, ...file.subjects.map((subject) => subject.id)) + 1;
@@ -186,7 +165,6 @@ export function dataOperations(db: Database) {
           })
       );
 
-      // Semesters do not depend on the timetable and stay
       for (const table of DATA_TABLES.filter((table) => table !== semesters)) {
         tx.delete(table).run();
       }
@@ -202,7 +180,6 @@ export function dataOperations(db: Database) {
           periodId: entry.periodId === null ? null : (periodIds.get(entry.periodId) ?? null),
         }))
       );
-      // Every graded subject is either matched or kept
       insert(
         grades,
         oldGrades.map((grade) => ({ ...grade, subjectId: subjectIds.get(grade.subjectId)! }))

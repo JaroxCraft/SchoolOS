@@ -6,7 +6,6 @@ import type { Lesson, Period } from "@/db/schema";
 import { minutesOf } from "@/lib/dates";
 import { type DueFields, dueChoiceDates, suggestDue } from "@/lib/due-date";
 
-// 2026-11-16 is a Monday
 const MONDAY = "2026-11-16";
 const TUESDAY = "2026-11-17";
 const MATH = 1;

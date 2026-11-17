@@ -21,12 +21,8 @@ type TableStore<T> = {
   getSnapshot: () => T;
 };
 
-// Stores by table name, marked stale by the change listener below
 const invalidators = new Map<string, () => void>();
 
-// Reads the table synchronously on first use, so screens get their data right away and never show
-// an empty state while loading (the database is opened synchronously). After a change it is read
-// again only once someone asks for it, and only once for all screens that show it.
 function tableStore<T>(table: SQLiteTable, read: () => T): TableStore<T> {
   const listeners = new Set<() => void>();
   let snapshot: T;
@@ -74,7 +70,6 @@ function useTable<T>(store: TableStore<T>): T {
   return useSyncExternalStore(store.subscribe, store.getSnapshot);
 }
 
-// Periods are sorted by start time, which periodNumber relies on
 const periodsStore = tableStore(periods, () =>
   db.select().from(periods).orderBy(asc(periods.startTime)).all()
 );
@@ -114,7 +109,6 @@ export function useEntries() {
   return useTable(entriesStore);
 }
 
-// The same entries outside of React, e.g. when a notification is tapped
 export function getEntries() {
   return entriesStore.getSnapshot();
 }

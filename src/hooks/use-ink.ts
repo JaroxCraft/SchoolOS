@@ -5,10 +5,8 @@ import { SYSTEM_COLORS } from "@/lib/system-colors";
 export type Ink = {
   label: string;
   secondary: string;
-  // Row accessories such as the disclosure chevron
   tertiary: string;
   danger: string;
-  // Selection marks such as the checkmark of the chosen subject
   accent: string;
 };
 

@@ -13,7 +13,6 @@ import { useNavigationTheme } from "@/hooks/use-navigation-theme";
 // Opened by a link straight into a sheet (e.g. an entry), the tabs are still beneath it
 export const unstable_settings = { anchor: "(tabs)" };
 
-// The splash stays until the database is ready, instead of an empty screen in between
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
@@ -42,7 +41,6 @@ export default function RootLayout() {
       <AppStack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="settings" options={{ presentation: "modal", headerShown: false }} />
-        {/* iOS: the entry draws its own navigation bar (SheetForm), so the "+" can zoom into it */}
         <Stack.Screen
           name="entry/[id]"
           options={{ presentation: "modal", headerShown: Platform.OS !== "ios" }}

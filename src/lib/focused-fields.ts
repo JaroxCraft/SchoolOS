@@ -11,7 +11,6 @@ export function fieldFocused(field: TextInputRef | null, isFocused: boolean) {
   else focused.delete(field);
 }
 
-// Ends the editing: the cursor leaves the field and the keyboard closes.
 export function endEditing() {
   focused.forEach((field) => field.blur());
   focused.clear();

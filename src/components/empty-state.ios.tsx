@@ -8,8 +8,6 @@ import { type EmptyStateProps, EmptyStateView } from "@/components/empty-state-v
 // ContentUnavailableView draws nothing before iOS 17, while the app runs from iOS 16.4
 const HAS_CONTENT_UNAVAILABLE_VIEW = parseInt(String(Platform.Version), 10) >= 17;
 
-// iOS: the system's ContentUnavailableView, the placeholder of the Apple apps for a screen
-// without content, with the next step as a prominent button. iOS 16 gets the React Native one.
 export function EmptyState(props: EmptyStateProps) {
   if (!HAS_CONTENT_UNAVAILABLE_VIEW) return <EmptyStateView {...props} />;
 

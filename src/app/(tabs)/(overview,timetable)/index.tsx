@@ -26,9 +26,6 @@ const DONE_ICON = { sf: "checkmark", md: "check", color: SYSTEM_COLORS.green } a
 
 type SetupProps = { periods: Period[]; subjects: Subject[] };
 
-// Shown until the timetable has lessons: the three steps in the order they depend on each other,
-// and importing the timetable of a classmate as a shortcut. A step is pushed onto this tab; each
-// leads on to the next with "Weiter", the last one comes back here with "Fertig".
 function Setup({ periods, subjects }: SetupProps) {
   const steps = [
     {
@@ -109,8 +106,6 @@ export default function OverviewScreen() {
   }
 
   const upcomingLessons = nextLessons(lessons, periods, now);
-  // Every open entry in one list by date, whatever its type; overdue and missed ones in red.
-  // One checked off here leaves the list after a moment, animated.
   const openEntries = placeEntries(entries).open;
 
   const lessonsDate = upcomingLessons[0]?.date;
@@ -127,7 +122,6 @@ export default function OverviewScreen() {
           {upcomingLessons.length === 0 && (
             <Text textStyle={{ color: ink.secondary }}>Keine Lektionen im Stundenplan</Text>
           )}
-          {/* A long press offers the actions of every lesson, as on the timetable cards */}
           {upcomingLessons.map(({ lesson, period }) => {
             const subject = findById(subjects, lesson.subjectId);
             return (

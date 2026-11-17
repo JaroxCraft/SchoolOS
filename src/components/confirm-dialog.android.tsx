@@ -2,7 +2,6 @@ import { AlertDialog, Host, Text, TextButton } from "@expo/ui/jetpack-compose";
 
 import { closeConfirmDialog, useConfirmDialog } from "@/lib/confirm-dialog-store";
 
-// Android: the Material 3 dialog for confirm(), rendered once in the root layout.
 export function ConfirmDialog() {
   const options = useConfirmDialog();
 

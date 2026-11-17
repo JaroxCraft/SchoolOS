@@ -1,5 +1,3 @@
-// Builds every app icon asset from one definition: Mon, Thu and Fri, periods 1–4 of the
-// S3a timetable 2026/27, double lessons drawn as one block.
 // Run with `bun run icons`. Validate the .icon package afterwards with the compose-app-icon skill.
 
 import { copyFileSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
@@ -17,7 +15,6 @@ const RENDERED = join(import.meta.dirname, "rendered");
 
 const APP_STORE_ICON_SIZE = 1024;
 
-// iOS system colors of the subjects, light and dark
 const SUBJECTS = {
   deutsch: { light: "#007AFF", dark: "#0A84FF" },
   rzg: { light: "#FF2D55", dark: "#FF375F" },
@@ -60,8 +57,8 @@ const FREE_PERIODS: Block[] = [
   { column: 2, firstRow: 3, rowCount: 1 },
 ];
 
-// Android masks the adaptive icon to a circle of 72/108 and keeps 66/108 safe:
-// the whole grid has to fit into that circle.
+// Android masks the adaptive icon to a circle of 72/108 and keeps 66/108 safe. The grid's
+// diagonal fills 0.6, a deliberately smaller margin inside that safe zone.
 const ANDROID_SCALE = (0.6 * APP_STORE_ICON_SIZE) / Math.hypot(GRID_W, GRID_H);
 // The notification icon (24 dp) keeps a margin of 2 dp, so the grid fills 20/24 of it
 const NOTIFICATION_SCALE = ((20 / 24) * APP_STORE_ICON_SIZE) / Math.max(GRID_W, GRID_H);
@@ -174,16 +171,13 @@ function buildIconPackage() {
 
 // Returns the opaque light icon, which the App Store export uses unchanged
 function buildAppImages() {
-  // Fallback icon (Expo Go, older Android without adaptive icons)
   const lightIcon = opaquePng(svg(background("light") + grid("light")));
   write(join(IMAGES, "icon.png"), lightIcon);
-  // Dark variant for the about screen in dark mode
   write(join(IMAGES, "icon-dark.png"), opaquePng(svg(background("dark") + grid("dark"))));
   // The about screen on iOS shows the icon as the home screen does, rendered by Apple
   copyFileSync(join(RENDERED, "icon-ios-light.png"), join(IMAGES, "icon-ios.png"));
   console.log("  assets/images/icon-ios.png (copied from design/icon/rendered)");
 
-  // Android adaptive icon
   write(join(IMAGES, "android-icon-background.png"), png(svg(background("light"))));
   write(join(IMAGES, "android-icon-foreground.png"), png(svg(grid("light", ANDROID_SCALE))));
   write(join(IMAGES, "android-icon-monochrome.png"), png(svg(silhouette(ANDROID_SCALE))));
@@ -196,11 +190,9 @@ function buildAppImages() {
   return lightIcon;
 }
 
-// Stores, documentation and everything outside the app
 function buildExports(lightIcon: Uint8Array) {
   rmSync(EXPORT, { recursive: true, force: true });
   mkdirSync(EXPORT, { recursive: true });
-  // Corner radius of an iOS icon, for documents (the system draws the real shape)
   const corner = APP_STORE_ICON_SIZE * 0.2237;
 
   for (const mode of ["light", "dark"] as const) {

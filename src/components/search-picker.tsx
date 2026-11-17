@@ -14,46 +14,32 @@ import { SYSTEM_COLORS } from "@/lib/system-colors";
 // ("Frei") or no Lektion. Ids of saved rows start at 1, so 0 never collides with one.
 export const NONE = 0;
 
-// The id to save for a picked value: null for NONE
 export function noneToNull(id: number): number | null {
   return id === NONE ? null : id;
 }
 
-// Choices above the items, e.g. "Frei" in the timetable or "Allgemein" for entries
 export type ExtraChoice = { label: string; value: number };
 
-// A form right in the sheet, to add an item or to change one. It is pushed inside the sheet (iOS)
-// or takes the place of the list (Android). A new item is picked and the sheet closes; after a
-// change the list is shown again.
 export type PickerForm<T> = {
-  // The list action row that opens the form for a new item, e.g. "Lehrperson hinzufügen"
   addLabel: string;
-  // Title of the form for a new item, e.g. "Neue Lehrperson"
   newTitle: string;
-  // Title of the form for an existing item, its name like the form screens
   editTitle: (item: T) => string;
-  // The rows of the form
   fields: ReactNode;
   canSave: boolean;
   // Fills the form: empty for a new item, with the values of `item` to change it. Called each
   // time the form is opened, so a draft that was left with back or "Abbrechen" is not saved later.
   start: (item?: T) => void;
-  // Saves the form and returns the id of the item
   save: () => Promise<number>;
 };
 
-// A sheet listing items (subjects, teachers) to pick one, with a search field. The chosen one is
-// marked with a checkmark; picking one closes the sheet. See search-picker-sheet(.ios).tsx.
 export type SearchPickerSheetProps<T extends { id: number }> = {
   isPresented: boolean;
   onDismiss: () => void;
   title: string;
   searchPlaceholder: string;
   items: T[];
-  // Title of the section with the items
   itemsTitle: string;
   getLabel: (item: T) => string;
-  // The texts the search looks in
   getSearchText: (item: T) => (string | null | undefined)[];
   renderLeading?: (item: T) => ReactNode;
   getSupportingText?: (item: T) => string | undefined;
@@ -105,7 +91,6 @@ export function usePickerSections<T extends { id: number }>(
 
   // While the form saves, so a second tap cannot add the item twice
   const { saving, run } = useSaving();
-  // The name of the item the form changes, or the title for a new item
   const formTitle = (item: T | undefined) => {
     if (!form) return "";
     return item ? form.editTitle(item) : form.newTitle;

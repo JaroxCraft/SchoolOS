@@ -16,8 +16,6 @@ import { openScreen } from "@/lib/routes";
 import { SYSTEM_COLORS } from "@/lib/system-colors";
 import { typography } from "@/lib/typography";
 
-// iOS: the home screen icon as rendered by Apple (Liquid Glass, light only, already shaped).
-// Android: the generated icon in the current appearance, rounded here.
 const IOS_ICON = require("@/assets/images/icon-ios.png");
 const ANDROID_ICONS = {
   light: require("@/assets/images/icon.png"),
@@ -27,9 +25,6 @@ const ICON_SIZE = 80;
 
 const COPIED_LABEL_MS = 2000;
 
-// Deletes everything and starts over like a new installation, e.g. before handing on the phone or
-// to set up again from a classmate's timetable. Kept at the end of "Über SchoolOS", out of the
-// way of the everyday settings.
 function confirmReset() {
   confirm({
     title: "App zurücksetzen?",

@@ -25,10 +25,10 @@ const ZOOM_SOURCE_PARAM = "__internal_expo_router_zoom_transition_source_id";
 // sheet would slide up instead of growing out of the button.
 //
 // Closing it while it still zooms in would leave react-native-screens unable to present or dismiss
-// any modal until the app restarts (expo/expo#43804, fixed by software-mansion/react-native-screens
-// #4731, not released yet). So × and ✓ take a tap at any time, but carry it out once the sheet is
-// fully presented; and the "+" waits while the sheet shrinks back (isSheetClosing). A sheet opened
-// without the zoom (e.g. an entry from a list) slides down instead and holds back nothing.
+// any modal until the app restarts (expo/expo#43804; a fix is proposed in react-native-screens
+// PR #4731, which is not merged yet). So × and ✓ take a tap at any time, but carry it out once the
+// sheet is fully presented; and the "+" waits while the sheet shrinks back (isSheetClosing). A sheet
+// opened without the zoom (e.g. an entry from a list) slides down instead and holds back nothing.
 //
 // While the form has changes, swiping it down is off (gestureEnabled), so useDiscardGuard can ask
 // first: usePreventRemove does not catch the dismissal of a zoomed sheet, which expo-router only
@@ -37,10 +37,8 @@ export function SheetForm({ title, canSave, dirty, onSave, children }: SheetForm
   const navigation = useNavigation<NativeStackNavigationProp<Record<string, object | undefined>>>();
   const params = useRoute().params as Record<string, unknown> | undefined;
   const zoomed = !!params?.[ZOOM_SOURCE_PARAM];
-  // Memoized, so the option is only set when it changes (as in DiscardGuard)
   const options = useMemo(() => ({ gestureEnabled: !dirty }), [dirty]);
   const presented = useRef(false);
-  // A tap on × or ✓ during the presentation, carried out at its end
   const pending = useRef<(() => void) | null>(null);
 
   useEffect(() => {
@@ -64,7 +62,6 @@ export function SheetForm({ title, canSave, dirty, onSave, children }: SheetForm
       closed = true;
       releaseSheetClosing(false);
     });
-    // Swiping down was cancelled, the sheet stays
     const unsubscribeCancel = navigation.addListener("gestureCancel", () =>
       releaseSheetClosing(false)
     );

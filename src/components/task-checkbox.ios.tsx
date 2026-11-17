@@ -19,8 +19,6 @@ import { MIN_TAP_TARGET } from "@/constants/layout";
 import { useInk } from "@/hooks/use-ink";
 import { SYSTEM_COLORS } from "@/lib/system-colors";
 
-// The haptic of checking a task off or reopening it, from the checkbox or a row action. iOS: the
-// selection haptic, as in Reminders.
 export function toggleHaptic(_checked: boolean) {
   Haptics.selectionAsync();
 }

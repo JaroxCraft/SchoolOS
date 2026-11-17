@@ -45,7 +45,6 @@ type EntryFormProps = {
 export function EntryForm({ entry, initialSubjectId, subjects, periods, lessons }: EntryFormProps) {
   const now = useNow();
 
-  // Fills in the due date and period that follow from the other fields.
   const derive = (state: FormState): FormState => {
     const due = suggestDue(
       { ...state, subjectId: noneToNull(state.subjectId), periodId: noneToNull(state.periodId) },
@@ -97,12 +96,10 @@ export function EntryForm({ entry, initialSubjectId, subjects, periods, lessons 
     () => dueChoiceDates(subjectId, lessons, periods, now),
     [subjectId, lessons, periods, now]
   );
-  // The form as it was opened, to tell whether anything was changed
   const [initialForm] = useState(form);
   const dirty = (
     ["type", "title", "description", "subjectId", "date", "periodId", "completed", "topic"] as const
   ).some((field) => form[field] !== initialForm[field]);
-  // ✓ only while there is something to save
   const canSave = dirty && form.title.trim().length > 0;
   const { saving, saveAndClose, deleteAndClose } = useClosingForm(dirty);
 

@@ -27,7 +27,6 @@ const appVersion = isDevelopmentClient
 
 const appBuild = isDevelopmentClient ? null : Application.nativeBuildVersion;
 
-// "Version 1.1.0 (12)", or "Version 1.1.0 · Entwicklung" in Expo Go.
 export const versionLabel = isDevelopmentClient
   ? `Version ${appVersion} · Entwicklung`
   : `Version ${appVersion}${appBuild ? ` (${appBuild})` : ""}`;
@@ -38,7 +37,6 @@ const updates = isDevelopmentClient
   ? null
   : { id: Updates.updateId, channel: Updates.channel, runtime: Updates.runtimeVersion };
 
-// The JS bundle that is running: the one embedded in the build or a downloaded update.
 function updateLabel(): string {
   if (!updates) return "–";
   if (!Updates.isEnabled) return "Nicht aktiv";
@@ -71,7 +69,6 @@ export function appInfoRows(): AppInfoRow[] {
   ];
 }
 
-// Plain text for bug reports: one "Label: value" line per row, with full IDs.
 export function appInfoText(): string {
   const rows = appInfoRows().map((row) => `${row.label}: ${row.copyValue ?? row.value}`);
   return ["SchoolOS", ...rows].join("\n");

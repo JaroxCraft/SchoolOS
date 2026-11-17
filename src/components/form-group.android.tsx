@@ -33,24 +33,19 @@ import { type Ink, useInk } from "@/hooks/use-ink";
 import { endEditing } from "@/lib/focused-fields";
 import type { RowAction } from "@/lib/row-action";
 
-// Space between the sections, as in the FieldGroup of @expo/ui
 const SECTION_GAP = 24;
 const EDGE_PADDING = 16;
 const FLOATING_BUTTON_HEIGHT = 64;
 
-// Tapping beside the fields and rows ends the editing: the keyboard closes and the cursor leaves
-// the field. The rows and fields keep handling their own taps.
 const DISMISS_ON_TAP = clickable(endEditing, { indication: false });
 
 type SectionElement = ReactElement<{ children?: ReactNode; modifiers?: ModifierConfig[] }>;
 
 type RowFactory = {
   asListItem?: (props: unknown, ink: Ink) => ReactElement;
-  // RowActions: its row gets the actions as a long-press menu
   rowActions?: true;
 };
 
-// What the rows need from the list: the colors and which row's menu is open
 type Rows = {
   ink: Ink;
   openMenu: string | null;
@@ -86,9 +81,6 @@ function withMenu(item: ReactElement<ListItemProps>, menu: RowAction[], key: str
   });
 }
 
-// Replaces row components (NavigationRow, EntryRow …) in the sections by the list items they
-// render, see RowComponent, and gives rows with RowActions their menu. Fragments and arrays are
-// flattened like the sections do. `prefix` keeps the menu keys apart between the sections.
 function expandRows(node: ReactNode, rows: Rows, prefix: string): ReactNode {
   return Children.map(node, (child) => {
     if (!isValidElement<{ children?: ReactNode }>(child)) return child;
@@ -103,7 +95,6 @@ function expandRows(node: ReactNode, rows: Rows, prefix: string): ReactNode {
         : item;
     }
     if (type.asListItem) {
-      // The list item may carry RowActions itself (EntryRow), keyed by this row
       const key = `${prefix}/${String(child.key)}`;
       const [item] = Children.toArray(
         expandRows(type.asListItem(child.props, rows.ink), rows, key)
@@ -171,7 +162,6 @@ function expandSections(node: ReactNode, rows: Rows, animateRows: boolean): Reac
 export function FormGroup({ children, modifiers = [], floatingButton, rowsKey }: FormGroupProps) {
   const ink = useInk();
   const colors = useMaterialColors();
-  // The row whose long-press menu is open
   const [openMenu, setOpenMenu] = useState<string | null>(null);
 
   return (

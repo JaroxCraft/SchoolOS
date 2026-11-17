@@ -16,7 +16,6 @@ type PushedFormProps = {
   // More buttons at the top right, before ✓, e.g. "Weiter" of a setup step. <Stack.Toolbar.Button>
   // elements, not wrapped in another component: iOS ignores those.
   toolbar?: ReactNode;
-  // The sections of the form
   children: ReactNode;
 };
 

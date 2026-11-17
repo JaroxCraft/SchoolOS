@@ -8,7 +8,6 @@ type LabeledRowProps = {
   children: ReactNode;
 };
 
-// A form row with a label on the left and a control or value on the right.
 export function LabeledRow({ label, children }: LabeledRowProps) {
   const ink = useInk();
 

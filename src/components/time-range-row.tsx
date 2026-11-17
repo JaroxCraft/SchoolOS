@@ -12,7 +12,6 @@ export type TimeRangeRowProps = {
   onChange: (start: ClockTime, end: ClockTime) => void;
 };
 
-// Android: a label with the start and end time as buttons that open the Material time dialog.
 export function TimeRangeRow({ label, start, end, onChange }: TimeRangeRowProps) {
   const ink = useInk();
   const [editing, setEditing] = useState<"start" | "end" | null>(null);

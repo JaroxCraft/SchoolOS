@@ -3,7 +3,6 @@ import { TextField } from "@/components/text-field";
 // The rules of the name and Kürzel of a Fach and a Lehrperson, shared by their forms.
 
 type AbbreviationFieldProps = {
-  // The name typed so far
   name: string;
   // Makes the Kürzel from the name, e.g. subjectAbbreviation
   makeAbbreviation: (name: string) => string;

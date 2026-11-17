@@ -4,7 +4,6 @@ import { FloatingActionButton, Icon } from "@expo/ui/jetpack-compose";
 import { useSymbol } from "@/hooks/use-symbol";
 import { NEW_ENTRY, openScreen } from "@/lib/routes";
 
-// Android: the Material floating action button that opens a new entry.
 export function AddButton() {
   const icon = useSymbol("plus", "add");
 

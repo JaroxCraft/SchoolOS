@@ -2,9 +2,7 @@ import { ActionSheetIOS, Alert } from "react-native";
 
 import type { ConfirmOptions } from "@/lib/confirm";
 
-// iOS: asks before an action that changes or deletes data. A destructive choice the user started
-// (delete, discard, reset) is an action sheet with the red button on top and "Abbrechen" below;
-// anything else is an alert (Apple HIG, action sheets and alerts).
+// A destructive choice is an action sheet, anything else an alert (Apple HIG).
 export function confirm({
   title,
   message,

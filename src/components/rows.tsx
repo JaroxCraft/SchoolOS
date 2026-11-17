@@ -9,10 +9,6 @@ import { type Ink, useInk } from "@/hooks/use-ink";
 import { useSymbol } from "@/hooks/use-symbol";
 import type { RowSymbol } from "@/lib/row-action";
 
-// Every tappable row shows what it does: a chevron opens a screen, an arrow opens a web page, an
-// accent-colored label runs an action (add, write an email). Rows without either only show a value
-// (LabeledRow).
-//
 // Row components carry an `asListItem` that returns their list item directly. <FormGroup> uses it
 // on Android: there a section draws its direct list items as rows, but wraps any other component
 // in a list item of its own, which doubles the padding and makes the row twice as tall.
@@ -41,7 +37,6 @@ const navigationItem = ({ icon, leading, ...props }: NavigationRowProps) => (
   />
 );
 
-// Opens another screen: disclosure chevron on the right, optionally an icon on the left.
 export const NavigationRow: RowComponent<NavigationRowProps> = Object.assign(
   (props: NavigationRowProps) => navigationItem(props),
   { asListItem: navigationItem }
@@ -61,7 +56,6 @@ const linkItem = ({ url, icon, leading, ...props }: LinkRowProps) => (
   />
 );
 
-// Opens a web page in the in-app browser: an arrow pointing out of the app on the right.
 export const LinkRow: RowComponent<LinkRowProps> = Object.assign(
   (props: LinkRowProps) => linkItem(props),
   { asListItem: linkItem }
@@ -72,7 +66,6 @@ type ActionRowProps = {
   onPress: () => void;
 };
 
-// The whole row is tappable, its label in the given color, optionally an icon on the left.
 const coloredItem = (label: string, color: string, onPress: () => void, icon?: RowSymbol) => (
   <ListItem onPress={onPress} leading={icon ? <RowIcon {...icon} /> : undefined}>
     <Text textStyle={{ color }}>{label}</Text>
@@ -81,8 +74,6 @@ const coloredItem = (label: string, color: string, onPress: () => void, icon?: R
 
 type IconActionRowProps = ActionRowProps & { icon?: RowSymbol };
 
-// Runs an action right away: a text button in the accent color (system blue / Material primary).
-// With an icon it lines up with the settings rows around it, still without a trailing accessory.
 export const ActionRow: RowComponent<IconActionRowProps> = Object.assign(
   function ActionRowComponent({ label, onPress, icon }: IconActionRowProps) {
     const ink = useInk();
@@ -95,7 +86,6 @@ export const ActionRow: RowComponent<IconActionRowProps> = Object.assign(
   }
 );
 
-// Deletes something: the label in red.
 export const DestructiveRow: RowComponent<ActionRowProps> = Object.assign(
   function DestructiveRowComponent({ label, onPress }: ActionRowProps) {
     const ink = useInk();

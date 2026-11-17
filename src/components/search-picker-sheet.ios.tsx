@@ -40,10 +40,7 @@ export function SearchPickerSheet<T extends { id: number }>(props: SearchPickerS
   const ink = useInk();
   const [query, setQuery] = useState("");
   const [path, setPath] = useState<string[]>([]);
-  // Follows the grabber, so pulling the sheet up for the form is a change even after the user
-  // pulled it down again
   const [detent, setDetent] = useState<PresentationDetent>("medium");
-  // The item the form changes; undefined when it adds one
   const [editing, setEditing] = useState<T>();
   const searchText = useNativeState("");
   const { form } = props;
@@ -129,7 +126,6 @@ export function SearchPickerSheet<T extends { id: number }>(props: SearchPickerS
                     <ToolbarItem placement="confirmationAction">
                       <Button
                         label={editing ? "Sichern" : "Hinzufügen"}
-                        // An icon in the bar, as the ✓ of Music; the label is for VoiceOver
                         systemImage="checkmark"
                         modifiers={[disabled(!form.canSave || saving)]}
                         onPress={() => saveForm(editing !== undefined, () => setPath([]))}

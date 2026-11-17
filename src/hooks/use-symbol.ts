@@ -3,7 +3,6 @@ import { unstable_getMaterialSymbolSourceAsync } from "expo-symbols";
 import { useEffect, useState } from "react";
 import { type ImageSourcePropType, Platform } from "react-native";
 
-// Material Symbols loaded so far, so screens opened again show their buttons right away
 const androidIcons = new Map<AndroidSymbol, ImageSourcePropType>();
 // Loads in flight, so rows mounting together share one fetch per symbol
 const loading = new Map<AndroidSymbol, Promise<ImageSourcePropType | null>>();

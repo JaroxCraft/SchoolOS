@@ -19,14 +19,11 @@ const DAY_PADDING = 2;
 const DAY_HEIGHT = CIRCLE + 2 * DAY_PADDING;
 // Grows the tap target to MIN_TAP_TARGET without moving the day
 const HIT_SLOP = (MIN_TAP_TARGET - DAY_HEIGHT) / 2;
-// The pop of the selection circle, as a spring with a light overshoot. A tap or swipe starts it,
-// so it is a spring and can be interrupted by the next one; it runs on the UI thread.
 const POP = { duration: 320, dampingRatio: 0.62 };
 const REDUCED_MOTION_FADE = { duration: 200 };
 
 export type WeekStripProps = {
   days: SchoolDay[];
-  // The day shown in the day view; none in the week view
   selected: number | null;
   today: string;
   onSelect: (weekday: Weekday) => void;
@@ -35,9 +32,6 @@ export type WeekStripProps = {
   gap: number;
 };
 
-// The school days of the week, like the week row of Calendar but without dates, since the
-// timetable is the same every week. Today is in the accent color; the chosen day sits on a filled
-// circle, in the accent color if it is today and in the text color otherwise, as in Calendar.
 export function WeekStrip({ days, selected, today, onSelect, inset, gap }: WeekStripProps) {
   return (
     <View style={[styles.row, { paddingLeft: inset, gap }]} accessibilityRole="tablist">
@@ -61,9 +55,6 @@ type WeekDayProps = {
   onSelect: (weekday: Weekday) => void;
 };
 
-// Every day keeps its circle; selecting a day springs the new circle up from half its size while
-// the old one shrinks away at the same time, and the text color follows. The circle already
-// selected when the screen opens is simply there.
 function WeekDay({ weekday, selected, isToday, onSelect }: WeekDayProps) {
   const ink = useInk();
   const dark = useColorScheme() === "dark";

@@ -23,8 +23,6 @@ function actionButton(action: RowAction, swipe: boolean) {
   );
 }
 
-// iOS: the swipe actions and the long-press context menu of a list row, as in Mail, Reminders and
-// Notes. Destructive actions are red and come last in the menu.
 export function RowActions({ leading, trailing, menu, children }: RowActionsProps) {
   const row = menu?.length ? (
     <ContextMenu>

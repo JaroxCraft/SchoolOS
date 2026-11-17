@@ -5,17 +5,12 @@ import { StyleSheet, Text, View } from "react-native";
 import { colors, useNativeColorsRefresh } from "@/constants/colors";
 
 export type EmptyStateProps = {
-  // SF Symbol on iOS, Material Symbol on Android
   icon?: SymbolViewProps["name"];
   title: string;
   message: string;
-  // The next step, e.g. opening the settings to set up the timetable
   action?: { label: string; onPress: () => void };
 };
 
-// Centered placeholder for a screen without content, drawn with React Native: the empty state on
-// Android and on iOS 16, where the system's ContentUnavailableView does not exist yet (see
-// empty-state.ios.tsx).
 export function EmptyStateView({ icon, title, message, action }: EmptyStateProps) {
   useNativeColorsRefresh();
 

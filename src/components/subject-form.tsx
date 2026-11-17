@@ -19,12 +19,10 @@ import { subjectAbbreviation } from "@/lib/text";
 
 type SubjectFormProps = {
   subject: Subject | undefined;
-  // Colors of the other subjects (by id), for the "used" dots of the swatches
   usedColors: string[];
   teachers: Teacher[];
 };
 
-// New subjects get the first color that is not taken yet.
 function firstFreeColor(usedColors: string[]): string {
   return (SUBJECT_COLORS.find((option) => !usedColors.includes(option.value)) ?? SUBJECT_COLORS[0])
     .value;
@@ -94,12 +92,10 @@ export function SubjectForm({ subject, usedColors, teachers }: SubjectFormProps)
           </FieldGroup.SectionFooter>
         </FieldGroup.Section>
 
-        {/* iOS: a row with the system color picker; Android: the color swatches */}
         <FieldGroup.Section title={Platform.OS === "android" ? "Farbe" : undefined}>
           <ColorField value={color} onChange={setColor} usedColors={usedColors} />
           <FieldGroup.SectionFooter>
             <FooterText>
-              {/* Only the Android swatches mark the colors other subjects have */}
               {Platform.OS === "android"
                 ? "Die Farbe erscheint im Stundenplan und bei den Einträgen. Ein Punkt markiert Farben, die schon ein anderes Fach hat."
                 : "Die Farbe erscheint im Stundenplan und bei den Einträgen."}
