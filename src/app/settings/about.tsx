@@ -1,7 +1,7 @@
 import { Column, FieldGroup, RNHostView, Row, Spacer, Text } from "@expo/ui";
 import * as Clipboard from "expo-clipboard";
 import * as Haptics from "expo-haptics";
-import { router, Stack } from "expo-router";
+import { Stack } from "expo-router";
 import { useEffect, useState } from "react";
 import { Image, Platform, useColorScheme } from "react-native";
 
@@ -12,7 +12,7 @@ import { resetDatabase } from "@/db/actions";
 import { useInk } from "@/hooks/use-ink";
 import { appInfoRows, appInfoText, FEEDBACK_URL, versionLabel, WEBSITE_URL } from "@/lib/app-info";
 import { confirm } from "@/lib/confirm";
-import { openScreen } from "@/lib/routes";
+import { openScreen, showOverview } from "@/lib/routes";
 import { SYSTEM_COLORS } from "@/lib/system-colors";
 import { typography } from "@/lib/typography";
 
@@ -34,9 +34,7 @@ function confirmReset() {
     onConfirm: () => {
       resetDatabase();
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      // Back to the existing tabs, popping their stacks; replace would put a second set of tabs
-      // on top of the old ones
-      router.dismissTo("/");
+      showOverview();
     },
   });
 }
