@@ -1,65 +1,56 @@
-import type { Entry, EntryType, Subject } from "@/db/schema";
-import { daysBetween, formatDate } from "@/lib/dates";
+import type { Entry, Subject } from "@/db/schema";
+import { daysBetween, formatDate, isoWeekday, weekdayName } from "@/lib/dates";
 import { ENTRY_TYPE_INFO } from "@/lib/entry-types";
 
 // The wording of the reminders (spec 4.5): several variants per text, so the same notification
-// never reads the same on two days in a row, and more urgent the closer the date. Motivating,
-// without pressure.
+// never reads the same on two days in a row, worded per type. Motivating, without pressure.
 
-// An exam, presentation or submission whose study period runs on the day of the notification
-export type StudyItem = { entry: Entry; subject: Subject | undefined; daysLeft: number };
+// An exam, presentation or submission due up to the next school day
+export type DueItem = { entry: Entry; subject: Subject | undefined };
 
 // Variants change from one day to the next: consecutive days get consecutive variants
 function pick(variants: string[], day: string): string {
   return variants[daysBetween("2000-01-01", day) % variants.length];
 }
 
+const capitalize = (text: string) => text[0].toUpperCase() + text.slice(1);
+
+// "morgen" for the day after `day`, else "am Montag"
+export function whenText(date: string, day: string): string {
+  return daysBetween(day, date) === 1 ? "morgen" : `am ${weekdayName(isoWeekday(date))}`;
+}
+
 // «Prüfung Französisch «Voci»», «Abgabe «Laborbericht»» for an entry without subject
-function studyWhat({ entry, subject }: StudyItem): string {
+function dueWhat({ entry, subject }: DueItem): string {
   return `${[ENTRY_TYPE_INFO[entry.type].label, subject?.name].filter(Boolean).join(" ")} «${entry.title}»`;
 }
 
-const LAST_DAY: Partial<Record<EntryType, string[]>> = {
+const DUE_LINES: Record<string, string[]> = {
   exam: [
-    "Morgen: {what} – letzte Wiederholung?",
-    "{what} ist morgen – nochmals alles durchgehen?",
-    "Morgen ist es so weit: {what}. Du schaffst das!",
+    "{When}: {what} – letzte Wiederholung?",
+    "{what} ist {when} – nochmals alles durchgehen?",
+    "{When} ist es so weit: {what}. Du schaffst das!",
   ],
   presentation: [
-    "Morgen: {what} – ein letzter Durchgang?",
-    "{what} ist morgen – nochmals laut üben?",
-    "Morgen ist es so weit: {what}. Du schaffst das!",
+    "{When}: {what} – ein letzter Durchgang?",
+    "{what} ist {when} – nochmals laut üben?",
+    "{When} ist es so weit: {what}. Du schaffst das!",
   ],
   submission: [
-    "Morgen: {what} – alles bereit?",
-    "{what} ist morgen fällig – fehlt noch etwas?",
-    "Morgen ist es so weit: {what}. Fast geschafft!",
+    "{When}: {what} – alles bereit?",
+    "{what} ist {when} fällig – fehlt noch etwas?",
+    "{When} ist es so weit: {what}. Fast geschafft!",
   ],
 };
 
-const FIRST_DAY = [
-  "{what} in {n} Tagen – guter Moment zum Starten",
-  "{what} in {n} Tagen – heute ist Lernbeginn",
-  "Ab heute lernen: {what} in {n} Tagen",
-];
-
-const MIDDLE = [
-  "{what} in {n} Tagen – dranbleiben!",
-  "{what} in {n} Tagen – heute ein Stück weiter?",
-  "Noch {n} Tage: {what}",
-];
-
-// One line of a study item: relaxed at the study start, urgent the day before
-export function studyLine(item: StudyItem, day: string): string {
-  const variants =
-    item.daysLeft === 1
-      ? (LAST_DAY[item.entry.type] ?? LAST_DAY.exam!)
-      : item.entry.studyStart === day
-        ? FIRST_DAY
-        : MIDDLE;
-  return pick(variants, day)
-    .replace("{what}", studyWhat(item))
-    .replace("{n}", String(item.daysLeft));
+// One line of an exam, presentation or submission, e.g. "Morgen: Prüfung Französisch «Voci» –
+// letzte Wiederholung?"
+export function dueLine(item: DueItem, day: string): string {
+  const when = whenText(item.entry.date, day);
+  return pick(DUE_LINES[item.entry.type] ?? DUE_LINES.exam, day)
+    .replace("{When}", capitalize(when))
+    .replace("{when}", when)
+    .replace("{what}", dueWhat(item));
 }
 
 // "Mathematik: S. 42", with the date when the homework is not due on the school day itself
@@ -68,11 +59,11 @@ export function homeworkLine(entry: Entry, subject: Subject | undefined, schoolD
   return entry.date === schoolDay ? line : `${line} (${formatDate(entry.date)})`;
 }
 
+// `dayName`: "morgen", or the weekday of a later school day ("Montag")
 export function summaryTitle(
-  // "morgen", or the weekday of a later school day ("Montag")
   dayName: string,
   hasHomework: boolean,
-  study: StudyItem[],
+  schoolDay: string,
   day: string
 ): string {
   if (hasHomework) {
@@ -81,13 +72,8 @@ export function summaryTitle(
       day
     );
   }
-  if (study.some((item) => item.daysLeft === 1)) {
-    return pick(["Morgen ist es so weit", "Endspurt", "Letzte Vorbereitung"], day);
-  }
-  if (study.some((item) => item.entry.studyStart === day)) {
-    return pick(["Lernbeginn", "Zeit zum Starten", "Guter Moment zum Lernen"], day);
-  }
-  return pick(["Dranbleiben", "Lernzeit", "Heute ein Stück weiter"], day);
+  const when = capitalize(whenText(schoolDay, day));
+  return pick([`${when} ist es so weit`, "Endspurt", "Letzte Vorbereitung"], day);
 }
 
 export function secondReminderTitle(dayName: string, day: string): string {
