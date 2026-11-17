@@ -31,8 +31,7 @@ type FormState = {
   dueChoice: DueChoice;
   completed: boolean;
   topic: string;
-  // Set once the user picks the value, so it is no longer derived automatically
-  dateTouched: boolean;
+  // Set once the user picks the Lektion of a chosen date, so it is no longer suggested
   periodTouched: boolean;
 };
 
@@ -71,7 +70,6 @@ export function EntryForm({ entry, initialSubjectId, subjects, periods, lessons 
           dueChoice: "custom",
           completed: entry.completed,
           topic: entry.topic ?? "",
-          dateTouched: true,
           periodTouched: true,
         }
       : derive({
@@ -84,7 +82,6 @@ export function EntryForm({ entry, initialSubjectId, subjects, periods, lessons 
           dueChoice: "next",
           completed: false,
           topic: "",
-          dateTouched: false,
           periodTouched: false,
         })
   );
@@ -166,52 +163,48 @@ export function EntryForm({ entry, initialSubjectId, subjects, periods, lessons 
           {subjectPicker.row}
         </FieldGroup.Section>
 
+        {/* The same for every type: a quick choice fills in date and Lektion, changing either
+            of them by hand makes it "Datum wählen" */}
         <FieldGroup.Section title="Termin">
-          {form.type === "homework" && (
-            <SelectRow
-              label="Fällig"
-              value={form.dueChoice}
-              onChange={(dueChoice) => change({ dueChoice })}
-              options={[
-                {
-                  label: choiceDates.next
-                    ? `Nächste Lektion (${formatDate(choiceDates.next)})`
-                    : "Morgen",
-                  value: "next",
-                },
-                ...(choiceDates.afterNext
-                  ? [
-                      {
-                        label: `Übernächste Lektion (${formatDate(choiceDates.afterNext)})`,
-                        value: "afterNext" as const,
-                      },
-                    ]
-                  : []),
-                { label: "Datum wählen", value: "custom" },
-              ]}
-            />
-          )}
-          {(form.type !== "homework" || form.dueChoice === "custom") && (
-            <DateField
-              label="Datum"
-              value={form.date}
-              onChange={(date) => change({ date, dateTouched: true })}
-            />
-          )}
-          {form.type !== "homework" && (
-            <SelectRow
-              label="Lektion"
-              value={form.periodId}
-              onChange={(periodId) => change({ periodId, periodTouched: true })}
-              options={[
-                { label: "Keine", value: NONE },
-                ...periods.map((period, index) => ({
-                  label: `${index + 1}. Lektion (${period.startTime})`,
-                  value: period.id,
-                })),
-              ]}
-            />
-          )}
+          <SelectRow
+            label="Wann"
+            value={form.dueChoice}
+            onChange={(dueChoice) => change({ dueChoice, periodTouched: false })}
+            options={[
+              {
+                label: choiceDates.next
+                  ? `Nächste Lektion (${formatDate(choiceDates.next)})`
+                  : "Morgen",
+                value: "next",
+              },
+              ...(choiceDates.afterNext
+                ? [
+                    {
+                      label: `Übernächste Lektion (${formatDate(choiceDates.afterNext)})`,
+                      value: "afterNext" as const,
+                    },
+                  ]
+                : []),
+              { label: "Datum wählen", value: "custom" },
+            ]}
+          />
+          <DateField
+            label="Datum"
+            value={form.date}
+            onChange={(date) => change({ date, dueChoice: "custom" })}
+          />
+          <SelectRow
+            label="Lektion"
+            value={form.periodId}
+            onChange={(periodId) => change({ periodId, periodTouched: true, dueChoice: "custom" })}
+            options={[
+              { label: "Keine", value: NONE },
+              ...periods.map((period, index) => ({
+                label: `${index + 1}. Lektion (${period.startTime})`,
+                value: period.id,
+              })),
+            ]}
+          />
           {entry && (
             <TaskCheckbox
               label="Erledigt"

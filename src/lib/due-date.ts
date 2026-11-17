@@ -1,5 +1,6 @@
-// The due date (Fälligkeit) the entry form suggests, from the timetable.
-import type { EntryType, Lesson, Period } from "@/db/schema";
+// When an entry is due (Fälligkeit), suggested by the entry form from the timetable. The same for
+// every type: at the next lesson of its subject, at the one after, or on a chosen date.
+import type { Lesson, Period } from "@/db/schema";
 import { addDays } from "@/lib/dates";
 import {
   type LessonOccurrence,
@@ -8,30 +9,28 @@ import {
   upcomingSubjectLessons,
 } from "@/lib/schedule";
 
-// "Fällig" of homework: at the next lesson of its subject, at the one after, or on a chosen date
 export type DueChoice = "next" | "afterNext" | "custom";
 
 // The fields of the entry form the due date follows from. A null subject is "Allgemein", a null
 // period "Keine".
 export type DueFields = {
-  type: EntryType;
   subjectId: number | null;
   dueChoice: DueChoice;
   date: string;
   periodId: number | null;
-  // Set once the user picks the value, so it is no longer suggested
-  dateTouched: boolean;
+  // Set once the user picks the Lektion of a chosen date, so it is no longer suggested
   periodTouched: boolean;
 };
 
 export type Due = { date: string; periodId: number | null };
 
-// The dates behind the "Fällig" choices of homework; null if the subject has no such lesson, so
-// "next" falls back to tomorrow and "afterNext" is not offered.
+// The dates behind the choices; null if the subject has no such lesson, so "next" falls back to
+// tomorrow and "afterNext" is not offered.
 export type DueChoiceDates = { next: string | null; afterNext: string | null };
 
-// The lessons homework can be due at: the next two of its subject after `now`
-function homeworkLessons(
+// The next two lessons of the subject after `now`: the lesson in progress does not count (what is
+// given in it is due at the following one), a later one today does
+function nextLessons(
   subjectId: number | null,
   lessons: Lesson[],
   periods: Period[],
@@ -46,40 +45,26 @@ export function dueChoiceDates(
   periods: Period[],
   now: Now
 ): DueChoiceDates {
-  const [next, afterNext] = homeworkLessons(subjectId, lessons, periods, now);
+  const [next, afterNext] = nextLessons(subjectId, lessons, periods, now);
   return { next: next?.date ?? null, afterNext: afterNext?.date ?? null };
 }
 
-// The date and period that follow from the other fields:
-// - Homework is due at the next lesson of its subject or the one after (the next one if there is
-//   none after it), tomorrow if the subject has no lessons; a chosen date is kept.
-// - Other entries are announced ahead, so until the date is touched it is the first lesson of the
-//   subject from tomorrow on (tomorrow without lessons); until the period is touched it is the
-//   subject's lesson on that date.
+// The date and Lektion that follow from the other fields:
+// - "next" and "afterNext" take the date and Lektion of that lesson of the subject ("afterNext"
+//   the next one if there is none after it), tomorrow without a Lektion if it has no lessons.
+// - A chosen date is kept; its Lektion is the subject's lesson on that date until the user picks
+//   one.
 export function suggestDue(fields: DueFields, lessons: Lesson[], periods: Period[], now: Now): Due {
-  const tomorrow = addDays(now.date, 1);
-  const { subjectId } = fields;
+  const { subjectId, date } = fields;
 
-  if (fields.type === "homework") {
-    if (fields.dueChoice === "custom") return { date: fields.date, periodId: fields.periodId };
-    const [first, second] = homeworkLessons(subjectId, lessons, periods, now);
+  if (fields.dueChoice !== "custom") {
+    const [first, second] = nextLessons(subjectId, lessons, periods, now);
     const pick = fields.dueChoice === "next" ? first : (second ?? first);
-    return { date: pick?.date ?? tomorrow, periodId: pick?.period.id ?? null };
+    return { date: pick?.date ?? addDays(now.date, 1), periodId: pick?.period.id ?? null };
   }
 
-  let date = fields.date;
-  if (!fields.dateTouched) {
-    const [first] =
-      subjectId === null
-        ? []
-        : upcomingSubjectLessons(subjectId, lessons, periods, 1, { date: tomorrow, minutes: 0 });
-    date = first?.date ?? tomorrow;
-  }
-  let periodId = fields.periodId;
-  if (!fields.periodTouched) {
-    const lesson =
-      subjectId === null ? undefined : subjectLessonOn(subjectId, date, lessons, periods);
-    periodId = lesson?.period.id ?? null;
-  }
-  return { date, periodId };
+  if (fields.periodTouched) return { date, periodId: fields.periodId };
+  const lesson =
+    subjectId === null ? undefined : subjectLessonOn(subjectId, date, lessons, periods);
+  return { date, periodId: lesson?.period.id ?? null };
 }
