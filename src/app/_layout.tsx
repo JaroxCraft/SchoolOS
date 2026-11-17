@@ -10,6 +10,7 @@ import { Reminders } from "@/components/reminders";
 import { initDatabase } from "@/db/actions";
 import { useDatabaseMigrations } from "@/db/migrate";
 import { useNavigationTheme } from "@/hooks/use-navigation-theme";
+import { useOpeningRelease } from "@/lib/routes";
 
 // Opened by a link straight into a sheet (e.g. an entry), the tabs are still beneath it
 export const unstable_settings = { anchor: "(tabs)" };
@@ -20,6 +21,7 @@ SplashScreen.preventAutoHideAsync();
 export default function RootLayout() {
   const theme = useNavigationTheme();
   const { success, error } = useDatabaseMigrations();
+  useOpeningRelease();
 
   useEffect(() => {
     if (success || error) SplashScreen.hide();

@@ -1,20 +1,36 @@
-import { type Href, router, useRoute } from "expo-router";
+import { type Href, router, useNavigationContainerRef, useRoute } from "expo-router";
+import { useEffect } from "react";
 
 import type { RowAction } from "@/components/row-actions";
 import { isSheetClosing } from "@/lib/sheet-transition";
 
-// About as long as a push or a sheet takes to come in
-const OPENING_MS = 500;
-let openingUntil = 0;
+// Only one screen or sheet opens at a time. Two rows touched at the same moment, or one tapped
+// twice quickly, would otherwise open two on top of each other: the first one opens, and nothing
+// else does until the navigation has taken it in (useOpeningRelease). Should nothing open at all
+// (a link that turned out to go nowhere), the lock lifts after this long anyway.
+const OPENING_LIMIT_MS = 1000;
+let opening = false;
+let openingLimit: ReturnType<typeof setTimeout> | undefined;
 
-// Two rows touched at the same time, or one tapped twice quickly, would open two screens on top of
-// each other: only the first counts while a screen is still coming in. Returns whether this one may
-// open; a <Link> that opens a screen asks it in its onPress and prevents the default otherwise.
+function releaseOpening() {
+  opening = false;
+  clearTimeout(openingLimit);
+}
+
+// Whether a screen may open now; claims the lock if so. A <Link> that opens a screen asks it in
+// its onPress and prevents the default otherwise.
 export function claimOpening(): boolean {
-  const now = Date.now();
-  if (now < openingUntil) return false;
-  openingUntil = now + OPENING_MS;
+  if (opening) return false;
+  opening = true;
+  openingLimit = setTimeout(releaseOpening, OPENING_LIMIT_MS);
   return true;
+}
+
+// Lifts the lock as soon as the navigation state changes, i.e. the claimed screen is there. Used
+// once, by the root layout.
+export function useOpeningRelease() {
+  const navigation = useNavigationContainerRef();
+  useEffect(() => navigation.addListener("state", releaseOpening), [navigation]);
 }
 
 // Opens a screen or sheet, the one way the app does it (see claimOpening)
