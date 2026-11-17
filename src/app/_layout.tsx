@@ -28,11 +28,13 @@ export default function RootLayout() {
   }, [success, error]);
 
   if (error) {
+    // Drizzle names only the failed query; the reason from SQLite is in the cause
+    const cause = error.cause instanceof Error ? error.cause.message : undefined;
     return (
       <EmptyState
         icon={{ ios: "exclamationmark.triangle", android: "warning" }}
         title="Datenbank konnte nicht geladen werden"
-        message={error.message}
+        message={cause ? `${error.message}\n\n${cause}` : error.message}
       />
     );
   }
