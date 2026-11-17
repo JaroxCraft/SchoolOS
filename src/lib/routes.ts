@@ -1,18 +1,19 @@
-import { type Href, router, useNavigationContainerRef, useRoute } from "expo-router";
-import { useEffect } from "react";
+import { type Href, router, useRoute } from "expo-router";
 
 import type { RowAction } from "@/components/row-actions";
 import { isSheetClosing } from "@/lib/sheet-transition";
 
 // Only one screen or sheet opens at a time. Two rows touched at the same moment, or one tapped
 // twice quickly, would otherwise open two on top of each other: the first one opens, and nothing
-// else does until the navigation has taken it in (useOpeningRelease). Should nothing open at all
-// (a link that turned out to go nowhere), the lock lifts after this long anyway.
+// else does until its transition has ended (releaseOpening, called by every stack, see
+// <AppStack>). The navigation state changes as soon as the push starts, so it is too early; only
+// the end of the transition says the screen is in. Should nothing open at all (a link that turned
+// out to go nowhere), the lock lifts after this long anyway.
 const OPENING_LIMIT_MS = 1000;
 let opening = false;
 let openingLimit: ReturnType<typeof setTimeout> | undefined;
 
-function releaseOpening() {
+export function releaseOpening() {
   opening = false;
   clearTimeout(openingLimit);
 }
@@ -24,13 +25,6 @@ export function claimOpening(): boolean {
   opening = true;
   openingLimit = setTimeout(releaseOpening, OPENING_LIMIT_MS);
   return true;
-}
-
-// Lifts the lock as soon as the navigation state changes, i.e. the claimed screen is there. Used
-// once, by the root layout.
-export function useOpeningRelease() {
-  const navigation = useNavigationContainerRef();
-  useEffect(() => navigation.addListener("state", releaseOpening), [navigation]);
 }
 
 // Opens a screen or sheet, the one way the app does it (see claimOpening)
