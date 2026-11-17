@@ -13,7 +13,7 @@ import { periodNumber } from "@/lib/schedule";
 import { joinDetails } from "@/lib/text";
 import { useInk } from "@/hooks/use-ink";
 import { useNow } from "@/hooks/use-now";
-import { useWasCompleted } from "@/hooks/use-recently-completed";
+import { useEntryPlacement } from "@/hooks/use-entry-placement";
 
 export default function SubjectScreen() {
   const ink = useInk();
@@ -33,11 +33,9 @@ export default function SubjectScreen() {
         a.weekday - b.weekday ||
         periodNumber(periods, a.periodId) - periodNumber(periods, b.periodId)
     );
-  const wasCompleted = useWasCompleted();
+  const placeEntries = useEntryPlacement();
   const now = useNow();
-  const openEntries = useEntries().filter(
-    (entry) => entry.subjectId === id && !wasCompleted(entry)
-  );
+  const openEntries = placeEntries(useEntries().filter((entry) => entry.subjectId === id)).open;
 
   // The subject was deleted or the app reset, maybe while this screen waited in its tab: it has
   // nothing left to show, so it closes itself. Goes back in this screen's own stack, not in

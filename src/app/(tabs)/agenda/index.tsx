@@ -14,7 +14,7 @@ import { useEntries, useLessons, useSubjects, useTeachers } from "@/db/queries";
 import type { EntryType } from "@/db/schema";
 import { useInk } from "@/hooks/use-ink";
 import { useNow } from "@/hooks/use-now";
-import { useWasCompleted } from "@/hooks/use-recently-completed";
+import { useEntryPlacement } from "@/hooks/use-entry-placement";
 import { ENTRY_TYPE_OPTIONS } from "@/lib/entry-types";
 import { openEntry } from "@/lib/routes";
 
@@ -32,7 +32,7 @@ export default function AgendaScreen() {
   if (subjectFilter > 0 && !subjects.some((subject) => subject.id === subjectFilter)) {
     setSubjectFilter(ALL_SUBJECTS);
   }
-  const wasCompleted = useWasCompleted();
+  const placeEntries = useEntryPlacement();
   const ink = useInk();
   const now = useNow();
 
@@ -81,8 +81,7 @@ export default function AgendaScreen() {
 
   // Every entry stays upcoming until it is checked off, even when overdue. Entries (un)checked just
   // now stay in their section until the screen is left.
-  const upcoming = visible.filter((entry) => !wasCompleted(entry));
-  const done = visible.filter(wasCompleted).reverse();
+  const { open: upcoming, done } = placeEntries(visible);
 
   const sections = [
     { title: "Anstehend", items: upcoming },
