@@ -1,4 +1,4 @@
-import { FieldGroup, Switch } from "@expo/ui";
+import { FieldGroup, ListItem, Switch } from "@expo/ui";
 import { router, Stack } from "expo-router";
 import { Platform } from "react-native";
 
@@ -8,8 +8,10 @@ import { ActionRow, NavigationRow } from "@/components/rows";
 import { updateSettings } from "@/db/actions";
 import { useLessons, usePeriods, useSettings, useSubjects, useTeachers } from "@/db/queries";
 import { useNotificationPermission } from "@/hooks/use-notification-permission";
+import { useScheduledReminders } from "@/hooks/use-scheduled-reminders";
 import { versionLabel } from "@/lib/app-info";
-import { allowNotifications } from "@/lib/notifications";
+import { dateToTime, formatDate, toISODate } from "@/lib/dates";
+import { allowNotifications, sendTestReminder } from "@/lib/notifications";
 import { SCHOOL_ROUTES } from "@/lib/routes";
 import { SETUP_STEP_ICONS } from "@/lib/setup";
 import { pickAndImport, shareExport } from "@/lib/transfer-file";
@@ -21,6 +23,7 @@ export default function SettingsScreen() {
   const lessons = useLessons();
   const settings = useSettings();
   const [permission, setPermission] = useNotificationPermission();
+  const reminders = useScheduledReminders();
 
   const notificationsFooter = !settings.notificationsEnabled
     ? "Keine Erinnerungen an Aufgaben, Prüfungen und den Lernbeginn."
@@ -145,6 +148,35 @@ export default function SettingsScreen() {
             Über SchoolOS
           </NavigationRow>
         </FieldGroup.Section>
+
+        {__DEV__ && (
+          <FieldGroup.Section title="Entwicklung: Erinnerungen">
+            {reminders.scheduled.length === 0 && <ListItem>Keine Mitteilungen geplant</ListItem>}
+            {reminders.scheduled.map((reminder) => (
+              <ListItem key={reminder.id} supportingText={reminder.body}>
+                {reminder.at
+                  ? `${formatDate(toISODate(reminder.at))} ${dateToTime(reminder.at)} · ${reminder.title}`
+                  : `Gleich · ${reminder.title}`}
+              </ListItem>
+            ))}
+            <ActionRow
+              label="Nächste in 10 s senden"
+              onPress={() =>
+                sendTestReminder(reminders.scheduled.find((reminder) => reminder.at)).then(
+                  reminders.refresh
+                )
+              }
+            />
+            <ActionRow label="Liste aktualisieren" onPress={reminders.refresh} />
+            <FieldGroup.SectionFooter>
+              <FooterText>
+                Nur in der Entwicklung sichtbar. Die Kopie kommt nach 10 Sekunden, auch bei offener
+                App; zum Prüfen des Antippens die App vorher in den Hintergrund schicken. Jede
+                Änderung der Daten plant neu und verwirft die Kopie.
+              </FooterText>
+            </FieldGroup.SectionFooter>
+          </FieldGroup.Section>
+        )}
       </FormList>
     </>
   );
