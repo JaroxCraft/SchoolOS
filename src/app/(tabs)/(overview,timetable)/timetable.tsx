@@ -1,4 +1,5 @@
 import { Host } from "@expo/ui";
+import { useHeaderHeight } from "expo-router/react-navigation";
 import { useRef, useState } from "react";
 import {
   type NativeScrollEvent,
@@ -11,6 +12,7 @@ import {
   View,
 } from "react-native";
 import { useReducedMotion } from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { EmptyState } from "@/components/empty-state";
 import { COLUMN_GAP, GUTTER_WIDTH, LessonTimeline } from "@/components/lesson-timeline";
@@ -40,6 +42,9 @@ export default function TimetableScreen() {
   const pager = useRef<ScrollViewInstance>(null);
   const positioned = useRef<{ pager: ScrollViewInstance | null; width: number }>(null);
   const reducedMotion = useReducedMotion();
+  const headerHeight = useHeaderHeight();
+  const insets = useSafeAreaInsets();
+  const [frameHeight, setFrameHeight] = useState(0);
 
   const days = schoolWeek(now.date);
 
@@ -117,9 +122,19 @@ export default function TimetableScreen() {
     now,
   };
 
+  // The day pager reaches down to the tab bar, so a swipe anywhere below the week row changes the
+  // day, not only on the lessons. iOS draws the scroll view under the navigation and tab bar and
+  // insets its content by them, so the content must fill only the space between them; filling the
+  // whole frame would let the page scroll by that much.
+  const fillPage =
+    Platform.OS === "ios" ? { minHeight: frameHeight - headerHeight - insets.bottom } : styles.fill;
+
   return (
     <Screen title="Stundenplan">
-      <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.content}>
+      <ScrollView
+        contentInsetAdjustmentBehavior="automatic"
+        onLayout={(event) => setFrameHeight(event.nativeEvent.layout.height)}
+        contentContainerStyle={[styles.content, fillPage]}>
         <View style={styles.header}>
           <Host matchContents={{ vertical: true }}>
             <SegmentedControl
@@ -191,6 +206,9 @@ export default function TimetableScreen() {
 }
 
 const styles = StyleSheet.create({
+  fill: {
+    flexGrow: 1,
+  },
   content: {
     paddingTop: 8,
     paddingBottom: 24,
