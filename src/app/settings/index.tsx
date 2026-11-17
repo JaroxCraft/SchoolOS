@@ -36,10 +36,10 @@ export default function SettingsScreen() {
   };
 
   const notificationsFooter = remindersOn
-    ? `30 Minuten nach der letzten Lektion fasst eine Übersicht die Hausaufgaben für den nächsten Schultag und die anstehenden Prüfungen, Präsentationen und Abgaben ab dem Lernbeginn zusammen, an Tagen ohne Unterricht um ${settings.noLessonSummaryTime}. Die zweite Erinnerung kommt nur, wenn Hausaufgaben für den nächsten Schultag noch offen sind.`
+    ? `30 Minuten nach der letzten Lektion fasst eine Übersicht zusammen, was bis zum nächsten Schultag fällig ist: Hausaufgaben, Prüfungen, Präsentationen und Abgaben. An Tagen ohne Unterricht kommt sie um ${settings.noLessonSummaryTime}. Die zweite Erinnerung kommt nur, wenn Hausaufgaben für den nächsten Schultag noch offen sind.`
     : denied
       ? "Mitteilungen sind für SchoolOS in den Systemeinstellungen ausgeschaltet. Beim Einschalten öffnen sich die Einstellungen, um sie zu erlauben."
-      : "Keine Erinnerungen an Aufgaben, Prüfungen und den Lernbeginn.";
+      : "Keine Erinnerungen an Hausaufgaben, Prüfungen, Präsentationen und Abgaben.";
 
   return (
     <>

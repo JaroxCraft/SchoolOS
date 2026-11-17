@@ -1,18 +1,11 @@
 import type { Entry, Lesson, Period, Settings, Subject } from "@/db/schema";
-import {
-  addDays,
-  daysBetween,
-  isoWeekday,
-  parseISODate,
-  toISODate,
-  weekdayName,
-} from "@/lib/dates";
+import { addDays, isoWeekday, parseISODate, toISODate, weekdayName } from "@/lib/dates";
 import { ENTRY_TYPE_INFO, isCheckable } from "@/lib/entry-types";
 import {
+  type DueItem,
+  dueLine,
   homeworkLine,
   secondReminderTitle,
-  type StudyItem,
-  studyLine,
   summaryTitle,
 } from "@/lib/reminder-texts";
 
@@ -78,9 +71,8 @@ function joinLines(lines: string[]): string {
 
 // The local notifications for the coming days (spec 4.5), at most two a day:
 // - The daily summary, 30 minutes after the last lesson, on a day without lessons at
-//   `noLessonSummaryTime`: the open homework due up to the next school day, and a study reminder
-//   for every exam, presentation and open submission from its study start until the day before.
-//   Not sent if there is nothing to report.
+//   `noLessonSummaryTime`: everything due up to the next school day, i.e. the open homework and
+//   the exams, presentations and open submissions. Not sent if there is nothing to report.
 // - The second reminder at `secondReminderTime`, every day including weekends, if homework for
 //   the next school day is still open. Dropped on a day whose summary comes later.
 // The plan reflects the data at the time it is made, so it has to be made again on every change;
@@ -109,31 +101,20 @@ export function planReminders({
       ? at(day, end, AFTER_SCHOOL_MINUTES)
       : at(day, settings.noLessonSummaryTime);
 
-    const homework = open.filter(
-      (entry) => entry.type === "homework" && entry.date > day && entry.date <= schoolDay
-    );
+    const dueUntilSchoolDay = (entry: Entry) => entry.date > day && entry.date <= schoolDay;
+    const homework = open.filter((entry) => entry.type === "homework" && dueUntilSchoolDay(entry));
     const homeworkLines = homework.map((entry) => homeworkLine(entry, subjectOf(entry), schoolDay));
-    const study: StudyItem[] = open
-      .filter(
-        (entry) =>
-          ENTRY_TYPE_INFO[entry.type].gradable &&
-          entry.studyStart !== null &&
-          entry.studyStart <= day &&
-          day < entry.date
-      )
-      .map((entry) => ({
-        entry,
-        subject: subjectOf(entry),
-        daysLeft: daysBetween(day, entry.date),
-      }));
+    const due: DueItem[] = open
+      .filter((entry) => ENTRY_TYPE_INFO[entry.type].gradable && dueUntilSchoolDay(entry))
+      .map((entry) => ({ entry, subject: subjectOf(entry) }));
 
-    const mentioned = [...homework, ...study.map((item) => item.entry)];
+    const mentioned = [...homework, ...due.map((item) => item.entry)];
     if (mentioned.length > 0) {
       reminders.push({
         id: `summary-${day}`,
         date: summaryDate,
-        title: summaryTitle(dayName, homework.length > 0, study, day),
-        body: joinLines([...homeworkLines, ...study.map((item) => studyLine(item, day))]),
+        title: summaryTitle(dayName, homework.length > 0, schoolDay, day),
+        body: joinLines([...homeworkLines, ...due.map((item) => dueLine(item, day))]),
         // A tap opens the entry if the notification is about a single one
         entryId: mentioned.length === 1 ? mentioned[0].id : null,
       });
