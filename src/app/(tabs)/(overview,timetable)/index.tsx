@@ -11,7 +11,7 @@ import { useEntries, useLessons, usePeriods, useSubjects } from "@/db/queries";
 import type { Period, Subject } from "@/db/schema";
 import { useInk } from "@/hooks/use-ink";
 import { useNow } from "@/hooks/use-now";
-import { useWasCompleted } from "@/hooks/use-recently-completed";
+import { useEntryPlacement } from "@/hooks/use-entry-placement";
 import { formatDate, relativeDay } from "@/lib/dates";
 import { nextLessons, periodNumber, periodRange } from "@/lib/schedule";
 import { openEntry, SCHOOL_ROUTES } from "@/lib/routes";
@@ -93,7 +93,7 @@ export default function OverviewScreen() {
   const subjects = useSubjects();
   const lessons = useLessons();
   const entries = useEntries();
-  const wasCompleted = useWasCompleted();
+  const placeEntries = useEntryPlacement();
   const now = useNow();
 
   const subjectById = (id: number | null) => subjects.find((subject) => subject.id === id);
@@ -109,7 +109,7 @@ export default function OverviewScreen() {
   const upcomingLessons = nextLessons(lessons, periods, now);
   // Every open entry in one list by date, whatever its type; overdue and missed ones in red.
   // Entries checked off here stay until the screen is left, so they can be unchecked again.
-  const openEntries = entries.filter((entry) => !wasCompleted(entry));
+  const openEntries = placeEntries(entries).open;
 
   const lessonsDate = upcomingLessons[0]?.date;
 

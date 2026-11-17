@@ -4,23 +4,18 @@ import * as Haptics from "expo-haptics";
 import { type RowAction, RowActions } from "@/components/row-actions";
 import type { RowComponent } from "@/components/rows";
 import { TaskCheckbox } from "@/components/task-checkbox";
-import { deleteEntry, setEntryCompleted } from "@/db/actions";
+import { deleteEntry } from "@/db/actions";
 import type { Entry, Subject } from "@/db/schema";
 import { type Ink, useInk } from "@/hooks/use-ink";
-import { markToggled } from "@/hooks/use-recently-completed";
+import { checkOffEntry } from "@/hooks/use-entry-placement";
 import { formatDate, relativeDay } from "@/lib/dates";
 import { ENTRY_TYPE_INFO } from "@/lib/entry-types";
+import { isOverdue } from "@/lib/entry-status";
 import { openEntry } from "@/lib/routes";
 import { NEUTRAL_COLOR } from "@/lib/subject-colors";
 import { typography } from "@/lib/typography";
 
 const DONE_GREEN = "#34C759";
-
-// An entry checked off or reopened stays in its place until the screen is left (useWasCompleted)
-function setCompleted(entry: Entry, completed: boolean) {
-  markToggled(entry.id, entry.completed);
-  setEntryCompleted(entry.id, completed);
-}
 
 type EntryRowProps = {
   entry: Entry;
@@ -31,11 +26,11 @@ type EntryRowProps = {
 
 // Every entry gets a checkbox in its subject color: it stays open until checked off, its date only
 // decides whether it is overdue. An entry checked off is dimmed and, like an unchecked one, stays
-// in its place until the screen is left (see useWasCompleted). Tapping the row opens the entry as
+// in its place until the screen is left (see useEntryPlacement). Tapping the row opens the entry as
 // a sheet, so it has no disclosure chevron: the chevron promises a screen pushed in the same stack
 // (Apple HIG, lists). Built without hooks, so <FormList> can use it as the list item itself.
 function entryItem({ entry, subject, today }: EntryRowProps, ink: Ink) {
-  const overdue = !entry.completed && entry.date < today;
+  const overdue = isOverdue(entry, today);
   const details = [
     ENTRY_TYPE_INFO[entry.type].label,
     subject?.name ?? "Allgemein",
@@ -50,7 +45,7 @@ function entryItem({ entry, subject, today }: EntryRowProps, ink: Ink) {
           value={entry.completed}
           accessibilityLabel={entry.title}
           color={subject?.color ?? NEUTRAL_COLOR}
-          onValueChange={(completed) => setCompleted(entry, completed)}
+          onValueChange={(completed) => checkOffEntry(entry, completed)}
         />
       }
       supportingText={
@@ -79,7 +74,7 @@ function entryRow(props: EntryRowProps, ink: Ink) {
     tint: DONE_GREEN,
     onPress: () => {
       Haptics.selectionAsync();
-      setCompleted(entry, !entry.completed);
+      checkOffEntry(entry, !entry.completed);
     },
   };
   const remove: RowAction = {
