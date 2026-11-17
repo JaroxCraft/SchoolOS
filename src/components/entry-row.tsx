@@ -23,8 +23,8 @@ type EntryRowProps = {
 };
 
 // Every entry gets a checkbox in its subject color: it stays open until checked off, its date only
-// decides whether it is overdue. An entry checked off is dimmed and, like an unchecked one, stays
-// in its place until the screen is left (see useEntryPlacement). Tapping the row opens the entry as
+// decides whether it is overdue. An entry checked off is dimmed and, like one reopened, stays in
+// its place for a moment before it moves (see useEntryPlacement). Tapping the row opens the entry as
 // a sheet, so it has no disclosure chevron: the chevron promises a screen pushed in the same stack
 // (Apple HIG, lists). Built without hooks, so <FormList> can use it as the list item itself.
 function entryItem({ entry, subject, today }: EntryRowProps, ink: Ink) {

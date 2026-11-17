@@ -9,6 +9,7 @@ import {
   useMaterialColors,
 } from "@expo/ui/jetpack-compose";
 import {
+  animateContentSize,
   background,
   clickable,
   combinedClickable,
@@ -128,8 +129,10 @@ function expandRows(node: ReactNode, rows: Rows, prefix: string): ReactNode {
 
 // The sections of the list, each with half the gap above and below inside its tappable area: the
 // list swallows taps between its items, so this way every tap beside a field lands on a section.
-// Rows outside a section are grouped into one, like FieldGroup does.
-function expandSections(node: ReactNode, rows: Rows): ReactElement[] {
+// Rows outside a section are grouped into one, like FieldGroup does. With `animateRows` a section
+// grows and shrinks smoothly as rows come and go, instead of jumping (Compose follows the system's
+// animation scale, so "Remove animations" turns it off).
+function expandSections(node: ReactNode, rows: Rows, animateRows: boolean): ReactElement[] {
   const sections: ReactElement[] = [];
   let loose: ReactNode[] = [];
 
@@ -143,6 +146,7 @@ function expandSections(node: ReactNode, rows: Rows): ReactElement[] {
             ...(section.props.modifiers ?? []),
             DISMISS_ON_TAP,
             padding(0, SECTION_GAP / 2, 0, SECTION_GAP / 2),
+            ...(animateRows ? [animateContentSize()] : []),
           ],
         },
         expandRows(section.props.children, rows, key)
@@ -177,7 +181,7 @@ function expandSections(node: ReactNode, rows: Rows): ReactElement[] {
 // its items, so the sections carry the gaps inside their tappable area, and the list is only as
 // tall as its content inside a tappable column that fills the rest. For a list inside an existing
 // host such as a sheet; a screen uses <FormList>. iOS: form-group.tsx.
-export function FormGroup({ children, modifiers = [], floatingButton }: FormGroupProps) {
+export function FormGroup({ children, modifiers = [], floatingButton, rowsKey }: FormGroupProps) {
   const ink = useInk();
   const colors = useMaterialColors();
   // The row whose long-press menu is open
@@ -192,7 +196,7 @@ export function FormGroup({ children, modifiers = [], floatingButton }: FormGrou
           top: EDGE_PADDING - SECTION_GAP / 2,
           bottom: EDGE_PADDING - SECTION_GAP / 2,
         }}>
-        {expandSections(children, { ink, openMenu, setOpenMenu })}
+        {expandSections(children, { ink, openMenu, setOpenMenu }, rowsKey !== undefined)}
         {floatingButton && (
           // As much room as before, when the gap above it was the list's spacing
           <FieldGroup.Section key="floating-button" style={{ height: 64 + SECTION_GAP }}>

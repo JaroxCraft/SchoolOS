@@ -115,7 +115,8 @@ export function EntryForm({ entry, initialSubjectId, subjects, periods, lessons 
 
   const save = () =>
     saveAndClose(async () => {
-      // Checked off or reopened here, it keeps its place in the list beneath, like from a row
+      // Checked off or reopened here, it moves in the list beneath once the sheet has closed,
+      // animated like from a row
       if (entry && form.completed !== entry.completed) {
         await checkOffEntry(entry, form.completed);
       }

@@ -3,7 +3,7 @@ import { router, Stack, useLocalSearchParams, useNavigation } from "expo-router"
 import { useEffect, useState } from "react";
 
 import { EntryRow } from "@/components/entry-row";
-import { FormList } from "@/components/form-list";
+import { FormList, rowsKey } from "@/components/form-list";
 import { LabeledRow } from "@/components/labeled-row";
 import { ActionRow } from "@/components/rows";
 import { useEntries, useLessons, usePeriods, useSubjects, useTeachers } from "@/db/queries";
@@ -53,7 +53,7 @@ export default function SubjectDetailScreen() {
   return (
     <>
       <Stack.Title>{subject.name}</Stack.Title>
-      <FormList>
+      <FormList rowsKey={rowsKey(openEntries)}>
         <FieldGroup.Section>
           <LabeledRow label="Kürzel">
             <Text textStyle={{ color: ink.secondary }}>{subject.abbreviation}</Text>
