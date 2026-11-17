@@ -1,5 +1,10 @@
 import * as Notifications from "expo-notifications";
-import { router } from "expo-router";
+import { router, useNavigationContainerRef } from "expo-router";
+import {
+  type NavigationContainerRef,
+  type ParamListBase,
+  CommonActions,
+} from "expo-router/react-navigation";
 import { useEffect } from "react";
 
 import {
@@ -19,12 +24,26 @@ import { openEntry } from "@/lib/routes";
 // A reminder about one entry opens it as a sheet, one about several switches to the agenda. If
 // the entry is done or deleted by now, the tap only opens the app: a sheet with a checked-off task
 // or "Eintrag nicht gefunden" would be in the way.
-function openReminder(response: Notifications.NotificationResponse) {
+function openReminder(
+  response: Notifications.NotificationResponse,
+  navigation: NavigationContainerRef<ParamListBase>
+) {
   Notifications.clearLastNotificationResponse();
   if (response.actionIdentifier !== Notifications.DEFAULT_ACTION_IDENTIFIER) return;
   const entryId = response.notification.request.content.data?.entryId;
   if (typeof entryId !== "number") {
-    router.navigate("/agenda");
+    // With a sheet open (the settings, an entry), router.navigate would push the tabs once more,
+    // presented as a sheet of their own on top. Instead the root stack goes back to the tabs
+    // (pop) and switches to the agenda in the same action.
+    const root = navigation.isReady() ? navigation.getRootState() : undefined;
+    if (root && root.index > 0) {
+      navigation.dispatch({
+        ...CommonActions.navigate("(tabs)", { screen: "agenda" }, { pop: true }),
+        target: root.key,
+      });
+    } else {
+      router.navigate("/agenda");
+    }
     return;
   }
   const entry = getEntries().find((candidate) => candidate.id === entryId);
@@ -48,13 +67,16 @@ export function Reminders() {
     );
   }, [entries, lessons, periods, subjects, settings, date]);
 
+  const navigation = useNavigationContainerRef();
   useEffect(() => {
+    const open = (response: Notifications.NotificationResponse) =>
+      openReminder(response, navigation);
     // The tap that launched the app
     const launched = Notifications.getLastNotificationResponse();
-    if (launched) openReminder(launched);
-    const subscription = Notifications.addNotificationResponseReceivedListener(openReminder);
+    if (launched) open(launched);
+    const subscription = Notifications.addNotificationResponseReceivedListener(open);
     return () => subscription.remove();
-  }, []);
+  }, [navigation]);
 
   return null;
 }
