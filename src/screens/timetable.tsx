@@ -18,10 +18,10 @@ import type { LessonSlot, Period, Subject } from "@/db/schema";
 import { useDiscardGuard } from "@/hooks/use-discard-guard";
 import { useSaveButton, useStepButton } from "@/hooks/use-header-button";
 import { type Ink, useInk } from "@/hooks/use-ink";
-import { isoWeekday, SCHOOL_WEEKDAYS, today, weekdayName, weekdayShort } from "@/lib/dates";
+import { SCHOOL_WEEKDAYS, today, weekdayName, weekdayShort } from "@/lib/dates";
 import { endEditing } from "@/lib/focused-fields";
 import { useSchoolRoutes } from "@/lib/routes";
-import { lessonAt, periodNumber, periodRange } from "@/lib/schedule";
+import { lessonAt, periodNumber, periodRange, shownWeekday } from "@/lib/schedule";
 import { typography } from "@/lib/typography";
 
 const FREE = 0;
@@ -154,10 +154,7 @@ export default function TimetableEditorScreen() {
   const saveButton = useSaveButton();
   const doneButton = useStepButton("done");
   // Start on the current weekday, or on Monday at the weekend
-  const [weekday, setWeekday] = useState(() => {
-    const current = isoWeekday(today());
-    return current <= 5 ? current : 1;
-  });
+  const [weekday, setWeekday] = useState(() => shownWeekday(today()));
   // The period whose sheet is open
   const [editing, setEditing] = useState<Period | null>(null);
   // null until the first change: until then the screen shows the saved timetable

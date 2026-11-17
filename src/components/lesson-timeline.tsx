@@ -3,10 +3,17 @@ import { Pressable, StyleSheet, Text, useColorScheme, View } from "react-native"
 
 import { colors } from "@/constants/colors";
 import type { Lesson, Period, Subject, Teacher } from "@/db/schema";
-import type { Now } from "@/hooks/use-now";
-import { minutesToTime } from "@/lib/dates";
+import { minutesOf, minutesToTime } from "@/lib/dates";
 import { openEntry, SCHOOL_ROUTES } from "@/lib/routes";
-import { lessonBlocks, type LessonBlock, minutesOf } from "@/lib/timeline";
+import {
+  lessonBlocks,
+  type LessonBlock,
+  type LessonState,
+  lessonState,
+  type Now,
+  periodNumber,
+  type SchoolDay,
+} from "@/lib/schedule";
 import { joinDetails } from "@/lib/text";
 
 export const GUTTER_WIDTH = 44;
@@ -14,14 +21,12 @@ export const COLUMN_GAP = 4;
 // Text grows with the system text size, but the cards have the height of their lessons
 const MAX_FONT_SCALE = 1.3;
 
-export type TimelineDay = { weekday: number; date: string };
-
 type LessonTimelineProps = {
   // All periods (for their numbers) and the ones shown
   periods: Period[];
   visiblePeriods: Period[];
   // One day (day view) or the five school days (week view)
-  days: TimelineDay[];
+  days: SchoolDay[];
   lessons: Lesson[];
   subjects: Subject[];
   teachers: Teacher[];
@@ -64,7 +69,7 @@ export function LessonTimeline({
   return (
     <View style={{ width, height: y(end) + 8 }}>
       {visiblePeriods.map((period) => {
-        const number = periods.findIndex((candidate) => candidate.id === period.id) + 1;
+        const number = periodNumber(periods, period.id);
         return (
           <View
             key={period.id}
@@ -94,7 +99,7 @@ export function LessonTimeline({
               compact && isToday && styles.todayColumn,
             ]}>
             {blocks.map((block) => {
-              const subject = subjects.find((candidate) => candidate.id === block.subjectId);
+              const subject = subjects.find((candidate) => candidate.id === block.lesson.subjectId);
               if (!subject) return null;
               return (
                 <LessonCard
@@ -105,15 +110,7 @@ export function LessonTimeline({
                   compact={compact}
                   top={y(block.start)}
                   height={(block.end - block.start) * scale}
-                  state={
-                    !isToday
-                      ? "upcoming"
-                      : now.minutes >= block.end
-                        ? "past"
-                        : now.minutes >= block.start
-                          ? "current"
-                          : "upcoming"
-                  }
+                  state={lessonState(day.date, block, now)}
                 />
               );
             })}
@@ -141,7 +138,7 @@ type LessonCardProps = {
   compact: boolean;
   top: number;
   height: number;
-  state: "past" | "current" | "upcoming";
+  state: LessonState;
 };
 
 // A lesson as a card in the subject color. Tapping it opens the subject in this tab; a long press
@@ -149,8 +146,8 @@ type LessonCardProps = {
 function LessonCard({ block, subject, teacher, compact, top, height, state }: LessonCardProps) {
   const time = `${minutesToTime(block.start)}–${minutesToTime(block.end)}`;
   const details = compact
-    ? block.room
-    : joinDetails(time, block.room, teacher?.abbreviation || undefined);
+    ? block.lesson.room
+    : joinDetails(time, block.lesson.room, teacher?.abbreviation || undefined);
   const periodsLabel =
     block.firstNumber === block.lastNumber
       ? `${block.firstNumber}. Lektion`
@@ -174,7 +171,7 @@ function LessonCard({ block, subject, teacher, compact, top, height, state }: Le
               subject.name,
               periodsLabel,
               time,
-              block.room,
+              block.lesson.room,
               STATE_LABELS[state]
             )}>
             {({ pressed }) => (

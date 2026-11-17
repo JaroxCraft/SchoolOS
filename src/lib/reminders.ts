@@ -1,5 +1,5 @@
 import type { Entry, Lesson, Period, Settings, Subject } from "@/db/schema";
-import { addDays, isoWeekday, parseISODate, toISODate, weekdayName } from "@/lib/dates";
+import { addDays, dateAt, isoWeekday, minutesOf, toISODate, weekdayName } from "@/lib/dates";
 import {
   type DueItem,
   dueLine,
@@ -7,12 +7,14 @@ import {
   secondReminderTitle,
   summaryTitle,
 } from "@/lib/reminder-texts";
+import { nextSchoolDay, schoolEnd } from "@/lib/schedule";
 
 // Days planned ahead. iOS keeps at most 64 pending notifications per app and a day has at most
 // two; the plan is renewed whenever the data changes or a new day begins in the open app.
 export const REMINDER_DAYS = 21;
-// The summary comes this long after the last lesson, once the student is out of school
-const AFTER_SCHOOL_MINUTES = 30;
+// The summary comes this long after the last lesson, once the student is out of school; the
+// settings footer names it
+export const AFTER_SCHOOL_MINUTES = 30;
 // Lines in a notification; the rest is counted as "und 2 weitere"
 const MAX_LINES = 4;
 
@@ -34,33 +36,6 @@ export type ReminderData = {
   settings: Settings;
   now: Date;
 };
-
-// When the last lesson of a weekday ends, null on a day without lessons
-function schoolEnd(weekday: number, lessons: Lesson[], periods: Period[]): string | null {
-  let end: string | null = null;
-  for (const lesson of lessons) {
-    if (lesson.weekday !== weekday) continue;
-    const period = periods.find((candidate) => candidate.id === lesson.periodId);
-    if (period && (end === null || period.endTime > end)) end = period.endTime;
-  }
-  return end;
-}
-
-// The next day after `date` with lessons; the day after if the timetable is empty
-function nextSchoolDay(date: string, lessons: Lesson[]): string {
-  for (let offset = 1; offset <= 7; offset++) {
-    const day = addDays(date, offset);
-    if (lessons.some((lesson) => lesson.weekday === isoWeekday(day))) return day;
-  }
-  return addDays(date, 1);
-}
-
-function at(date: string, time: string, extraMinutes = 0): Date {
-  const [hours, minutes] = time.split(":").map(Number);
-  const result = parseISODate(date);
-  result.setHours(hours, minutes + extraMinutes, 0, 0);
-  return result;
-}
 
 function joinLines(lines: string[]): string {
   if (lines.length <= MAX_LINES) return lines.join("\n");
@@ -97,9 +72,10 @@ export function planReminders({
     const schoolDay = nextSchoolDay(day, lessons);
     const dayName = schoolDay === addDays(day, 1) ? "morgen" : weekdayName(isoWeekday(schoolDay));
     const end = schoolEnd(isoWeekday(day), lessons, periods);
-    const summaryDate = end
-      ? at(day, end, AFTER_SCHOOL_MINUTES)
-      : at(day, settings.noLessonSummaryTime);
+    const summaryDate =
+      end !== null
+        ? dateAt(day, end + AFTER_SCHOOL_MINUTES)
+        : dateAt(day, minutesOf(settings.noLessonSummaryTime));
 
     const dueUntilSchoolDay = open.filter((entry) => entry.date > day && entry.date <= schoolDay);
     if (dueUntilSchoolDay.length === 0) continue;
@@ -120,7 +96,7 @@ export function planReminders({
       entryId,
     });
 
-    const secondDate = at(day, settings.secondReminderTime);
+    const secondDate = dateAt(day, minutesOf(settings.secondReminderTime));
     if (secondDate > summaryDate) {
       reminders.push({
         id: `second-${day}`,
