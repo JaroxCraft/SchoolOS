@@ -1,10 +1,26 @@
 import type { Entry, Lesson, Period, Settings, Subject } from "@/db/schema";
-import { addDays, formatDate, isoWeekday, parseISODate, toISODate, weekdayName } from "@/lib/dates";
+import {
+  addDays,
+  daysBetween,
+  isoWeekday,
+  parseISODate,
+  toISODate,
+  weekdayName,
+} from "@/lib/dates";
 import { ENTRY_TYPE_INFO, isCheckable } from "@/lib/entry-types";
+import {
+  homeworkLine,
+  secondReminderTitle,
+  type StudyItem,
+  studyLine,
+  summaryTitle,
+} from "@/lib/reminder-texts";
 
 // Days planned ahead. iOS keeps at most 64 pending notifications per app and a day has at most
 // two; the plan is renewed whenever the data changes or a new day begins in the open app.
 export const REMINDER_DAYS = 21;
+// The summary comes this long after the last lesson, once the student is out of school
+const AFTER_SCHOOL_MINUTES = 30;
 // Lines in a notification; the rest is counted as "und 2 weitere"
 const MAX_LINES = 4;
 
@@ -47,20 +63,11 @@ function nextSchoolDay(date: string, lessons: Lesson[]): string {
   return addDays(date, 1);
 }
 
-function at(date: string, time: string): Date {
+function at(date: string, time: string, extraMinutes = 0): Date {
   const [hours, minutes] = time.split(":").map(Number);
   const result = parseISODate(date);
-  result.setHours(hours, minutes, 0, 0);
+  result.setHours(hours, minutes + extraMinutes, 0, 0);
   return result;
-}
-
-// "Prüfung Mathematik: Vokabeltest", "Deutsch: Aufsatz", with the date when it is not `due`
-function entryLine(entry: Entry, subjects: Subject[], due: string | null): string {
-  const subject = subjects.find((candidate) => candidate.id === entry.subjectId);
-  const info = ENTRY_TYPE_INFO[entry.type];
-  const label = [info.gradable ? info.label : null, subject?.name].filter(Boolean).join(" ");
-  const line = label ? `${label}: ${entry.title}` : entry.title;
-  return entry.date === due ? line : `${line} (${formatDate(entry.date)})`;
 }
 
 function joinLines(lines: string[]): string {
@@ -69,16 +76,15 @@ function joinLines(lines: string[]): string {
   return [...shown, `und ${lines.length - shown.length} weitere`].join("\n");
 }
 
-// The local notifications for the coming days, at most two a day:
-// - The summary when the last lesson of the day ends, on a day without lessons at
-//   `noLessonSummaryTime`: everything due up to the next school day (homework and submissions
-//   not yet done, exams, presentations, other entries) and the exams, presentations and
-//   submissions whose study start is today.
-// - The second reminder at `secondReminderTime` on the evening before a school day, if it comes
-//   after the summary: the homework and submissions for that day that are still open. Over a
-//   weekend only on Sunday, the summaries of Friday and Saturday already list them.
+// The local notifications for the coming days (spec 4.5), at most two a day:
+// - The daily summary, 30 minutes after the last lesson, on a day without lessons at
+//   `noLessonSummaryTime`: the open homework due up to the next school day, and a study reminder
+//   for every exam, presentation and open submission from its study start until the day before.
+//   Not sent if there is nothing to report.
+// - The second reminder at `secondReminderTime`, every day including weekends, if homework for
+//   the next school day is still open. Dropped on a day whose summary comes later.
 // The plan reflects the data at the time it is made, so it has to be made again on every change;
-// a task checked off later in the evening then no longer gets its second reminder.
+// homework checked off in the evening then no longer gets its second reminder.
 export function planReminders({
   entries,
   lessons,
@@ -90,42 +96,57 @@ export function planReminders({
   if (!settings.notificationsEnabled) return [];
 
   const open = entries.filter((entry) => !(isCheckable(entry.type) && entry.completed));
+  const subjectOf = (entry: Entry) => subjects.find((subject) => subject.id === entry.subjectId);
   const today = toISODate(now);
   const reminders: Reminder[] = [];
 
   for (let offset = 0; offset < REMINDER_DAYS; offset++) {
     const day = addDays(today, offset);
     const schoolDay = nextSchoolDay(day, lessons);
-    const tomorrow = addDays(day, 1);
-    const dayName = schoolDay === tomorrow ? "morgen" : weekdayName(isoWeekday(schoolDay));
-    const summaryTime =
-      schoolEnd(isoWeekday(day), lessons, periods) ?? settings.noLessonSummaryTime;
+    const dayName = schoolDay === addDays(day, 1) ? "morgen" : weekdayName(isoWeekday(schoolDay));
+    const end = schoolEnd(isoWeekday(day), lessons, periods);
+    const summaryDate = end
+      ? at(day, end, AFTER_SCHOOL_MINUTES)
+      : at(day, settings.noLessonSummaryTime);
 
-    const due = open.filter((entry) => entry.date > day && entry.date <= schoolDay);
-    const studyStarts = open.filter((entry) => entry.studyStart === day && entry.date > day);
-    const mentioned = [...due, ...studyStarts];
+    const homework = open.filter(
+      (entry) => entry.type === "homework" && entry.date > day && entry.date <= schoolDay
+    );
+    const homeworkLines = homework.map((entry) => homeworkLine(entry, subjectOf(entry), schoolDay));
+    const study: StudyItem[] = open
+      .filter(
+        (entry) =>
+          ENTRY_TYPE_INFO[entry.type].gradable &&
+          entry.studyStart !== null &&
+          entry.studyStart <= day &&
+          day < entry.date
+      )
+      .map((entry) => ({
+        entry,
+        subject: subjectOf(entry),
+        daysLeft: daysBetween(day, entry.date),
+      }));
+
+    const mentioned = [...homework, ...study.map((item) => item.entry)];
     if (mentioned.length > 0) {
       reminders.push({
         id: `summary-${day}`,
-        date: at(day, summaryTime),
-        title: due.length > 0 ? `Für ${dayName}` : "Lernbeginn",
-        body: joinLines([
-          ...due.map((entry) => entryLine(entry, subjects, schoolDay)),
-          ...studyStarts.map((entry) => `Ab heute lernen für ${entryLine(entry, subjects, null)}`),
-        ]),
+        date: summaryDate,
+        title: summaryTitle(dayName, homework.length > 0, study, day),
+        body: joinLines([...homeworkLines, ...study.map((item) => studyLine(item, day))]),
         // A tap opens the entry if the notification is about a single one
         entryId: mentioned.length === 1 ? mentioned[0].id : null,
       });
     }
 
-    const tasks = due.filter((entry) => isCheckable(entry.type));
-    if (tasks.length > 0 && schoolDay === tomorrow && settings.secondReminderTime > summaryTime) {
+    const secondDate = at(day, settings.secondReminderTime);
+    if (homework.length > 0 && secondDate > summaryDate) {
       reminders.push({
         id: `second-${day}`,
-        date: at(day, settings.secondReminderTime),
-        title: "Noch offen für morgen",
-        body: joinLines(tasks.map((entry) => entryLine(entry, subjects, schoolDay))),
-        entryId: tasks.length === 1 ? tasks[0].id : null,
+        date: secondDate,
+        title: secondReminderTitle(dayName, day),
+        body: joinLines(homeworkLines),
+        entryId: homework.length === 1 ? homework[0].id : null,
       });
     }
   }
