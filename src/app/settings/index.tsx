@@ -12,6 +12,7 @@ import { useScheduledReminders } from "@/hooks/use-scheduled-reminders";
 import { versionLabel } from "@/lib/app-info";
 import { dateToTime, formatDate, toISODate } from "@/lib/dates";
 import { allowNotifications, sendTestReminder } from "@/lib/notifications";
+import { AFTER_SCHOOL_MINUTES } from "@/lib/reminders";
 import { SCHOOL_ROUTES } from "@/lib/routes";
 import { SETUP_STEP_ICONS } from "@/lib/setup";
 import { pickAndImport, shareExport } from "@/lib/transfer-file";
@@ -36,7 +37,7 @@ export default function SettingsScreen() {
   };
 
   const notificationsFooter = remindersOn
-    ? `30 Minuten nach der letzten Lektion fasst eine Übersicht zusammen, was bis zum nächsten Schultag ansteht: Hausaufgaben, Prüfungen, Präsentationen, Abgaben und sonstige Einträge. An Tagen ohne Unterricht kommt sie um ${settings.noLessonSummaryTime}. Die zweite Erinnerung wiederholt das am Abend, solange noch etwas offen ist.`
+    ? `${AFTER_SCHOOL_MINUTES} Minuten nach der letzten Lektion fasst eine Übersicht zusammen, was bis zum nächsten Schultag ansteht: Hausaufgaben, Prüfungen, Präsentationen, Abgaben und sonstige Einträge. An Tagen ohne Unterricht kommt sie um ${settings.noLessonSummaryTime}. Die zweite Erinnerung wiederholt das am Abend, solange noch etwas offen ist.`
     : denied
       ? "Mitteilungen sind für SchoolOS in den Systemeinstellungen ausgeschaltet. Beim Einschalten öffnen sich die Einstellungen, um sie zu erlauben."
       : "Keine Erinnerungen an Hausaufgaben, Prüfungen und andere Einträge.";
