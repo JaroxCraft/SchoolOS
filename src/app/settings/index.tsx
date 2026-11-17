@@ -11,7 +11,8 @@ import { useNotificationPermission } from "@/hooks/use-notification-permission";
 import { useScheduledReminders } from "@/hooks/use-scheduled-reminders";
 import { versionLabel } from "@/lib/app-info";
 import { dateToTime, formatDate, toISODate } from "@/lib/dates";
-import { allowNotifications, sendTestReminder } from "@/lib/notifications";
+import { sendTestReminder } from "@/lib/notification-dev-tools";
+import { allowNotifications } from "@/lib/notifications";
 import { AFTER_SCHOOL_MINUTES } from "@/lib/reminders";
 import { openScreen, SCHOOL_ROUTES } from "@/lib/routes";
 import { SETUP_STEP_ICONS } from "@/lib/setup";
@@ -28,9 +29,6 @@ export default function SettingsScreen() {
   const [permission, setPermission] = useNotificationPermission();
   const reminders = useScheduledReminders();
 
-  // Without the system permission the switch shows off, whatever is saved: no reminder arrives.
-  // Switching it on asks for the permission, or opens the system settings once the system no
-  // longer shows its dialog (allowNotifications).
   const denied = permission === "denied";
   const remindersOn = settings.notificationsEnabled && !denied;
   const setRemindersOn = (on: boolean) => {
