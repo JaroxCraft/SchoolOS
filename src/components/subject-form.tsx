@@ -1,5 +1,5 @@
 import { FieldGroup, ListItem, Text } from "@expo/ui";
-import { router, Stack } from "expo-router";
+import { Stack } from "expo-router";
 import { useState } from "react";
 
 import { Platform } from "react-native";
@@ -12,12 +12,11 @@ import { NO_TEACHER, TeacherPickerSheet } from "@/components/teacher-picker";
 import { TextField } from "@/components/text-field";
 import { saveSubject } from "@/db/actions";
 import type { Subject, Teacher } from "@/db/schema";
-import { useDiscardGuard } from "@/hooks/use-discard-guard";
+import { useClosingForm } from "@/hooks/use-closing-form";
 import { useInk } from "@/hooks/use-ink";
-import { confirmDelete, subjectDeletion } from "@/lib/confirm-delete";
+import { subjectDeletion } from "@/lib/confirm-delete";
 import { SUBJECT_COLORS } from "@/lib/subject-colors";
 import { useSaveButton } from "@/hooks/use-header-button";
-import { useSaving } from "@/hooks/use-saving";
 
 type SubjectFormProps = {
   subject: Subject | undefined;
@@ -54,25 +53,22 @@ export function SubjectForm({ subject, allColors, usedColors, teachers }: Subjec
     abbreviation !== (subject?.abbreviation ?? "") ||
     teacherId !== (subject?.teacherId ?? NO_TEACHER) ||
     (subject !== undefined && color !== subject.color);
-  const allowLeave = useDiscardGuard(dirty);
+  const { saving, saveAndClose, deleteAndClose } = useClosingForm(dirty);
 
-  const { saving, run } = useSaving({ closesOnSuccess: true });
   const save = () =>
-    run(async () => {
+    saveAndClose(() => {
       const trimmedName = name.trim();
-      await saveSubject(subject?.id ?? null, {
+      return saveSubject(subject?.id ?? null, {
         name: trimmedName,
         abbreviation: abbreviation.trim() || defaultAbbreviation(trimmedName),
         color,
         teacherId: teacherId === NO_TEACHER ? null : teacherId,
       });
-      allowLeave();
-      router.back();
     });
 
   const remove = () => {
     if (!subject) return;
-    confirmDelete(subjectDeletion(subject), allowLeave);
+    deleteAndClose(subjectDeletion(subject));
   };
 
   return (

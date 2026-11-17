@@ -1,8 +1,5 @@
-import { useState } from "react";
-
 import { SearchPickerSheet } from "@/components/search-picker-sheet";
-import { TextField } from "@/components/text-field";
-import { addTeacher, saveTeacher } from "@/db/actions";
+import { useTeacherDraft } from "@/components/teacher-draft";
 import type { Teacher } from "@/db/schema";
 
 export const NO_TEACHER = 0;
@@ -19,13 +16,7 @@ type TeacherPickerSheetProps = {
 // teacher is added right in the sheet ("Neue Lehrperson") and picked at once; a teacher is
 // changed right in the sheet too ("Bearbeiten" in the row actions).
 export function TeacherPickerSheet({ teachers, ...props }: TeacherPickerSheetProps) {
-  // The teacher the form changes; null for a new one
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [name, setName] = useState("");
-  const [abbreviation, setAbbreviation] = useState("");
-  const [email, setEmail] = useState("");
-  // Remounts the fields each time the form opens, so they show the values above
-  const [draft, setDraft] = useState(0);
+  const draft = useTeacherDraft();
 
   return (
     <SearchPickerSheet
@@ -41,52 +32,10 @@ export function TeacherPickerSheet({ teachers, ...props }: TeacherPickerSheetPro
       form={{
         label: "Neue Lehrperson",
         editLabel: "Lehrperson bearbeiten",
-        canSave: name.trim().length > 0,
-        start: (teacher) => {
-          setEditingId(teacher?.id ?? null);
-          setName(teacher?.name ?? "");
-          setAbbreviation(teacher?.abbreviation ?? "");
-          setEmail(teacher?.email ?? "");
-          setDraft((count) => count + 1);
-        },
-        save: async () => {
-          const values = {
-            name: name.trim(),
-            abbreviation: abbreviation.trim(),
-            email: email.trim() || null,
-          };
-          if (editingId === null) return addTeacher(values);
-          await saveTeacher(editingId, values);
-          return editingId;
-        },
-        fields: [
-          <TextField
-            key={`name-${draft}`}
-            placeholder="Name, z. B. Julian Riegger"
-            defaultValue={name}
-            // A new teacher starts with the name; a change starts where the user taps
-            autoFocus={editingId === null}
-            autoCapitalize="words"
-            onChangeText={setName}
-          />,
-          <TextField
-            key={`abbreviation-${draft}`}
-            placeholder="Kürzel, z. B. JRi"
-            defaultValue={abbreviation}
-            autoCapitalize="none"
-            maxLength={5}
-            onChangeText={setAbbreviation}
-          />,
-          <TextField
-            key={`email-${draft}`}
-            placeholder="E-Mail (optional)"
-            defaultValue={email}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            autoCorrect={false}
-            onChangeText={setEmail}
-          />,
-        ],
+        canSave: draft.canSave,
+        start: draft.start,
+        save: draft.save,
+        fields: draft.fields,
       }}
     />
   );
