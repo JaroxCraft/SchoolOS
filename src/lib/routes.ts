@@ -28,6 +28,12 @@ export function openScreen(href: Href) {
   if (claimOpening()) router.push(href);
 }
 
+// Closes everything (settings, pushed screens) and shows the Übersicht, e.g. after the data was
+// replaced. dismissTo goes back to the existing tabs; replace would put a second set on top.
+export function showOverview() {
+  router.dismissTo("/");
+}
+
 export const NEW_ENTRY = { pathname: "/entry/[id]", params: { id: "new" } } as const;
 
 // Opens an entry, or a new one (optionally for a subject), as a sheet. Ignored while the last

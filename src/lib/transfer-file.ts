@@ -15,6 +15,7 @@ import {
 } from "@/db/transfer";
 import { confirm, showError } from "@/lib/confirm";
 import { today } from "@/lib/dates";
+import { showOverview } from "@/lib/routes";
 
 // Exports are a few hundred KB at most; a larger file is not one and would block reading it
 const MAX_EXPORT_FILE_BYTES = 5 * 1024 * 1024;
@@ -111,4 +112,5 @@ function runImport(file: TransferFile) {
     return;
   }
   Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+  showOverview();
 }
