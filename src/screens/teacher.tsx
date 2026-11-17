@@ -3,7 +3,7 @@ import { useLocalSearchParams } from "expo-router";
 import { TeacherForm } from "@/components/teacher-form";
 import { useTeachers } from "@/db/queries";
 
-export default function TeacherScreen() {
+export default function TeacherEditScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const teacher = useTeachers().find((candidate) => String(candidate.id) === id);
 

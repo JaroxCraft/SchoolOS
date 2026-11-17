@@ -1,4 +1,4 @@
-import { FieldGroup } from "@expo/ui";
+import { FieldGroup, Text } from "@expo/ui";
 import { router, Stack } from "expo-router";
 import { useState } from "react";
 
@@ -11,9 +11,12 @@ import { useLessons, usePeriods } from "@/db/queries";
 import type { PeriodDraft } from "@/db/schema";
 import { useDiscardGuard } from "@/hooks/use-discard-guard";
 import { useSaveButton, useStepButton } from "@/hooks/use-header-button";
+import { useInk } from "@/hooks/use-ink";
+import { useSaving } from "@/hooks/use-saving";
 import { confirm } from "@/lib/confirm";
 import { addMinutes, minutesOf } from "@/lib/dates";
 import { useSchoolRoutes } from "@/lib/routes";
+import { saveFailed } from "@/lib/save-failed";
 
 const LESSON_MINUTES = 50;
 const FIRST_START = "07:25";
@@ -54,11 +57,13 @@ function changePeriod(grid: PeriodDraft[], index: number, start: string, end: st
 }
 
 // The period grid. Changes stay a draft until they are saved with ✓ (settings) or "Weiter" (setup),
-// like the forms of subjects and teachers; leaving with changes asks to discard them.
-export default function PeriodsScreen() {
+// like the forms of subjects and teachers; leaving with changes asks to discard them. Saving runs
+// at most once at a time and tells when it fails, like the forms.
+export default function PeriodsEditScreen() {
   const periods = usePeriods();
   const lessons = useLessons();
   const routes = useSchoolRoutes();
+  const ink = useInk();
   const saveButton = useSaveButton();
   const nextButton = useStepButton("next");
   // null until the first change: until then the screen shows the saved grid
@@ -67,11 +72,18 @@ export default function PeriodsScreen() {
   const dirty = draft !== null && gridKey(draft) !== gridKey(periods);
   const allowLeave = useDiscardGuard(dirty);
   const last = grid.at(-1);
+  // Leaving the settings after saving keeps the lock, since ✓ can still be tapped while the screen
+  // slides away; the setup step stays below the next one and is used again on the way back
+  const { saving, run } = useSaving({ closesOnSuccess: !routes.setup });
 
-  const save = () => {
-    if (dirty) savePeriods(grid);
-    setDraft(null);
-  };
+  // Saves the draft, then leaves with `leave`; a failed save stays on the screen with the draft
+  const saveAndLeave = (leave: () => void) =>
+    run(async () => {
+      if (dirty) savePeriods(grid);
+      setDraft(null);
+      allowLeave();
+      leave();
+    }).catch(saveFailed);
 
   const add = () => {
     const start = last ? last.endTime : FIRST_START;
@@ -87,7 +99,7 @@ export default function PeriodsScreen() {
       return;
     }
     confirm({
-      title: `${grid.length}. Lektion entfernen?`,
+      title: "Letzte Lektionszeit entfernen?",
       message: `${used === 1 ? "Eine Lektion" : `${used} Lektionen`} im Stundenplan zu dieser Zeit ${used === 1 ? "wird" : "werden"} beim Sichern ebenfalls entfernt.`,
       confirmLabel: "Entfernen",
       onConfirm: remove,
@@ -102,27 +114,24 @@ export default function PeriodsScreen() {
         {routes.setup && nextButton && (
           <Stack.Toolbar.Button
             {...nextButton}
-            disabled={grid.length === 0}
-            onPress={() => {
-              save();
-              router.push(routes.subjects);
-            }}
+            disabled={grid.length === 0 || saving}
+            onPress={() => saveAndLeave(() => router.push(routes.subjects))}
           />
         )}
         {!routes.setup && saveButton && (
           <Stack.Toolbar.Button
             {...saveButton}
-            onPress={() => {
-              save();
-              allowLeave();
-              router.back();
-            }}
+            disabled={saving}
+            onPress={() => saveAndLeave(() => router.back())}
           />
         )}
       </Stack.Toolbar>
       <DiscardGuard dirty={dirty}>
         <FormList>
           <FieldGroup.Section>
+            {grid.length === 0 && (
+              <Text textStyle={{ color: ink.secondary }}>Keine Lektionszeiten</Text>
+            )}
             {grid.map((period, index) => (
               <TimeRangeRow
                 // Added periods have no id yet; only the last one can be removed
@@ -133,19 +142,19 @@ export default function PeriodsScreen() {
                 onChange={(start, end) => setDraft(changePeriod(grid, index, start, end))}
               />
             ))}
-            <ActionRow label="Lektion hinzufügen" onPress={add} />
+            <ActionRow label="Lektionszeit hinzufügen" onPress={add} />
             <FieldGroup.SectionFooter>
               <FooterText>
                 Das Raster gilt für jeden Schultag. Tippe auf eine Zeit, um sie zu ändern; die
-                Lektion behält dabei ihre Länge, folgende Lektionen rücken bei Überschneidung nach.
-                Neue Lektionen schliessen direkt an die letzte an.
+                Lektionszeit behält dabei ihre Länge, folgende rücken bei Überschneidung nach. Neue
+                Lektionszeiten schliessen direkt an die letzte an.
               </FooterText>
             </FieldGroup.SectionFooter>
           </FieldGroup.Section>
 
           {last && (
             <FieldGroup.Section>
-              <DestructiveRow label="Letzte Lektion entfernen" onPress={removeLast} />
+              <DestructiveRow label="Letzte Lektionszeit entfernen" onPress={removeLast} />
             </FieldGroup.Section>
           )}
         </FormList>

@@ -12,7 +12,15 @@ export type TaskCheckboxProps = {
   color?: string;
 };
 
-// Android: the Material checkbox, with the toggle haptic of the system switches.
+// The haptic of checking a task off or reopening it, from the checkbox or a row action. Android:
+// the toggle haptic of the system switches.
+export function toggleHaptic(checked: boolean) {
+  Haptics.performAndroidHapticsAsync(
+    checked ? Haptics.AndroidHaptics.Toggle_On : Haptics.AndroidHaptics.Toggle_Off
+  );
+}
+
+// Android: the Material checkbox, with the toggle haptic.
 export function TaskCheckbox({
   value,
   onValueChange,
@@ -20,9 +28,7 @@ export function TaskCheckbox({
   accessibilityLabel,
 }: TaskCheckboxProps) {
   const toggle = (checked: boolean) => {
-    Haptics.performAndroidHapticsAsync(
-      checked ? Haptics.AndroidHaptics.Toggle_On : Haptics.AndroidHaptics.Toggle_Off
-    );
+    toggleHaptic(checked);
     onValueChange(checked);
   };
 

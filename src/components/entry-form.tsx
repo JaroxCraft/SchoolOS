@@ -3,23 +3,23 @@ import { useState } from "react";
 
 import { DateField } from "@/components/date-field";
 import { DestructiveRow } from "@/components/rows";
+import { NONE } from "@/components/search-picker";
 import { SelectRow } from "@/components/select-row";
 import { SheetForm } from "@/components/sheet-form";
 import { useSubjectPicker } from "@/components/subject-picker";
 import { TaskCheckbox } from "@/components/task-checkbox";
 import { TextField } from "@/components/text-field";
-import { deleteEntry, saveEntry } from "@/db/actions";
+import { saveEntry } from "@/db/actions";
 import { useTeachers } from "@/db/queries";
 import type { Entry, EntryType, Lesson, Period, Subject } from "@/db/schema";
+import { useClosingForm } from "@/hooks/use-closing-form";
+import { checkOffEntry } from "@/hooks/use-entry-placement";
+import { useNow } from "@/hooks/use-now";
+import { entryDeletion } from "@/lib/confirm-delete";
 import { formatDate } from "@/lib/dates";
 import { type DueChoice, dueChoiceDates, suggestDue } from "@/lib/due-date";
 import { ENTRY_TYPE_INFO, ENTRY_TYPE_OPTIONS } from "@/lib/entry-types";
 import { NEUTRAL_COLOR } from "@/lib/subject-colors";
-import { checkOffEntry } from "@/hooks/use-entry-placement";
-import { useClosingForm } from "@/hooks/use-closing-form";
-import { useNow } from "@/hooks/use-now";
-
-const NONE = 0;
 
 type FormState = {
   type: EntryType;
@@ -132,18 +132,13 @@ export function EntryForm({ entry, initialSubjectId, subjects, periods, lessons 
     });
 
   const remove = () => {
-    if (!entry) return;
-    deleteAndClose({
-      title: "Eintrag löschen?",
-      message: `«${entry.title}» wird gelöscht.`,
-      onDelete: () => deleteEntry(entry.id),
-    });
+    if (entry) deleteAndClose(entryDeletion(entry));
   };
 
   return (
     <>
       <SheetForm
-        title={entry ? info.label : "Neuer Eintrag"}
+        title={entry ? entry.title : "Neuer Eintrag"}
         canSave={canSave && !saving}
         dirty={dirty}
         onSave={save}>

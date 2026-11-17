@@ -1,5 +1,6 @@
 import { router, useRoute } from "expo-router";
 
+import type { RowAction } from "@/components/row-actions";
 import { isSheetClosing } from "@/lib/sheet-transition";
 
 export const NEW_ENTRY = { pathname: "/entry/[id]", params: { id: "new" } } as const;
@@ -15,6 +16,29 @@ export function openEntry({ id, subjectId }: { id: number | "new"; subjectId?: n
         ? { id: String(id) }
         : { id: String(id), subjectId: String(subjectId) },
   });
+}
+
+// The screen of a subject, pushed onto the stack of the overview or timetable tab it is opened from
+export const subjectHref = (subjectId: number) =>
+  ({ pathname: "/subject/[subjectId]", params: { subjectId: String(subjectId) } }) as const;
+
+export function openSubject(subjectId: number) {
+  router.push(subjectHref(subjectId));
+}
+
+// The long-press actions of a lesson, the same in the overview and on the timetable cards.
+// "Stundenplan bearbeiten" opens the editor of the settings sheet (✓ "Sichern" and back), not the
+// one of the first setup.
+export function lessonActions(subjectId: number): RowAction[] {
+  return [
+    { label: "Neuer Eintrag", icon: "plus", onPress: () => openEntry({ id: "new", subjectId }) },
+    { label: "Fach anzeigen", icon: "book", onPress: () => openSubject(subjectId) },
+    {
+      label: "Stundenplan bearbeiten",
+      icon: "pencil",
+      onPress: () => router.push(SCHOOL_ROUTES.settings.timetable),
+    },
+  ];
 }
 
 // The screens that set up the school (period grid, subjects, timetable and the subject form) exist

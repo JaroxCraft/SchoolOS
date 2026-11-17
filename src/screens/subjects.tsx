@@ -1,12 +1,13 @@
-import { FieldGroup } from "@expo/ui";
+import { FieldGroup, Text } from "@expo/ui";
 import { router, Stack } from "expo-router";
 
 import { FormList } from "@/components/form-list";
-import { RowActions } from "@/components/row-actions";
+import { type RowAction, RowActions } from "@/components/row-actions";
 import { ActionRow, NavigationRow } from "@/components/rows";
 import { SubjectDot } from "@/components/subject-dot";
 import { useSubjects, useTeachers } from "@/db/queries";
 import { useStepButton } from "@/hooks/use-header-button";
+import { useInk } from "@/hooks/use-ink";
 import { confirmRowDelete, subjectDeletion } from "@/lib/confirm-delete";
 import { useSchoolRoutes } from "@/lib/routes";
 import { joinDetails } from "@/lib/text";
@@ -15,6 +16,7 @@ export default function SubjectsScreen() {
   const subjects = useSubjects();
   const teachers = useTeachers();
   const routes = useSchoolRoutes();
+  const ink = useInk();
   const nextButton = useStepButton("next");
 
   const openSubject = (id: string) => router.push({ pathname: routes.subject, params: { id } });
@@ -36,27 +38,26 @@ export default function SubjectsScreen() {
       )}
       <FormList>
         <FieldGroup.Section>
+          {subjects.length === 0 && <Text textStyle={{ color: ink.secondary }}>Keine Fächer</Text>}
           {/* iOS: swipe left or long press to delete (asked first), long press to edit */}
           {subjects.map((subject) => {
-            const remove = {
+            const remove: RowAction = {
               label: "Löschen",
               icon: "trash",
               destructive: true,
               asksFirst: true,
               onPress: () => confirmRowDelete(subjectDeletion(subject)),
-            } as const;
+            };
+            const menu: RowAction[] = [
+              {
+                label: "Bearbeiten",
+                icon: "pencil",
+                onPress: () => openSubject(String(subject.id)),
+              },
+              remove,
+            ];
             return (
-              <RowActions
-                key={subject.id}
-                trailing={[remove]}
-                menu={[
-                  {
-                    label: "Bearbeiten",
-                    icon: "pencil",
-                    onPress: () => openSubject(String(subject.id)),
-                  },
-                  remove,
-                ]}>
+              <RowActions key={subject.id} trailing={[remove]} menu={menu}>
                 <NavigationRow
                   onPress={() => openSubject(String(subject.id))}
                   leading={<SubjectDot color={subject.color} />}

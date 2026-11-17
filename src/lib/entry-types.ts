@@ -9,7 +9,11 @@ type EntryTypeInfo = {
 };
 
 export const ENTRY_TYPE_INFO: Record<EntryType, EntryTypeInfo> = {
-  homework: { label: "Hausaufgabe", titlePlaceholder: "Aufgabe", gradable: false },
+  homework: {
+    label: "Hausaufgabe",
+    titlePlaceholder: "Aufgabe, z. B. S. 42, Nr. 3",
+    gradable: false,
+  },
   exam: { label: "Prüfung", titlePlaceholder: "Prüfung, z. B. Vokabeltest Unit 3", gradable: true },
   presentation: {
     label: "Präsentation",

@@ -1,8 +1,9 @@
 /// <reference types="bun" />
 
+import { readFileSync } from "node:fs";
+
 import { Database } from "bun:sqlite";
 import { describe, expect, test } from "bun:test";
-import { readFileSync } from "node:fs";
 
 import { ENTRY_TYPES, type Entry, type EntryType } from "@/db/schema";
 import { completePastEvents, isOverdue, placeEntries } from "@/lib/entry-status";

@@ -8,19 +8,20 @@ import { EntryRow } from "@/components/entry-row";
 import { FormList } from "@/components/form-list";
 import { ActionRow } from "@/components/rows";
 import { Screen } from "@/components/screen";
+import { NONE } from "@/components/search-picker";
 import { type SelectOption, SelectRow } from "@/components/select-row";
 import { sortSubjectsByUse, useSubjectPicker } from "@/components/subject-picker";
 import { useEntries, useLessons, useSubjects, useTeachers } from "@/db/queries";
 import type { EntryType } from "@/db/schema";
+import { useEntryPlacement } from "@/hooks/use-entry-placement";
 import { useInk } from "@/hooks/use-ink";
 import { useNow } from "@/hooks/use-now";
-import { useEntryPlacement } from "@/hooks/use-entry-placement";
 import { ENTRY_TYPE_OPTIONS } from "@/lib/entry-types";
 import { openEntry } from "@/lib/routes";
 
 const ALL = "all";
-const ALL_SUBJECTS = 0;
-const GENERAL = -1;
+// The subject filter "Alle Fächer"; NONE filters the entries without a subject (Allgemein)
+const ALL_SUBJECTS = -1;
 
 export default function AgendaScreen() {
   const subjects = useSubjects();
@@ -45,7 +46,7 @@ export default function AgendaScreen() {
   ];
   const subjectChoices = [
     { label: Platform.OS === "ios" ? "Alle Fächer" : "Alle", value: ALL_SUBJECTS },
-    { label: "Allgemein", value: GENERAL },
+    { label: "Allgemein", value: NONE },
   ];
   const subjectPicker = useSubjectPicker({
     label: "Fach",
@@ -65,8 +66,8 @@ export default function AgendaScreen() {
         <EmptyState
           icon={{ ios: "checklist", android: "checklist" }}
           title="Keine Einträge"
-          message="Hausaufgaben, Prüfungen, Präsentationen und Abgaben erscheinen hier."
-          action={{ label: "Eintrag erfassen", onPress: () => openEntry({ id: "new" }) }}
+          message="Hausaufgaben, Prüfungen, Präsentationen, Abgaben und andere Einträge erscheinen hier."
+          action={{ label: "Eintrag hinzufügen", onPress: () => openEntry({ id: "new" }) }}
         />
       </Screen>
     );
@@ -76,15 +77,15 @@ export default function AgendaScreen() {
     (entry) =>
       (typeFilter === ALL || entry.type === typeFilter) &&
       (subjectFilter === ALL_SUBJECTS ||
-        (subjectFilter === GENERAL ? entry.subjectId === null : entry.subjectId === subjectFilter))
+        (subjectFilter === NONE ? entry.subjectId === null : entry.subjectId === subjectFilter))
   );
 
-  // Every entry stays upcoming until it is checked off, even when overdue. Entries (un)checked just
+  // Every entry stays open until it is checked off, even when overdue. Entries (un)checked just
   // now stay in their section until the screen is left.
-  const { open: upcoming, done } = placeEntries(visible);
+  const { open, done } = placeEntries(visible);
 
   const sections = [
-    { title: "Anstehend", items: upcoming },
+    { title: "Offen", items: open },
     { title: "Erledigt", items: done },
   ];
 
@@ -157,7 +158,7 @@ export default function AgendaScreen() {
         {/* iOS: what the menu filters by, and the way back to all entries */}
         {Platform.OS === "ios" && filtered && visible.length > 0 && (
           <FieldGroup.Section title={`Gefiltert: ${filterLabel}`}>
-            <ActionRow label="Alle Einträge zeigen" onPress={resetFilter} />
+            <ActionRow label="Filter zurücksetzen" onPress={resetFilter} />
           </FieldGroup.Section>
         )}
 
@@ -176,12 +177,11 @@ export default function AgendaScreen() {
             </FieldGroup.Section>
           ))}
 
+        {/* Only with a filter on: without entries at all the screen shows its empty state */}
         {visible.length === 0 && (
           <FieldGroup.Section>
             <Text textStyle={{ color: ink.secondary }}>
-              {filterLabel
-                ? `Keine Einträge für «${filterLabel}»`
-                : "Keine Einträge für diesen Filter"}
+              {`Keine Einträge für «${filterLabel}»`}
             </Text>
             <ActionRow label="Filter zurücksetzen" onPress={resetFilter} />
           </FieldGroup.Section>

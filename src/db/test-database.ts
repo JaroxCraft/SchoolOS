@@ -1,8 +1,9 @@
 /// <reference types="bun" />
+import { join } from "node:path";
+
 import { Database as SQLite } from "bun:sqlite";
 import { drizzle } from "drizzle-orm/bun-sqlite";
 import { migrate } from "drizzle-orm/bun-sqlite/migrator";
-import { join } from "node:path";
 
 import { enableForeignKeys, type Database } from "@/db/database";
 import * as schema from "@/db/schema";

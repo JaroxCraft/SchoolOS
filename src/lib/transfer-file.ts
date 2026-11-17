@@ -40,13 +40,13 @@ export async function shareExport(kind: TransferKind) {
     });
   } catch {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-    showMessage("Teilen ist fehlgeschlagen", "Versuche es noch einmal.");
+    showMessage("Teilen nicht möglich", "Versuche es noch einmal.");
   }
 }
 
 // Lets the user pick an export file, shows what it contains and replaces the data after
-// confirming. onDone runs after a successful import.
-export async function pickAndImport(onDone?: () => void) {
+// confirming.
+export async function pickAndImport() {
   let text;
   try {
     // Only JSON files can be picked. Android messengers often save them without their type
@@ -71,7 +71,10 @@ export async function pickAndImport(onDone?: () => void) {
     text = await new File(picked.uri).text();
   } catch {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-    showMessage("Die Datei konnte nicht geöffnet werden", "Versuche es noch einmal.");
+    showMessage(
+      "Öffnen nicht möglich",
+      "Die Datei konnte nicht geöffnet werden. Versuche es noch einmal."
+    );
     return;
   }
 
@@ -94,18 +97,18 @@ export async function pickAndImport(onDone?: () => void) {
           message: `Die Datei enthält ${describeTransferFile(file)}. Dein Lektionenraster, deine Fächer, Lehrpersonen und dein Stundenplan werden ersetzt. Einträge und Noten bleiben erhalten.`,
           confirmLabel: "Importieren",
           destructive: false,
-          onConfirm: () => runImport(file, onDone),
+          onConfirm: () => runImport(file),
         }
       : {
           title: "Backup wiederherstellen?",
           message: `Die Datei enthält ${describeTransferFile(file)}. Alle Daten auf diesem Gerät werden durch das Backup ersetzt.`,
           confirmLabel: "Wiederherstellen",
-          onConfirm: () => runImport(file, onDone),
+          onConfirm: () => runImport(file),
         }
   );
 }
 
-function runImport(file: TransferFile, onDone?: () => void) {
+function runImport(file: TransferFile) {
   try {
     data.importData(file);
   } catch (error) {
@@ -119,5 +122,4 @@ function runImport(file: TransferFile, onDone?: () => void) {
     return;
   }
   Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-  onDone?.();
 }

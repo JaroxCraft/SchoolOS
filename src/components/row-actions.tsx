@@ -6,7 +6,7 @@ export type RowAction = {
   icon: SFSymbol;
   onPress: () => void;
   destructive?: boolean;
-  // The action asks before it deletes (subjects, teachers). Its swipe button is red without the
+  // The action asks before it deletes (entries, subjects, teachers). Its swipe button is red without the
   // destructive role: with that role iOS removes the row at once, even if the user cancels.
   asksFirst?: boolean;
   // Background of the swipe button, e.g. green for "Erledigt"

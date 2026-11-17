@@ -9,17 +9,19 @@ import { Screen } from "@/components/screen";
 import { SubjectDot } from "@/components/subject-dot";
 import { useEntries, useLessons, usePeriods, useSubjects } from "@/db/queries";
 import type { Period, Subject } from "@/db/schema";
+import { useEntryPlacement } from "@/hooks/use-entry-placement";
 import { useInk } from "@/hooks/use-ink";
 import { useNow } from "@/hooks/use-now";
-import { useEntryPlacement } from "@/hooks/use-entry-placement";
 import { formatDate, relativeDay } from "@/lib/dates";
+import { lessonActions, openSubject, SCHOOL_ROUTES } from "@/lib/routes";
 import { nextLessons, periodNumber, periodRange } from "@/lib/schedule";
-import { openEntry, SCHOOL_ROUTES } from "@/lib/routes";
 import { SETUP_STEP_ICONS } from "@/lib/setup";
-import { joinDetails } from "@/lib/text";
+import { NEUTRAL_COLOR } from "@/lib/subject-colors";
+import { SYSTEM_COLORS } from "@/lib/system-colors";
+import { countOf, joinDetails } from "@/lib/text";
 import { pickAndImport } from "@/lib/transfer-file";
 
-const DONE_ICON = { sf: "checkmark", md: "check", color: "#34C759" } as const;
+const DONE_ICON = { sf: "checkmark", md: "check", color: SYSTEM_COLORS.green } as const;
 
 type SetupProps = { periods: Period[]; subjects: Subject[] };
 
@@ -33,7 +35,7 @@ function Setup({ periods, subjects }: SetupProps) {
       done: periods.length > 0,
       detail:
         periods.length > 0
-          ? `${periods.length} Lektionen, ${periods[0].startTime}–${periods.at(-1)!.endTime}`
+          ? `${countOf(periods.length, "Lektionszeit", "Lektionszeiten")}, ${periods[0].startTime}–${periods.at(-1)!.endTime}`
           : "Wann deine Lektionen beginnen und enden",
       icon: SETUP_STEP_ICONS.periods,
       href: SCHOOL_ROUTES.setup.periods,
@@ -41,7 +43,8 @@ function Setup({ periods, subjects }: SetupProps) {
     {
       title: "Fächer erfassen",
       done: subjects.length > 0,
-      detail: subjects.length > 0 ? `${subjects.length} Fächer` : "Mit Kürzel und Farbe",
+      detail:
+        subjects.length > 0 ? countOf(subjects.length, "Fach", "Fächer") : "Mit Kürzel und Farbe",
       icon: SETUP_STEP_ICONS.subjects,
       href: SCHOOL_ROUTES.setup.subjects,
     },
@@ -68,7 +71,7 @@ function Setup({ periods, subjects }: SetupProps) {
         ))}
         <FieldGroup.SectionFooter>
           <FooterText>
-            Danach zeigt die Übersicht deine nächsten Lektionen, offenen Aufgaben und Prüfungen.
+            Danach zeigt die Übersicht deine nächsten Lektionen und alle offenen Einträge.
           </FooterText>
         </FieldGroup.SectionFooter>
       </FieldGroup.Section>
@@ -125,28 +128,14 @@ export default function OverviewScreen() {
           {upcomingLessons.length === 0 && (
             <Text textStyle={{ color: ink.secondary }}>Keine Lektionen im Stundenplan</Text>
           )}
-          {/* A long press offers a new entry for the subject and the subject itself */}
+          {/* A long press offers the actions of every lesson, as on the timetable cards */}
           {upcomingLessons.map(({ lesson, period }) => {
             const subject = subjectById(lesson.subjectId);
-            const openSubject = () =>
-              router.push({
-                pathname: "/subject/[subjectId]",
-                params: { subjectId: String(lesson.subjectId) },
-              });
             return (
-              <RowActions
-                key={lesson.id}
-                menu={[
-                  {
-                    label: "Neuer Eintrag",
-                    icon: "plus",
-                    onPress: () => openEntry({ id: "new", subjectId: lesson.subjectId }),
-                  },
-                  { label: "Fach anzeigen", icon: "book", onPress: openSubject },
-                ]}>
+              <RowActions key={lesson.id} menu={lessonActions(lesson.subjectId)}>
                 <NavigationRow
-                  onPress={openSubject}
-                  leading={<SubjectDot color={subject?.color ?? ink.secondary} />}
+                  onPress={() => openSubject(lesson.subjectId)}
+                  leading={<SubjectDot color={subject?.color ?? NEUTRAL_COLOR} />}
                   supportingText={joinDetails(periodRange(period), lesson.room)}>
                   {`${periodNumber(periods, period.id)}. ${subject?.name ?? ""}`}
                 </NavigationRow>

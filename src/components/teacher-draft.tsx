@@ -3,10 +3,12 @@ import { useState } from "react";
 import { TextField } from "@/components/text-field";
 import { addTeacher, saveTeacher } from "@/db/actions";
 import type { Teacher } from "@/db/schema";
+import { teacherAbbreviation } from "@/lib/text";
 
 // A teacher being added or changed, in the teacher form (settings) and right in the teacher
 // picker: the fields with their placeholders and limits, whether it can be saved or has changes,
-// and saving it with the values tidied up (trimmed, an empty email address stored as none).
+// and saving it with the values tidied up (trimmed, an empty Kürzel made from the name like the
+// one of a Fach, an empty email address stored as none).
 export function useTeacherDraft(initial?: Teacher) {
   // The teacher the draft changes; undefined for a new one
   const [teacher, setTeacher] = useState(initial);
@@ -27,9 +29,10 @@ export function useTeacherDraft(initial?: Teacher) {
 
   // Returns the id of the saved teacher
   const save = async (): Promise<number> => {
+    const trimmedName = name.trim();
     const values = {
-      name: name.trim(),
-      abbreviation: abbreviation.trim(),
+      name: trimmedName,
+      abbreviation: abbreviation.trim() || teacherAbbreviation(trimmedName),
       email: email.trim() || null,
     };
     if (!teacher) return addTeacher(values);
@@ -49,7 +52,9 @@ export function useTeacherDraft(initial?: Teacher) {
     />,
     <TextField
       key={`abbreviation-${version}`}
-      placeholder="Kürzel, z. B. JRi"
+      placeholder={
+        name.trim() ? `Kürzel (sonst «${teacherAbbreviation(name)}»)` : "Kürzel, z. B. JRi"
+      }
       defaultValue={abbreviation}
       autoCapitalize="none"
       maxLength={5}
@@ -57,7 +62,7 @@ export function useTeacherDraft(initial?: Teacher) {
     />,
     <TextField
       key={`email-${version}`}
-      placeholder="E-Mail (optional)"
+      placeholder="E-Mail, z. B. julian.riegger@schule.ch"
       defaultValue={email}
       keyboardType="email-address"
       autoCapitalize="none"

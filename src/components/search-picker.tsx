@@ -5,18 +5,26 @@ import type { ReactNode } from "react";
 import { RowActions } from "@/components/row-actions";
 import { useInk } from "@/hooks/use-ink";
 import { useSymbol } from "@/hooks/use-symbol";
+import { SYSTEM_COLORS } from "@/lib/system-colors";
+
+// "None" in every picker and select: no Fach ("Allgemein"), no Lehrperson ("Keine"), a free period
+// ("Frei") or no Lektion. Ids of saved rows start at 1, so 0 never collides with one.
+export const NONE = 0;
 
 // Choices above the items, e.g. "Frei" in the timetable or "Allgemein" for entries
 export type ExtraChoice = { label: string; value: number };
 
-// A form right in the sheet, to add an item ("Neue Lehrperson") or to change one. It is pushed
-// inside the sheet (iOS) or takes the place of the list (Android). A new item is picked and the
-// sheet closes; after a change the list is shown again.
+// A form right in the sheet, to add an item or to change one. It is pushed inside the sheet (iOS)
+// or takes the place of the list (Android). A new item is picked and the sheet closes; after a
+// change the list is shown again.
 export type PickerForm<T> = {
-  // Title of the form for a new item, and of the row that opens it
-  label: string;
-  // Title of the form for an existing item. Without it, items cannot be changed in the sheet.
-  editLabel?: string;
+  // The list action row that opens the form for a new item, e.g. "Lehrperson hinzufügen"
+  addLabel: string;
+  // Title of the form for a new item, e.g. "Neue Lehrperson"
+  newTitle: string;
+  // Title of the form for an existing item, its name like the form screens. Without it, items
+  // cannot be changed in the sheet.
+  editTitle?: (item: T) => string;
   // The rows of the form
   fields: ReactNode;
   canSave: boolean;
@@ -26,9 +34,6 @@ export type PickerForm<T> = {
   // Saves the form and returns the id of the item
   save: () => Promise<number>;
 };
-
-// systemGray, the color of the swipe buttons that change a row, as in Mail
-const EDIT_GRAY = "#8E8E93";
 
 // A sheet listing items (subjects, teachers) to pick one, with a search field. The chosen one is
 // marked with a checkmark; picking one closes the sheet. See search-picker-sheet(.ios).tsx.
@@ -129,7 +134,8 @@ export function usePickerSections<T extends { id: number }>(
           const edit = {
             label: "Bearbeiten",
             icon: "pencil",
-            tint: EDIT_GRAY,
+            // Gray like the swipe buttons that change a row in Mail
+            tint: SYSTEM_COLORS.gray,
             onPress: () => onEdit(item),
           } as const;
           return (

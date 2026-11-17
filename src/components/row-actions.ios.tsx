@@ -2,18 +2,16 @@ import { Button, ContextMenu, SwipeActions } from "@expo/ui/swift-ui";
 import { tint } from "@expo/ui/swift-ui/modifiers";
 
 import type { RowAction, RowActionsProps } from "@/components/row-actions";
+import { SYSTEM_COLORS } from "@/lib/system-colors";
 
 export type { RowAction } from "@/components/row-actions";
-
-// systemRed, the color of the destructive swipe buttons
-const DESTRUCTIVE_RED = "#FF3B30";
 
 // A button of the context menu, or of a swipe group (`swipe`). A destructive swipe button with the
 // destructive role makes iOS remove the row right away; for an action that asks first, the row
 // must stay until the user confirms, so the button only takes the red.
 function actionButton(action: RowAction, swipe: boolean) {
   const keepsRow = swipe && action.destructive && action.asksFirst;
-  const color = keepsRow ? DESTRUCTIVE_RED : action.tint;
+  const color = keepsRow ? SYSTEM_COLORS.red : action.tint;
   return (
     <Button
       key={action.label}

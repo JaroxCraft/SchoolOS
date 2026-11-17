@@ -13,11 +13,11 @@ import { type SearchPickerSheetProps, usePickerSections } from "@/components/sea
 import { TextField } from "@/components/text-field";
 import { useInk } from "@/hooks/use-ink";
 import { useSaving } from "@/hooks/use-saving";
-import { showMessage } from "@/lib/confirm";
 import { useSymbol } from "@/hooks/use-symbol";
+import { saveFailed } from "@/lib/save-failed";
 
 // Android: a Material bottom sheet that opens at half height with the drag handle on top, so it
-// can be pulled up or swiped down to close (also: tapping the scrim, the back gesture). "Neue …"
+// can be pulled up or swiped down to close (also: tapping the scrim, the back gesture). "… hinzufügen"
 // and "Bearbeiten" in the menu of an item's long press expand it to full height and show the form
 // in place of the list, like the pushed form in the iOS sheet (search-picker-sheet.ios.tsx). The
 // Compose sheet is used instead of the universal BottomSheet, which does not offer to expand it.
@@ -30,8 +30,8 @@ export function SearchPickerSheet<T extends { id: number }>(props: SearchPickerS
   const [mounted, setMounted] = useState(props.isPresented);
   if (props.isPresented && !mounted) setMounted(true);
   const [query, setQuery] = useState("");
-  // The form in place of the list, for a new item or to change one
-  const [formMode, setFormMode] = useState<"new" | "edit" | null>(null);
+  // The form in place of the list: "new" for a new item, or the item it changes
+  const [formMode, setFormMode] = useState<"new" | { edit: T } | null>(null);
   // While the form saves, so a second tap cannot add the item twice
   const { saving, run } = useSaving();
   const { form } = props;
@@ -54,14 +54,14 @@ export function SearchPickerSheet<T extends { id: number }>(props: SearchPickerS
   };
   const openForm = (item?: T) => {
     form?.start(item);
-    setFormMode(item === undefined ? "new" : "edit");
+    setFormMode(item === undefined ? "new" : { edit: item });
     sheet.current?.expand();
   };
   const { sections, choose } = usePickerSections(
     props,
     query,
     close,
-    form?.editLabel ? openForm : undefined
+    form?.editTitle ? openForm : undefined
   );
 
   if (!mounted) return null;
@@ -78,27 +78,27 @@ export function SearchPickerSheet<T extends { id: number }>(props: SearchPickerS
         {form && formMode ? (
           <FormGroup>
             <FieldGroup.Section
-              title={formMode === "edit" ? (form.editLabel ?? form.label) : form.label}>
+              title={
+                formMode === "new"
+                  ? form.newTitle
+                  : (form.editTitle?.(formMode.edit) ?? form.newTitle)
+              }>
               {form.fields}
             </FieldGroup.Section>
             <FieldGroup.Section>
               <Button
                 variant="text"
-                label={formMode === "edit" ? "Sichern" : "Hinzufügen"}
+                label={formMode === "new" ? "Hinzufügen" : "Sichern"}
                 disabled={!form.canSave || saving}
                 onPress={() =>
                   run(async () => {
                     try {
                       const id = await form.save();
                       // A changed item stays as it was picked; the list shows the change
-                      if (formMode === "edit") setFormMode(null);
+                      if (formMode !== "new") setFormMode(null);
                       else choose(id);
                     } catch {
-                      // Shared by the subject and teacher pickers, so the message names no kind of item
-                      showMessage(
-                        "Nicht gesichert",
-                        "Die Eingaben konnten nicht gesichert werden. Versuche es nochmals."
-                      );
+                      saveFailed();
                     }
                   })
                 }
@@ -122,7 +122,7 @@ export function SearchPickerSheet<T extends { id: number }>(props: SearchPickerS
             {form && !query.trim() && (
               <FieldGroup.Section>
                 <ListItem onPress={() => openForm()}>
-                  <Text textStyle={{ color: ink.accent }}>{form.label}</Text>
+                  <Text textStyle={{ color: ink.accent }}>{form.addLabel}</Text>
                 </ListItem>
               </FieldGroup.Section>
             )}

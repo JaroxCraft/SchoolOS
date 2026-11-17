@@ -15,6 +15,8 @@ import { allowNotifications, sendTestReminder } from "@/lib/notifications";
 import { AFTER_SCHOOL_MINUTES } from "@/lib/reminders";
 import { SCHOOL_ROUTES } from "@/lib/routes";
 import { SETUP_STEP_ICONS } from "@/lib/setup";
+import { SYSTEM_COLORS } from "@/lib/system-colors";
+import { countOf } from "@/lib/text";
 import { pickAndImport, shareExport } from "@/lib/transfer-file";
 
 export default function SettingsScreen() {
@@ -37,7 +39,7 @@ export default function SettingsScreen() {
   };
 
   const notificationsFooter = remindersOn
-    ? `${AFTER_SCHOOL_MINUTES} Minuten nach der letzten Lektion fasst eine Übersicht zusammen, was bis zum nächsten Schultag ansteht: Hausaufgaben, Prüfungen, Präsentationen, Abgaben und sonstige Einträge. An Tagen ohne Unterricht kommt sie um ${settings.noLessonSummaryTime}. Die zweite Erinnerung wiederholt das am Abend, solange noch etwas offen ist.`
+    ? `${AFTER_SCHOOL_MINUTES} Minuten nach der letzten Lektion kommt eine Zusammenfassung von allem, was bis zum nächsten Schultag ansteht: Hausaufgaben, Prüfungen, Präsentationen, Abgaben und andere Einträge. An freien Tagen kommt sie um ${settings.noLessonSummaryTime}. Die zweite Erinnerung wiederholt das am Abend, solange noch etwas offen ist.`
     : denied
       ? "Mitteilungen sind für SchoolOS in den Systemeinstellungen ausgeschaltet. Beim Einschalten öffnen sich die Einstellungen, um sie zu erlauben."
       : "Keine Erinnerungen an Hausaufgaben, Prüfungen und andere Einträge.";
@@ -60,39 +62,39 @@ export default function SettingsScreen() {
           <NavigationRow
             icon={SETUP_STEP_ICONS.periods}
             onPress={() => router.push(SCHOOL_ROUTES.settings.periods)}
-            supportingText={`${periods.length} Lektionen pro Tag`}>
+            supportingText={`${countOf(periods.length, "Lektionszeit", "Lektionszeiten")} pro Tag`}>
             Lektionenraster
           </NavigationRow>
           <NavigationRow
             icon={SETUP_STEP_ICONS.subjects}
             onPress={() => router.push(SCHOOL_ROUTES.settings.subjects)}
-            supportingText={`${subjects.length} Fächer`}>
+            supportingText={countOf(subjects.length, "Fach", "Fächer")}>
             Fächer
           </NavigationRow>
           <NavigationRow
             icon={SETUP_STEP_ICONS.timetable}
             onPress={() => router.push(SCHOOL_ROUTES.settings.timetable)}
-            supportingText={`${lessons.length} Lektionen pro Woche`}>
+            supportingText={`${countOf(lessons.length, "Lektion", "Lektionen")} pro Woche`}>
             Stundenplan
           </NavigationRow>
           <NavigationRow
             icon={SETUP_STEP_ICONS.teachers}
             onPress={() => router.push("/settings/teachers")}
-            supportingText={`${teachers.length} Lehrpersonen`}>
+            supportingText={countOf(teachers.length, "Lehrperson", "Lehrpersonen")}>
             Lehrpersonen
           </NavigationRow>
         </FieldGroup.Section>
 
         <FieldGroup.Section title="Teilen">
           <ActionRow
-            icon={{ sf: "square.and.arrow.up", md: "share", color: "#5856D6" }}
+            icon={{ sf: "square.and.arrow.up", md: "share", color: SYSTEM_COLORS.indigo }}
             label="Stundenplan teilen"
             onPress={() => shareExport("timetable")}
           />
           <ActionRow
-            icon={{ sf: "square.and.arrow.down", md: "download", color: "#30B0C7" }}
+            icon={{ sf: "square.and.arrow.down", md: "download", color: SYSTEM_COLORS.teal }}
             label="Datei importieren"
-            onPress={() => pickAndImport()}
+            onPress={pickAndImport}
           />
           <FieldGroup.SectionFooter>
             <FooterText>
@@ -117,7 +119,7 @@ export default function SettingsScreen() {
           {remindersOn && (
             <DateField
               mode="time"
-              label="Übersicht an freien Tagen"
+              label="Zusammenfassung an freien Tagen"
               value={settings.noLessonSummaryTime}
               onChange={(noLessonSummaryTime) => updateSettings({ noLessonSummaryTime })}
             />
@@ -129,7 +131,7 @@ export default function SettingsScreen() {
 
         <FieldGroup.Section title="Backup">
           <ActionRow
-            icon={{ sf: "externaldrive", md: "backup", color: "#8E8E93" }}
+            icon={{ sf: "externaldrive", md: "backup", color: SYSTEM_COLORS.gray }}
             label="Backup sichern"
             onPress={() => shareExport("backup")}
           />
@@ -143,7 +145,7 @@ export default function SettingsScreen() {
 
         <FieldGroup.Section title="Info">
           <NavigationRow
-            icon={{ sf: "info", md: "info", color: "#8E8E93" }}
+            icon={{ sf: "info", md: "info", color: SYSTEM_COLORS.gray }}
             onPress={() => router.push("/settings/about")}
             supportingText={versionLabel}>
             Über SchoolOS
