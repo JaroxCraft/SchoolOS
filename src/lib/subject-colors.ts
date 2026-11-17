@@ -13,5 +13,4 @@ export const SUBJECT_COLORS = [
   { name: "Braun", value: SYSTEM_COLORS.brown },
 ] as const;
 
-// Entries without a subject ("Allgemein")
-export const NEUTRAL_COLOR = SYSTEM_COLORS.gray;
+export const ALLGEMEIN_COLOR = SYSTEM_COLORS.gray;

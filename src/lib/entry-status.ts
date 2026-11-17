@@ -19,7 +19,9 @@ export function placeEntries(
   const open: Entry[] = [];
   const done: Entry[] = [];
   for (const entry of entries) {
-    ((placedBefore.get(entry.id) ?? entry.completed) ? done : open).push(entry);
+    const isDone = placedBefore.get(entry.id) ?? entry.completed;
+    if (isDone) done.push(entry);
+    else open.push(entry);
   }
   return { open, done: done.reverse() };
 }

@@ -16,8 +16,8 @@ const REMINDER_DAYS = 21;
 // The summary comes this long after the last lesson, once the student is out of school; the
 // settings footer names it
 export const AFTER_SCHOOL_MINUTES = 30;
-// Lines in a notification; the rest is counted as "und 2 weitere"
-const MAX_LINES = 4;
+// The rest is counted as "und 2 weitere"
+const MAX_LINES_PER_NOTIFICATION = 4;
 
 export type Reminder = {
   // "summary-2026-11-17" or "second-2026-11-17"
@@ -39,8 +39,8 @@ export type ReminderData = {
 };
 
 function joinLines(lines: string[]): string {
-  if (lines.length <= MAX_LINES) return lines.join("\n");
-  const shown = lines.slice(0, MAX_LINES - 1);
+  if (lines.length <= MAX_LINES_PER_NOTIFICATION) return lines.join("\n");
+  const shown = lines.slice(0, MAX_LINES_PER_NOTIFICATION - 1);
   return [...shown, `und ${lines.length - shown.length} weitere`].join("\n");
 }
 

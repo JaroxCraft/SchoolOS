@@ -18,12 +18,14 @@ export function FormList({ children, floatingButton, rowsKey }: Omit<FormGroupPr
 // The rowsKey of a list with these rows, one array per section in order: it changes when a row
 // is added, removed or moves to another section, and stays the same otherwise
 export function rowsKey(...sections: { id: number }[][]): number {
-  // FNV-1a over the ids, with a separator between the sections
+  const values = sections.flatMap((section) => [...section.map((row) => row.id), -1]);
+  return fnv1a(values);
+}
+
+function fnv1a(values: number[]): number {
   let hash = 0x811c9dc5;
-  for (const section of sections) {
-    for (const value of [...section.map((row) => row.id), -1]) {
-      hash = Math.imul(hash ^ value, 0x01000193);
-    }
+  for (const value of values) {
+    hash = Math.imul(hash ^ value, 0x01000193);
   }
   return hash >>> 0;
 }

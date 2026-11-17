@@ -15,8 +15,7 @@ const EXPORT = join(import.meta.dirname, "export");
 // Icons rendered by Apple (Liquid Glass), downloaded from App Store Connect; not generated here
 const RENDERED = join(import.meta.dirname, "rendered");
 
-// Canvas of Icon Composer and the App Store
-const CANVAS = 1024;
+const APP_STORE_ICON_SIZE = 1024;
 
 // iOS system colors of the subjects, light and dark
 const SUBJECTS = {
@@ -37,46 +36,44 @@ const IOS_BACKGROUND = {
 const BACKGROUND = { light: "#F4F6F9", dark: "#1C1C1E" } as const;
 type Mode = "light" | "dark";
 
-// Grid: columns are weekdays, rows are periods
-const COLS = 3;
-const ROWS = 4;
+const WEEKDAY_COLUMNS = 3;
+const PERIOD_ROWS = 4;
 const CELL_W = 184;
 const CELL_H = 136;
 const GAP = 32;
 const RADIUS = 46;
-const GRID_W = COLS * CELL_W + (COLS - 1) * GAP;
-const GRID_H = ROWS * CELL_H + (ROWS - 1) * GAP;
+const GRID_W = WEEKDAY_COLUMNS * CELL_W + (WEEKDAY_COLUMNS - 1) * GAP;
+const GRID_H = PERIOD_ROWS * CELL_H + (PERIOD_ROWS - 1) * GAP;
 
-// [column, first row, rows]
-type Block = [number, number, number];
+type Block = { column: number; firstRow: number; rowCount: number };
 const LESSONS: Record<Subject, Block[]> = {
   deutsch: [
-    [0, 0, 2],
-    [1, 2, 2],
+    { column: 0, firstRow: 0, rowCount: 2 },
+    { column: 1, firstRow: 2, rowCount: 2 },
   ],
-  rzg: [[0, 2, 2]],
-  englisch: [[1, 0, 2]],
-  nt: [[2, 0, 2]],
+  rzg: [{ column: 0, firstRow: 2, rowCount: 2 }],
+  englisch: [{ column: 1, firstRow: 0, rowCount: 2 }],
+  nt: [{ column: 2, firstRow: 0, rowCount: 2 }],
 };
 const FREE_PERIODS: Block[] = [
-  [2, 2, 1],
-  [2, 3, 1],
+  { column: 2, firstRow: 2, rowCount: 1 },
+  { column: 2, firstRow: 3, rowCount: 1 },
 ];
 
 // Android masks the adaptive icon to a circle of 72/108 and keeps 66/108 safe:
 // the whole grid has to fit into that circle.
-const ANDROID_SCALE = (0.6 * CANVAS) / Math.hypot(GRID_W, GRID_H);
+const ANDROID_SCALE = (0.6 * APP_STORE_ICON_SIZE) / Math.hypot(GRID_W, GRID_H);
 // The notification icon (24 dp) keeps a margin of 2 dp, so the grid fills 20/24 of it
-const NOTIFICATION_SCALE = ((20 / 24) * CANVAS) / Math.max(GRID_W, GRID_H);
+const NOTIFICATION_SCALE = ((20 / 24) * APP_STORE_ICON_SIZE) / Math.max(GRID_W, GRID_H);
 
 function rects(blocks: Block[], fill: string, scale = 1) {
-  const x0 = (CANVAS - GRID_W * scale) / 2;
-  const y0 = (CANVAS - GRID_H * scale) / 2;
+  const x0 = (APP_STORE_ICON_SIZE - GRID_W * scale) / 2;
+  const y0 = (APP_STORE_ICON_SIZE - GRID_H * scale) / 2;
   return blocks
-    .map(([col, row, span]) => {
-      const x = x0 + col * (CELL_W + GAP) * scale;
-      const y = y0 + row * (CELL_H + GAP) * scale;
-      const h = (span * CELL_H + (span - 1) * GAP) * scale;
+    .map(({ column, firstRow, rowCount }) => {
+      const x = x0 + column * (CELL_W + GAP) * scale;
+      const y = y0 + firstRow * (CELL_H + GAP) * scale;
+      const h = (rowCount * CELL_H + (rowCount - 1) * GAP) * scale;
       return `<rect x="${x}" y="${y}" width="${CELL_W * scale}" height="${h}" rx="${RADIUS * scale}" fill="${fill}"/>`;
     })
     .join("");
@@ -97,22 +94,22 @@ function silhouette(scale: number) {
 }
 
 function background(mode: Mode) {
-  return `<rect width="${CANVAS}" height="${CANVAS}" fill="${BACKGROUND[mode]}"/>`;
+  return `<rect width="${APP_STORE_ICON_SIZE}" height="${APP_STORE_ICON_SIZE}" fill="${BACKGROUND[mode]}"/>`;
 }
 function svg(content: string, clipRadius?: number) {
   const clip =
     clipRadius === undefined
       ? content
-      : `<clipPath id="mask"><rect width="${CANVAS}" height="${CANVAS}" rx="${clipRadius}"/></clipPath><g clip-path="url(#mask)">${content}</g>`;
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${CANVAS}" height="${CANVAS}" viewBox="0 0 ${CANVAS} ${CANVAS}">${clip}</svg>\n`;
+      : `<clipPath id="mask"><rect width="${APP_STORE_ICON_SIZE}" height="${APP_STORE_ICON_SIZE}" rx="${clipRadius}"/></clipPath><g clip-path="url(#mask)">${content}</g>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${APP_STORE_ICON_SIZE}" height="${APP_STORE_ICON_SIZE}" viewBox="0 0 ${APP_STORE_ICON_SIZE} ${APP_STORE_ICON_SIZE}">${clip}</svg>\n`;
 }
 
-function png(svgSource: string, size = CANVAS) {
+function png(svgSource: string, size = APP_STORE_ICON_SIZE) {
   return new Resvg(svgSource, { fitTo: { mode: "width", value: size } }).render().asPng();
 }
 
 // The App Store rejects icons with an alpha channel
-function opaquePng(svgSource: string, size = CANVAS) {
+function opaquePng(svgSource: string, size = APP_STORE_ICON_SIZE) {
   const image = PNG.sync.read(png(svgSource, size));
   return PNG.sync.write(image, { colorType: 2 });
 }
@@ -204,7 +201,7 @@ function buildExports(lightIcon: Uint8Array) {
   rmSync(EXPORT, { recursive: true, force: true });
   mkdirSync(EXPORT, { recursive: true });
   // Corner radius of an iOS icon, for documents (the system draws the real shape)
-  const corner = CANVAS * 0.2237;
+  const corner = APP_STORE_ICON_SIZE * 0.2237;
 
   for (const mode of ["light", "dark"] as const) {
     const suffix = mode === "light" ? "" : "-dark";

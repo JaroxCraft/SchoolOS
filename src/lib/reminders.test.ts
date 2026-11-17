@@ -18,7 +18,7 @@ const subjects: Subject[] = [
   { id: MATH, name: "Mathe", abbreviation: "M", color: "#ff0000", teacherId: null },
 ];
 // Math Monday to Thursday; Friday and the weekend are free
-const lessons: Lesson[] = [1, 2, 3, 4].map((weekday) => ({
+const lessons: Lesson[] = ([1, 2, 3, 4] as const).map((weekday) => ({
   id: weekday,
   weekday,
   periodId: weekday % 2 === 0 ? 12 : 11,

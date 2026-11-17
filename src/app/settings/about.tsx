@@ -25,8 +25,7 @@ const ANDROID_ICONS = {
 };
 const ICON_SIZE = 80;
 
-// How long the button shows "Kopiert" after copying
-const COPIED_MS = 2000;
+const COPIED_LABEL_MS = 2000;
 
 // Deletes everything and starts over like a new installation, e.g. before handing on the phone or
 // to set up again from a classmate's timetable. Kept at the end of "Über SchoolOS", out of the
@@ -56,7 +55,7 @@ export default function AboutScreen() {
 
   useEffect(() => {
     if (!copied) return;
-    const timeout = setTimeout(() => setCopied(false), COPIED_MS);
+    const timeout = setTimeout(() => setCopied(false), COPIED_LABEL_MS);
     return () => clearTimeout(timeout);
   }, [copied]);
 

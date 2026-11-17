@@ -4,9 +4,10 @@ import { background, clip, Shapes, size } from "@expo/ui/jetpack-compose/modifie
 import { useInk } from "@/hooks/use-ink";
 import { useSymbol } from "@/hooks/use-symbol";
 import type { RowSymbol } from "@/lib/row-action";
+import type { HexColor } from "@/lib/system-colors";
 
-// Relative luminance (sRGB, 0 black to 1 white) of a "#RRGGBB" color
-function luminance(hex: string) {
+// Relative luminance (sRGB, 0 black to 1 white)
+function luminance(hex: HexColor) {
   const [r, g, b] = [1, 3, 5].map((i) => {
     const c = parseInt(hex.slice(i, i + 2), 16) / 255;
     return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;

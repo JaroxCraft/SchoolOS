@@ -1,8 +1,8 @@
 // The school week: the time rules of the period grid (Lektionenraster) and the timetable
 // (Stundenplan). Periods must be sorted by start time (as returned by usePeriods); times are
 // compared as minutes since midnight.
-import type { Lesson, LessonSlot, Period } from "@/db/schema";
-import { addDays, isoWeekday, minutesOf, SCHOOL_WEEKDAYS } from "@/lib/dates";
+import type { Lesson, LessonDraft, Period } from "@/db/schema";
+import { addDays, isoWeekday, minutesOf, SCHOOL_WEEKDAYS, type Weekday } from "@/lib/dates";
 
 // Today's date and the minutes since midnight (see useNow)
 export type Now = { date: string; minutes: number };
@@ -30,7 +30,7 @@ export type LessonBlock = {
 };
 
 // A school day of the shown week
-export type SchoolDay = { weekday: number; date: string };
+export type SchoolDay = { weekday: Weekday; date: string };
 
 export type LessonState = "past" | "current" | "upcoming";
 
@@ -49,9 +49,9 @@ export function periodRange(period: Period): string {
 }
 
 // The lesson in a slot of the timetable (saved or being edited); each slot holds at most one.
-export function lessonAt<T extends LessonSlot>(
+export function lessonAt<T extends LessonDraft>(
   lessons: T[],
-  weekday: number,
+  weekday: Weekday,
   periodId: number
 ): T | undefined {
   return lessons.find((lesson) => lesson.weekday === weekday && lesson.periodId === periodId);
@@ -74,7 +74,11 @@ const spanOf = (period: Period) => ({
   end: minutesOf(period.endTime),
 });
 
-export function lessonBlocks(lessons: Lesson[], periods: Period[], weekday: number): LessonBlock[] {
+export function lessonBlocks(
+  lessons: Lesson[],
+  periods: Period[],
+  weekday: Weekday
+): LessonBlock[] {
   const blocks: LessonBlock[] = [];
   periods.forEach((period, index) => {
     const lesson = lessonAt(lessons, weekday, period.id);
@@ -105,15 +109,15 @@ export function lessonBlocks(lessons: Lesson[], periods: Period[], weekday: numb
 // The periods the timetable shows: from the first to the last period with a lesson on any day,
 // so neither view ends in a long empty stretch.
 export function visiblePeriods(lessons: Lesson[], periods: Period[]): Period[] {
-  const used = periods
-    .map((period, index) => (lessons.some((lesson) => lesson.periodId === period.id) ? index : -1))
-    .filter((index) => index >= 0);
-  if (used.length === 0) return [];
-  return periods.slice(used[0], used.at(-1)! + 1);
+  const isUsed = (period: Period) => lessons.some((lesson) => lesson.periodId === period.id);
+  const first = periods.findIndex(isUsed);
+  if (first === -1) return [];
+  const last = periods.findLastIndex(isUsed);
+  return periods.slice(first, last + 1);
 }
 
 // The weekday a timetable opens on: today, or Monday at the weekend
-export function shownWeekday(date: string): number {
+export function shownWeekday(date: string): Weekday {
   const weekday = isoWeekday(date);
   return weekday <= 5 ? weekday : 1;
 }
@@ -135,7 +139,7 @@ export function nextSchoolDay(date: string, lessons: Lesson[]): string {
 }
 
 // When the last lesson of a weekday ends (minutes since midnight), null on a day without lessons
-export function schoolEnd(weekday: number, lessons: Lesson[], periods: Period[]): number | null {
+export function schoolEnd(weekday: Weekday, lessons: Lesson[], periods: Period[]): number | null {
   const ends = lessons
     .filter((lesson) => lesson.weekday === weekday)
     .flatMap((lesson) => periods.filter((period) => period.id === lesson.periodId))

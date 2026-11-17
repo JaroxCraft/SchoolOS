@@ -9,23 +9,27 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 
+import { MIN_TAP_TARGET } from "@/constants/layout";
 import { useInk } from "@/hooks/use-ink";
-import { weekdayName, weekdayShort } from "@/lib/dates";
+import { type Weekday, weekdayName, weekdayShort } from "@/lib/dates";
 import type { SchoolDay } from "@/lib/schedule";
 
 const CIRCLE = 36;
+const DAY_PADDING = 2;
+const DAY_HEIGHT = CIRCLE + 2 * DAY_PADDING;
+// Grows the tap target to MIN_TAP_TARGET without moving the day
+const HIT_SLOP = (MIN_TAP_TARGET - DAY_HEIGHT) / 2;
 // The pop of the selection circle, as a spring with a light overshoot. A tap or swipe starts it,
 // so it is a spring and can be interrupted by the next one; it runs on the UI thread.
 const POP = { duration: 320, dampingRatio: 0.62 };
-// Reduce Motion: the circle only fades
-const FADE = { duration: 200 };
+const REDUCED_MOTION_FADE = { duration: 200 };
 
 export type WeekStripProps = {
   days: SchoolDay[];
   // The day shown in the day view; none in the week view
   selected: number | null;
   today: string;
-  onSelect: (weekday: number) => void;
+  onSelect: (weekday: Weekday) => void;
   // Space on the left, so the days line up with the columns of the week view
   inset: number;
   gap: number;
@@ -51,10 +55,10 @@ export function WeekStrip({ days, selected, today, onSelect, inset, gap }: WeekS
 }
 
 type WeekDayProps = {
-  weekday: number;
+  weekday: Weekday;
   selected: boolean;
   isToday: boolean;
-  onSelect: (weekday: number) => void;
+  onSelect: (weekday: Weekday) => void;
 };
 
 // Every day keeps its circle; selecting a day springs the new circle up from half its size while
@@ -68,11 +72,10 @@ function WeekDay({ weekday, selected, isToday, onSelect }: WeekDayProps) {
 
   useEffect(() => {
     const target = selected ? 1 : 0;
-    progress.set(reducedMotion ? withTiming(target, FADE) : withSpring(target, POP));
+    progress.set(reducedMotion ? withTiming(target, REDUCED_MOTION_FADE) : withSpring(target, POP));
   }, [selected, reducedMotion, progress]);
 
-  const fill = isToday ? ink.accent : ink.label;
-  const textColor = isToday ? ink.accent : ink.label;
+  const dayColor = isToday ? ink.accent : ink.label;
   const selectedTextColor = isToday || !dark ? "#FFFFFF" : "#000000";
 
   const circleStyle = useAnimatedStyle(() => {
@@ -83,20 +86,19 @@ function WeekDay({ weekday, selected, isToday, onSelect }: WeekDayProps) {
     };
   });
   const textStyle = useAnimatedStyle(() => ({
-    color: interpolateColor(progress.get(), [0, 1], [textColor, selectedTextColor]),
+    color: interpolateColor(progress.get(), [0, 1], [dayColor, selectedTextColor]),
   }));
 
   return (
     <Pressable
       style={styles.day}
-      // 40 pt tall (circle and padding); the hit slop makes the tap target 44 pt without moving it
-      hitSlop={{ top: 2, bottom: 2 }}
+      hitSlop={{ top: HIT_SLOP, bottom: HIT_SLOP }}
       accessibilityRole="tab"
       accessibilityState={{ selected }}
       accessibilityLabel={`${weekdayName(weekday)}${isToday ? ", heute" : ""}`}
       onPress={() => onSelect(weekday)}>
       <View style={styles.circle}>
-        <Animated.View style={[styles.fill, { backgroundColor: fill }, circleStyle]} />
+        <Animated.View style={[styles.fill, { backgroundColor: dayColor }, circleStyle]} />
         <Animated.Text style={[styles.weekday, textStyle]} maxFontSizeMultiplier={1.4}>
           {weekdayShort(weekday)}
         </Animated.Text>
@@ -112,7 +114,7 @@ const styles = StyleSheet.create({
   day: {
     flex: 1,
     alignItems: "center",
-    paddingVertical: 2,
+    paddingVertical: DAY_PADDING,
   },
   circle: {
     width: CIRCLE,

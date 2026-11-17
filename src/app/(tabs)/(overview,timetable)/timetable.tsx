@@ -19,13 +19,14 @@ import { SegmentedControl } from "@/components/segmented-control";
 import { WeekStrip } from "@/components/week-strip";
 import { useLessons, usePeriods, useSubjects, useTeachers } from "@/db/queries";
 import { useNow } from "@/hooks/use-now";
+import type { Weekday } from "@/lib/dates";
 import { openScreen, SCHOOL_ROUTES } from "@/lib/routes";
 import { schoolWeek, shownWeekday, visiblePeriods } from "@/lib/schedule";
 
 const PADDING = 16;
-// Points per minute: a 50-minute lesson is 80 pt tall in the day view, 55 pt in the week view
-const DAY_SCALE = 1.6;
-const WEEK_SCALE = 1.1;
+// A 50-minute lesson is 80 pt tall in the day view, 55 pt in the week view
+const DAY_POINTS_PER_MINUTE = 1.6;
+const WEEK_POINTS_PER_MINUTE = 1.1;
 
 type Mode = "day" | "week";
 
@@ -40,7 +41,6 @@ export default function TimetableScreen() {
   const lessons = useLessons();
   const now = useNow();
   const pager = useRef<ScrollViewInstance>(null);
-  // The pager and window width the chosen day was last scrolled into view for (see onLayout)
   const positioned = useRef<{ pager: ScrollViewInstance | null; width: number }>(null);
   const reducedMotion = useReducedMotion();
 
@@ -79,7 +79,7 @@ export default function TimetableScreen() {
   const scrollToDay = (weekday: number, animated: boolean) =>
     pager.current?.scrollTo({ x: (weekday - 1) * width, animated });
 
-  const selectDay = (weekday: number) => {
+  const selectDay = (weekday: Weekday) => {
     setSelected(weekday);
     if (mode === "week") {
       setMode("day");
@@ -89,7 +89,8 @@ export default function TimetableScreen() {
   };
 
   const selectPage = (page: number) => {
-    const weekday = Math.min(Math.max(page + 1, 1), days.length);
+    const index = Math.min(Math.max(page, 0), days.length - 1);
+    const weekday = days[index].weekday;
     if (weekday !== selected) setSelected(weekday);
   };
 
@@ -105,11 +106,9 @@ export default function TimetableScreen() {
     }
     const towardsNext = (Platform.OS === "android" ? -1 : 1) * (velocity?.x ?? 0);
     const page = contentOffset.x / width;
-    selectPage(
-      Math.abs(towardsNext) > 0.2
-        ? (towardsNext > 0 ? Math.ceil : Math.floor)(page)
-        : Math.round(page)
-    );
+    if (towardsNext > 0.2) selectPage(Math.ceil(page));
+    else if (towardsNext < -0.2) selectPage(Math.floor(page));
+    else selectPage(Math.round(page));
   };
 
   // The page the scroll came to rest on, in case Android's fling ended elsewhere than guessed
@@ -159,12 +158,13 @@ export default function TimetableScreen() {
             horizontal
             pagingEnabled
             showsHorizontalScrollIndicator={false}
-            // Opens on the chosen day without a visible scroll. Only on the first layout of this
-            // pager and when the width changes (rotation, iPad split view): later layouts, e.g.
-            // while the timetable grows, would pull a swipe in progress back to the chosen day.
+            // Opens on the chosen day without a visible scroll. Later layouts, e.g. while the
+            // timetable grows, would pull a swipe in progress back to the chosen day.
             onLayout={() => {
               const last = positioned.current;
-              if (last?.pager === pager.current && last.width === width) return;
+              const isFirstLayoutOrResize =
+                last === null || last.pager !== pager.current || last.width !== width;
+              if (!isFirstLayoutOrResize) return;
               positioned.current = { pager: pager.current, width };
               scrollToDay(selected, false);
             }}
@@ -175,7 +175,7 @@ export default function TimetableScreen() {
                 <LessonTimeline
                   {...timeline}
                   days={[day]}
-                  scale={DAY_SCALE}
+                  pointsPerMinute={DAY_POINTS_PER_MINUTE}
                   width={width - 2 * PADDING}
                   compact={false}
                 />
@@ -187,7 +187,7 @@ export default function TimetableScreen() {
             <LessonTimeline
               {...timeline}
               days={days}
-              scale={WEEK_SCALE}
+              pointsPerMinute={WEEK_POINTS_PER_MINUTE}
               width={width - PADDING}
               compact
             />

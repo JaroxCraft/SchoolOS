@@ -15,7 +15,7 @@ import { SubjectPickerSheet } from "@/components/subject-picker";
 import { TextField } from "@/components/text-field";
 import { saveLessons } from "@/db/actions";
 import { useLessons, usePeriods, useSubjects, useTeachers } from "@/db/queries";
-import type { LessonSlot, Period, Subject } from "@/db/schema";
+import type { LessonDraft, Period, Subject } from "@/db/schema";
 import { useDraftEditor } from "@/hooks/use-draft-editor";
 import { useStepButton } from "@/hooks/use-header-button";
 import { type Ink, useInk } from "@/hooks/use-ink";
@@ -31,7 +31,7 @@ import { typography } from "@/lib/typography";
 type LessonRowsProps = {
   period: Period;
   number: number;
-  lesson: LessonSlot | undefined;
+  lesson: LessonDraft | undefined;
   subject: Subject | undefined;
   onPress: () => void;
   // Makes the period free again
@@ -125,7 +125,7 @@ function lessonRows({
 }
 
 // The room a subject usually has, to fill in when it is put into another period
-function usualRoom(subjectId: number, lessons: LessonSlot[]): string | null {
+function usualRoom(subjectId: number, lessons: LessonDraft[]): string | null {
   const counts = new Map<string, number>();
   for (const lesson of lessons) {
     if (lesson.subjectId === subjectId && lesson.room) {
@@ -136,7 +136,7 @@ function usualRoom(subjectId: number, lessons: LessonSlot[]): string | null {
 }
 
 // The timetable without ids and in a fixed order, to tell whether the draft differs from it
-const timetableKey = (timetable: LessonSlot[]) =>
+const timetableKey = (timetable: LessonDraft[]) =>
   timetable
     .map(({ weekday, periodId, subjectId, room }) => `${weekday}:${periodId}:${subjectId}:${room}`)
     .sort()
@@ -165,7 +165,7 @@ export default function TimetableEditScreen() {
     dirty,
     saving,
     saveAndLeave,
-  } = useDraftEditor<LessonSlot[]>({
+  } = useDraftEditor<LessonDraft[]>({
     saved: lessons,
     keyOf: timetableKey,
     save: saveLessons,
@@ -178,7 +178,7 @@ export default function TimetableEditScreen() {
   });
 
   // Sets the lesson of a slot on the shown weekday; null makes it free
-  const setSlot = (periodId: number, lesson: Omit<LessonSlot, "weekday" | "periodId"> | null) =>
+  const setSlot = (periodId: number, lesson: Omit<LessonDraft, "weekday" | "periodId"> | null) =>
     setDraft([
       ...timetable.filter((slot) => slot.weekday !== weekday || slot.periodId !== periodId),
       ...(lesson ? [{ weekday, periodId, ...lesson }] : []),
@@ -211,7 +211,7 @@ export default function TimetableEditScreen() {
     );
   }
 
-  const subjectOf = (lesson: LessonSlot | undefined) => findById(subjects, lesson?.subjectId);
+  const subjectOf = (lesson: LessonDraft | undefined) => findById(subjects, lesson?.subjectId);
   const lessonCount = timetable.filter((lesson) => lesson.weekday === weekday).length;
   const editedLesson = editing ? lessonAt(timetable, weekday, editing.id) : undefined;
   const editedTitle = editing
@@ -289,13 +289,12 @@ export default function TimetableEditScreen() {
         onChange={(subjectId) => {
           // The same subject again keeps the lesson and its room as they are
           if (!editing || subjectId === (editedLesson?.subjectId ?? NONE)) return;
-          setSlot(
-            editing.id,
-            subjectId === NONE
-              ? null
-              : // The room the subject usually has; it can be changed in the row below the lesson
-                { subjectId, room: usualRoom(subjectId, timetable) }
-          );
+          if (subjectId === NONE) {
+            setSlot(editing.id, null);
+          } else {
+            // The room the subject usually has; it can be changed in the row below the lesson
+            setSlot(editing.id, { subjectId, room: usualRoom(subjectId, timetable) });
+          }
         }}
       />
     </>

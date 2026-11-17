@@ -17,7 +17,7 @@ import { lessonActions } from "@/lib/lesson-actions";
 import { openScreen, openSubject, SCHOOL_ROUTES } from "@/lib/routes";
 import { nextLessons, periodNumber, periodRange } from "@/lib/schedule";
 import { SETUP_STEP_ICONS } from "@/lib/setup";
-import { NEUTRAL_COLOR } from "@/lib/subject-colors";
+import { ALLGEMEIN_COLOR } from "@/lib/subject-colors";
 import { SYSTEM_COLORS } from "@/lib/system-colors";
 import { countOf, joinDetails } from "@/lib/text";
 import { pickAndImport } from "@/lib/transfer-file";
@@ -134,7 +134,7 @@ export default function OverviewScreen() {
               <RowActions key={lesson.id} menu={lessonActions(lesson.subjectId)}>
                 <NavigationRow
                   onPress={() => openSubject(lesson.subjectId)}
-                  leading={<SubjectDot color={subject?.color ?? NEUTRAL_COLOR} />}
+                  leading={<SubjectDot color={subject?.color ?? ALLGEMEIN_COLOR} />}
                   supportingText={joinDetails(periodRange(period), lesson.room)}>
                   {`${periodNumber(periods, period.id)}. ${subject?.name ?? ""}`}
                 </NavigationRow>

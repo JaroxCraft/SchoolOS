@@ -12,7 +12,7 @@ import {
   SETTINGS_ID,
   subjects,
   teachers,
-  type LessonSlot,
+  type LessonDraft,
   type PeriodDraft,
   type Subject,
   type Table,
@@ -68,7 +68,7 @@ export function dataOperations(db: Database) {
 
   // Replaces the whole timetable with the edited one, all or nothing. Nothing references a lesson,
   // so new ids do no harm.
-  function saveLessons(timetable: LessonSlot[]) {
+  function saveLessons(timetable: LessonDraft[]) {
     db.transaction((tx) => {
       tx.delete(lessons).run();
       if (timetable.length > 0) tx.insert(lessons).values(timetable).run();

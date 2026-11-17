@@ -36,6 +36,7 @@ import type { RowAction } from "@/lib/row-action";
 // Space between the sections, as in the FieldGroup of @expo/ui
 const SECTION_GAP = 24;
 const EDGE_PADDING = 16;
+const FLOATING_BUTTON_HEIGHT = 64;
 
 // Tapping beside the fields and rows ends the editing: the keyboard closes and the cursor leaves
 // the field. The rows and fields keep handling their own taps.
@@ -184,8 +185,9 @@ export function FormGroup({ children, modifiers = [], floatingButton, rowsKey }:
         }}>
         {expandSections(children, { ink, openMenu, setOpenMenu }, rowsKey !== undefined)}
         {floatingButton && (
-          // As much room as before, when the gap above it was the list's spacing
-          <FieldGroup.Section key="floating-button" style={{ height: 64 + SECTION_GAP }}>
+          <FieldGroup.Section
+            key="floating-button"
+            style={{ height: FLOATING_BUTTON_HEIGHT + SECTION_GAP }}>
             {null}
           </FieldGroup.Section>
         )}
