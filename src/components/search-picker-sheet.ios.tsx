@@ -26,8 +26,6 @@ import { FormGroup } from "@/components/form-group";
 import { NavigationRow } from "@/components/rows";
 import { type SearchPickerSheetProps, usePickerSections } from "@/components/search-picker";
 import { useInk } from "@/hooks/use-ink";
-import { useSaving } from "@/hooks/use-saving";
-import { saveFailed } from "@/lib/save-failed";
 
 const FORM = "form";
 
@@ -45,10 +43,8 @@ export function SearchPickerSheet<T extends { id: number }>(props: SearchPickerS
   // Follows the grabber, so pulling the sheet up for the form is a change even after the user
   // pulled it down again
   const [detent, setDetent] = useState<PresentationDetent>("medium");
-  // The item the form changes; null when it adds one
-  const [editing, setEditing] = useState<T | null>(null);
-  // While the form saves, so a second tap cannot add the item twice
-  const { saving, run } = useSaving();
+  // The item the form changes; undefined when it adds one
+  const [editing, setEditing] = useState<T>();
   const searchText = useNativeState("");
   const { form } = props;
 
@@ -64,15 +60,15 @@ export function SearchPickerSheet<T extends { id: number }>(props: SearchPickerS
   // together
   const openForm = (item?: T) => {
     form?.start(item);
-    setEditing(item ?? null);
+    setEditing(item);
     setDetent("large");
     setPath([FORM]);
   };
-  const { sections, choose } = usePickerSections(
+  const { sections, saving, formTitle, saveForm } = usePickerSections(
     props,
     query,
     close,
-    form?.editTitle ? openForm : undefined
+    form ? openForm : undefined
   );
 
   return (
@@ -124,9 +120,7 @@ export function SearchPickerSheet<T extends { id: number }>(props: SearchPickerS
                 <Toolbar>
                   <FormGroup
                     modifiers={[
-                      navigationTitle(
-                        editing ? (form.editTitle?.(editing) ?? form.newTitle) : form.newTitle
-                      ),
+                      navigationTitle(formTitle(editing)),
                       navigationBarTitleDisplayMode("inline"),
                     ]}>
                     <FieldGroup.Section>{form.fields}</FieldGroup.Section>
@@ -138,18 +132,7 @@ export function SearchPickerSheet<T extends { id: number }>(props: SearchPickerS
                         // An icon in the bar, as the ✓ of Music; the label is for VoiceOver
                         systemImage="checkmark"
                         modifiers={[disabled(!form.canSave || saving)]}
-                        onPress={() =>
-                          run(async () => {
-                            try {
-                              const id = await form.save();
-                              // A changed item stays as it was picked; the list shows the change
-                              if (editing) setPath([]);
-                              else choose(id);
-                            } catch {
-                              saveFailed();
-                            }
-                          })
-                        }
+                        onPress={() => saveForm(editing !== undefined, () => setPath([]))}
                       />
                     </ToolbarItem>
                   </Toolbar.Content>

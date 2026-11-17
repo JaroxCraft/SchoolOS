@@ -12,9 +12,7 @@ import { FormGroup } from "@/components/form-group";
 import { type SearchPickerSheetProps, usePickerSections } from "@/components/search-picker";
 import { TextField } from "@/components/text-field";
 import { useInk } from "@/hooks/use-ink";
-import { useSaving } from "@/hooks/use-saving";
 import { useSymbol } from "@/hooks/use-symbol";
-import { saveFailed } from "@/lib/save-failed";
 
 // Android: a Material bottom sheet that opens at half height with the drag handle on top, so it
 // can be pulled up or swiped down to close (also: tapping the scrim, the back gesture). "… hinzufügen"
@@ -32,8 +30,6 @@ export function SearchPickerSheet<T extends { id: number }>(props: SearchPickerS
   const [query, setQuery] = useState("");
   // The form in place of the list: "new" for a new item, or the item it changes
   const [formMode, setFormMode] = useState<"new" | { edit: T } | null>(null);
-  // While the form saves, so a second tap cannot add the item twice
-  const { saving, run } = useSaving();
   const { form } = props;
 
   useEffect(() => {
@@ -57,11 +53,11 @@ export function SearchPickerSheet<T extends { id: number }>(props: SearchPickerS
     setFormMode(item === undefined ? "new" : { edit: item });
     sheet.current?.expand();
   };
-  const { sections, choose } = usePickerSections(
+  const { sections, saving, formTitle, saveForm } = usePickerSections(
     props,
     query,
     close,
-    form?.editTitle ? openForm : undefined
+    form ? openForm : undefined
   );
 
   if (!mounted) return null;
@@ -77,12 +73,7 @@ export function SearchPickerSheet<T extends { id: number }>(props: SearchPickerS
         containerColor={colors.surface}>
         {form && formMode ? (
           <FormGroup>
-            <FieldGroup.Section
-              title={
-                formMode === "new"
-                  ? form.newTitle
-                  : (form.editTitle?.(formMode.edit) ?? form.newTitle)
-              }>
+            <FieldGroup.Section title={formTitle(formMode === "new" ? undefined : formMode.edit)}>
               {form.fields}
             </FieldGroup.Section>
             <FieldGroup.Section>
@@ -90,18 +81,7 @@ export function SearchPickerSheet<T extends { id: number }>(props: SearchPickerS
                 variant="text"
                 label={formMode === "new" ? "Hinzufügen" : "Sichern"}
                 disabled={!form.canSave || saving}
-                onPress={() =>
-                  run(async () => {
-                    try {
-                      const id = await form.save();
-                      // A changed item stays as it was picked; the list shows the change
-                      if (formMode !== "new") setFormMode(null);
-                      else choose(id);
-                    } catch {
-                      saveFailed();
-                    }
-                  })
-                }
+                onPress={() => saveForm(formMode !== "new", () => setFormMode(null))}
               />
               <Button variant="text" label="Abbrechen" onPress={() => setFormMode(null)} />
             </FieldGroup.Section>

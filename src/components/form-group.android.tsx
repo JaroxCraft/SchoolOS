@@ -3,7 +3,6 @@ import {
   Box,
   Column,
   DropdownMenu,
-  DropdownMenuItem,
   LazyColumn,
   Text,
   useMaterialColors,
@@ -27,6 +26,7 @@ import {
   useState,
 } from "react";
 
+import { ActionMenuItems } from "@/components/action-menu-items";
 import type { FormGroupProps } from "@/components/form-group";
 import type { RowActionsProps } from "@/components/row-actions";
 import { type Ink, useInk } from "@/hooks/use-ink";
@@ -56,11 +56,11 @@ type Rows = {
   setOpenMenu: (key: string | null) => void;
 };
 
-// A row with RowActions: a long press opens a Material menu at the row with the actions of the
-// iOS context menu, the destructive ones in red; a tap does what it did before. The menu hangs on
-// the row's trailing content (e.g. the chevron), so the row stays the section's own list item.
+// A row with RowActions: a long press opens a Material menu at the row with its actions (see
+// ActionMenuItems); a tap does what it did before. The menu hangs on the row's trailing content
+// (e.g. the chevron), so the row stays the section's own list item.
 function withMenu(item: ReactElement<ListItemProps>, menu: RowAction[], key: string, rows: Rows) {
-  const { ink, openMenu, setOpenMenu } = rows;
+  const { openMenu, setOpenMenu } = rows;
   const { onPress, trailing, modifiers } = item.props;
   const close = () => setOpenMenu(null);
 
@@ -78,22 +78,7 @@ function withMenu(item: ReactElement<ListItemProps>, menu: RowAction[], key: str
           {typeof trailing === "string" ? <Text>{trailing}</Text> : (trailing ?? <Box />)}
         </DropdownMenu.Trigger>
         <DropdownMenu.Items>
-          {menu.map((action) => (
-            <DropdownMenuItem
-              key={action.label}
-              onClick={() => {
-                close();
-                action.onPress();
-              }}>
-              <DropdownMenuItem.Text>
-                <Text
-                  color={action.destructive ? ink.danger : ink.label}
-                  style={{ typography: "bodyLarge" }}>
-                  {action.label}
-                </Text>
-              </DropdownMenuItem.Text>
-            </DropdownMenuItem>
-          ))}
+          <ActionMenuItems actions={menu} onClose={close} />
         </DropdownMenu.Items>
       </DropdownMenu>
     ),
