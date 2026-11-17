@@ -1,9 +1,9 @@
 import type { Entry, EntryType } from "@/db/schema";
 
 // An entry is open until it is checked off, whatever its type; its date only decides whether it
-// is overdue. Lists place an entry by the state it had when the screen was opened, so a row that
-// is checked off or reopened there stays in its place until the screen is left: `placedBefore`
-// holds that earlier state of the entries toggled since (see useEntryPlacement).
+// is overdue. An entry that was just checked off or reopened stays where it was for a moment
+// before it moves: `placedBefore` holds the earlier state of those entries (see
+// useEntryPlacement).
 
 export type EntryLists = {
   // By date, overdue ones first

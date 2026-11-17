@@ -34,7 +34,7 @@ describe("placeEntries", () => {
     expect(done).toEqual([late, early]);
   });
 
-  test("an entry toggled on this screen stays where it was placed", () => {
+  test("an entry toggled just now stays where it was until it is released", () => {
     const checkedOff = { ...entry("2026-11-18"), completed: true };
     const reopened = entry("2026-11-19");
     const placedBefore = new Map([

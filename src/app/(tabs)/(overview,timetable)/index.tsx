@@ -2,7 +2,7 @@ import { FieldGroup, Text } from "@expo/ui";
 import { router } from "expo-router";
 
 import { EntryRow } from "@/components/entry-row";
-import { FooterText, FormList } from "@/components/form-list";
+import { FooterText, FormList, rowsKey } from "@/components/form-list";
 import { RowActions } from "@/components/row-actions";
 import { ActionRow, NavigationRow } from "@/components/rows";
 import { Screen } from "@/components/screen";
@@ -111,14 +111,14 @@ export default function OverviewScreen() {
 
   const upcomingLessons = nextLessons(lessons, periods, now);
   // Every open entry in one list by date, whatever its type; overdue and missed ones in red.
-  // Entries checked off here stay until the screen is left, so they can be unchecked again.
+  // One checked off here leaves the list after a moment, animated.
   const openEntries = placeEntries(entries).open;
 
   const lessonsDate = upcomingLessons[0]?.date;
 
   return (
     <Screen title="Übersicht" showAddButton>
-      <FormList floatingButton>
+      <FormList floatingButton rowsKey={rowsKey(openEntries)}>
         <FieldGroup.Section
           title={
             lessonsDate

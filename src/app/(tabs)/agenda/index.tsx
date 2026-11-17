@@ -5,7 +5,7 @@ import { Platform } from "react-native";
 
 import { EmptyState } from "@/components/empty-state";
 import { EntryRow } from "@/components/entry-row";
-import { FormList } from "@/components/form-list";
+import { FormList, rowsKey } from "@/components/form-list";
 import { ActionRow } from "@/components/rows";
 import { Screen } from "@/components/screen";
 import { NONE } from "@/components/search-picker";
@@ -80,8 +80,8 @@ export default function AgendaScreen() {
         (subjectFilter === NONE ? entry.subjectId === null : entry.subjectId === subjectFilter))
   );
 
-  // Every entry stays open until it is checked off, even when overdue. Entries (un)checked just
-  // now stay in their section until the screen is left.
+  // Every entry stays open until it is checked off, even when overdue. One just checked off or
+  // reopened moves to the other section after a moment, animated.
   const { open, done } = placeEntries(visible);
 
   const sections = [
@@ -142,7 +142,7 @@ export default function AgendaScreen() {
 
   return (
     <Screen title="Agenda" showAddButton toolbarItems={filterMenu}>
-      <FormList floatingButton>
+      <FormList floatingButton rowsKey={rowsKey(open, done)}>
         {Platform.OS === "android" && (
           <FieldGroup.Section title="Filter">
             <SelectRow

@@ -4,8 +4,11 @@ import {
   accessibilityAddTraits,
   accessibilityLabel as a11yLabel,
   accessibilityValue,
+  animation,
+  Animation,
   buttonStyle,
   contentShape,
+  contentTransition,
   frame,
   shapes,
 } from "@expo/ui/swift-ui/modifiers";
@@ -60,6 +63,14 @@ export function TaskCheckbox({
           systemName={value ? "largecircle.fill.circle" : "circle"}
           size={22}
           color={value ? color : ink.secondary}
+          // The circle fills with the system's symbol replace effect, scaling down and back up,
+          // in the time of a small state change; the system tones it down with Reduce Motion
+          modifiers={[
+            contentTransition("symbolEffect", {
+              symbolEffect: { effect: "replace", direction: "downUp" },
+            }),
+            animation(Animation.snappy({ duration: 0.25 }), value),
+          ]}
         />
         {label ? <Text textStyle={{ color: ink.label }}>{label}</Text> : null}
       </Row>
