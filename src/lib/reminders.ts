@@ -1,5 +1,5 @@
 import type { Entry, Lesson, Period, Settings, Subject } from "@/db/schema";
-import { addDays, dateAt, isoWeekday, minutesOf, toISODate, weekdayName } from "@/lib/dates";
+import { addDays, dateAt, isoWeekday, minutesOf, toISODate } from "@/lib/dates";
 import {
   type DueItem,
   dueLine,
@@ -70,7 +70,6 @@ export function planReminders({
   for (let offset = 0; offset < REMINDER_DAYS; offset++) {
     const day = addDays(today, offset);
     const schoolDay = nextSchoolDay(day, lessons);
-    const dayName = schoolDay === addDays(day, 1) ? "morgen" : weekdayName(isoWeekday(schoolDay));
     const end = schoolEnd(isoWeekday(day), lessons, periods);
     const summaryDate =
       end !== null
@@ -91,7 +90,7 @@ export function planReminders({
     reminders.push({
       id: `summary-${day}`,
       date: summaryDate,
-      title: summaryTitle(dayName, hasHomework, schoolDay, day),
+      title: summaryTitle(hasHomework, schoolDay, day),
       body: joinLines([...homeworkLines, ...due.map((item) => dueLine(item, day))]),
       entryId,
     });
@@ -101,7 +100,7 @@ export function planReminders({
       reminders.push({
         id: `second-${day}`,
         date: secondDate,
-        title: secondReminderTitle(dayName, hasHomework, schoolDay, day),
+        title: secondReminderTitle(hasHomework, schoolDay, day),
         body: joinLines([...homeworkLines, ...due.map((item) => dueLine(item, day, 1))]),
         entryId,
       });

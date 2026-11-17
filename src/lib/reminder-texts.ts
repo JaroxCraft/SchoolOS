@@ -16,9 +16,15 @@ function pick(variants: string[], day: string, shift = 0): string {
 
 const capitalize = (text: string) => text[0].toUpperCase() + text.slice(1);
 
+// "morgen" for the day after `day`, else the weekday ("Montag")
+function dayName(date: string, day: string): string {
+  return daysBetween(day, date) === 1 ? "morgen" : weekdayName(isoWeekday(date));
+}
+
 // "morgen" for the day after `day`, else "am Montag"
-export function whenText(date: string, day: string): string {
-  return daysBetween(day, date) === 1 ? "morgen" : `am ${weekdayName(isoWeekday(date))}`;
+function whenText(date: string, day: string): string {
+  const name = dayName(date, day);
+  return name === "morgen" ? name : `am ${name}`;
 }
 
 // «Prüfung Französisch «Voci»», «Abgabe «Laborbericht»» without subject, «Deutsch «Exkursion»» for
@@ -64,39 +70,27 @@ export function homeworkLine(entry: Entry, subject: Subject | undefined, schoolD
   return entry.date === schoolDay ? line : `${line} (${formatDate(entry.date)})`;
 }
 
-// `dayName`: "morgen", or the weekday of a later school day ("Montag")
-export function summaryTitle(
-  dayName: string,
-  hasHomework: boolean,
-  schoolDay: string,
-  day: string
-): string {
+// The title of the daily summary about what is due up to `schoolDay`, sent on `day`
+export function summaryTitle(hasHomework: boolean, schoolDay: string, day: string): string {
   const when = whenText(schoolDay, day);
+  const name = dayName(schoolDay, day);
   if (hasHomework) {
-    return pick([`Für ${dayName}`, `Das steht ${when} an`, `Bis ${dayName} zu erledigen`], day);
+    return pick([`Für ${name}`, `Das steht ${when} an`, `Bis ${name} zu erledigen`], day);
   }
   return pick([`${capitalize(when)} ist es so weit`, "Endspurt", "Letzte Vorbereitung"], day);
 }
 
-export function secondReminderTitle(
-  dayName: string,
-  hasHomework: boolean,
-  schoolDay: string,
-  day: string
-): string {
+export function secondReminderTitle(hasHomework: boolean, schoolDay: string, day: string): string {
   const when = whenText(schoolDay, day);
+  const name = dayName(schoolDay, day);
   if (hasHomework) {
     return pick(
-      [
-        `Noch offen für ${dayName}`,
-        `Schon alles bereit für ${dayName}?`,
-        `Zur Erinnerung: ${when}`,
-      ],
+      [`Noch offen für ${name}`, `Schon alles bereit für ${name}?`, `Zur Erinnerung: ${when}`],
       day
     );
   }
   return pick(
-    [`Bereit für ${dayName}?`, "Noch einmal zur Erinnerung", `${capitalize(when)} gilt es`],
+    [`Bereit für ${name}?`, "Noch einmal zur Erinnerung", `${capitalize(when)} gilt es`],
     day
   );
 }

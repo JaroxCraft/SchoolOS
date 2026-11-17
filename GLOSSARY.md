@@ -54,11 +54,18 @@ _Avoid_: Vergangen, completed
 An Eintrag that is still offen after its date, such as a missed Prüfung that is still to be written.
 _Avoid_: Verpasst, past
 
-**Fälligkeit** (due date suggestion):
-The date and Lektion suggested for a new Eintrag: a Hausaufgabe is due at the next or the following Lektion of its Fach, other types at its first Lektion from tomorrow on.
+**Fälligkeit** (due date):
+When an Eintrag is due: at the next or the following Lektion of its Fach, or on a chosen date and Lektion; the same for every type.
 
 **Stoff** (topic):
 What a Prüfung, Präsentation or Abgabe covers.
+
+**Note** (grade):
+A mark from 1 to 6 in a Fach, optionally for a Prüfung, Präsentation or Abgabe, counted in the Semester its date falls into.
+_Avoid_: Bewertung, Zensur
+
+**Semester**:
+A named school half-year with a start and end date that groups the Noten.
 
 ## Reminders and files
 

@@ -13,6 +13,13 @@ import * as Haptics from "expo-haptics";
 
 import type { TaskCheckboxProps } from "@/components/task-checkbox";
 import { useInk } from "@/hooks/use-ink";
+import { SYSTEM_COLORS } from "@/lib/system-colors";
+
+// The haptic of checking a task off or reopening it, from the checkbox or a row action. iOS: the
+// selection haptic, as in Reminders.
+export function toggleHaptic(_checked: boolean) {
+  Haptics.selectionAsync();
+}
 
 // iOS: an empty circle that becomes a ring with a filled dot, like in Reminders. The universal
 // Checkbox is a switch on iOS. A selection haptic fires together with the change, and VoiceOver
@@ -22,7 +29,7 @@ export function TaskCheckbox({
   onValueChange,
   label,
   accessibilityLabel,
-  color = "#007AFF",
+  color = SYSTEM_COLORS.blue,
 }: TaskCheckboxProps) {
   const ink = useInk();
   const spokenLabel = accessibilityLabel ?? label;
@@ -31,7 +38,7 @@ export function TaskCheckbox({
   const spokenValue = label ? (value ? "Ja" : "Nein") : value ? "Erledigt" : "Offen";
 
   const toggle = () => {
-    Haptics.selectionAsync();
+    toggleHaptic(!value);
     onValueChange(!value);
   };
 

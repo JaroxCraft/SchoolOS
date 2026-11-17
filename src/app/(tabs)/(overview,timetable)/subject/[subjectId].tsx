@@ -7,15 +7,15 @@ import { FormList } from "@/components/form-list";
 import { LabeledRow } from "@/components/labeled-row";
 import { ActionRow } from "@/components/rows";
 import { useEntries, useLessons, usePeriods, useSubjects, useTeachers } from "@/db/queries";
+import { useEntryPlacement } from "@/hooks/use-entry-placement";
+import { useInk } from "@/hooks/use-ink";
+import { useNow } from "@/hooks/use-now";
 import { weekdayName } from "@/lib/dates";
 import { openEntry } from "@/lib/routes";
 import { periodNumber } from "@/lib/schedule";
 import { joinDetails } from "@/lib/text";
-import { useInk } from "@/hooks/use-ink";
-import { useNow } from "@/hooks/use-now";
-import { useEntryPlacement } from "@/hooks/use-entry-placement";
 
-export default function SubjectScreen() {
+export default function SubjectDetailScreen() {
   const ink = useInk();
   const { subjectId } = useLocalSearchParams<{ subjectId: string }>();
   const id = Number(subjectId);
@@ -61,7 +61,7 @@ export default function SubjectScreen() {
           {teacher && (
             <LabeledRow label="Lehrperson">
               <Text textStyle={{ color: ink.secondary }}>
-                {teacher.abbreviation ? `${teacher.name} (${teacher.abbreviation})` : teacher.name}
+                {joinDetails(teacher.abbreviation, teacher.name)}
               </Text>
             </LabeledRow>
           )}
@@ -73,6 +73,9 @@ export default function SubjectScreen() {
         </FieldGroup.Section>
 
         <FieldGroup.Section title="Lektionen">
+          {lessons.length === 0 && (
+            <Text textStyle={{ color: ink.secondary }}>Keine Lektionen</Text>
+          )}
           {lessons.map((lesson) => {
             const period = periods.find((candidate) => candidate.id === lesson.periodId);
             return (
@@ -88,6 +91,9 @@ export default function SubjectScreen() {
         </FieldGroup.Section>
 
         <FieldGroup.Section title="Offene Einträge">
+          {openEntries.length === 0 && (
+            <Text textStyle={{ color: ink.secondary }}>Keine offenen Einträge</Text>
+          )}
           {openEntries.map((entry) => (
             <EntryRow key={entry.id} entry={entry} subject={subject} today={now.date} />
           ))}

@@ -8,6 +8,7 @@ import { EmptyState } from "@/components/empty-state";
 import { FooterText, FormList } from "@/components/form-list";
 import { type RowAction, RowActions } from "@/components/row-actions";
 import { ActionRow } from "@/components/rows";
+import { NONE } from "@/components/search-picker";
 import { SegmentedControl } from "@/components/segmented-control";
 import { SubjectDot } from "@/components/subject-dot";
 import { SubjectPickerSheet } from "@/components/subject-picker";
@@ -18,13 +19,14 @@ import type { LessonSlot, Period, Subject } from "@/db/schema";
 import { useDiscardGuard } from "@/hooks/use-discard-guard";
 import { useSaveButton, useStepButton } from "@/hooks/use-header-button";
 import { type Ink, useInk } from "@/hooks/use-ink";
+import { useSaving } from "@/hooks/use-saving";
 import { SCHOOL_WEEKDAYS, today, weekdayName, weekdayShort } from "@/lib/dates";
 import { endEditing } from "@/lib/focused-fields";
 import { useSchoolRoutes } from "@/lib/routes";
+import { saveFailed } from "@/lib/save-failed";
 import { lessonAt, periodNumber, periodRange, shownWeekday } from "@/lib/schedule";
+import { countOf } from "@/lib/text";
 import { typography } from "@/lib/typography";
-
-const FREE = 0;
 
 type LessonRowsProps = {
   period: Period;
@@ -143,8 +145,9 @@ const timetableKey = (timetable: LessonSlot[]) =>
 // The timetable of one weekday at a time, one row per period. Tapping a period opens the subject
 // sheet; picking a subject closes it, and the room can be changed in the row below the lesson.
 // Changes stay a draft until they are saved with ✓ (settings) or "Fertig" (setup), like the forms
-// of subjects and teachers; leaving with changes asks to discard them.
-export default function TimetableEditorScreen() {
+// of subjects and teachers; leaving with changes asks to discard them. Saving runs at most once and
+// tells when it fails, like the forms.
+export default function TimetableEditScreen() {
   const periods = usePeriods();
   const subjects = useSubjects();
   const lessons = useLessons();
@@ -152,7 +155,7 @@ export default function TimetableEditorScreen() {
   const ink = useInk();
   const routes = useSchoolRoutes();
   const saveButton = useSaveButton();
-  const doneButton = useStepButton("done");
+  const finishButton = useStepButton("finish");
   // Start on the current weekday, or on Monday at the weekend
   const [weekday, setWeekday] = useState(() => shownWeekday(today()));
   // The period whose sheet is open
@@ -173,12 +176,17 @@ export default function TimetableEditorScreen() {
       ...(lesson ? [{ weekday, periodId, ...lesson }] : []),
     ]);
 
-  // Saves and leaves with `leave`
-  const saveAndLeave = (leave: () => void) => {
-    if (dirty) saveLessons(timetable);
-    allowLeave();
-    leave();
-  };
+  // Both buttons leave the screen, so the lock stays after saving: ✓ can still be tapped while
+  // the screen slides away
+  const { saving, run } = useSaving({ closesOnSuccess: true });
+
+  // Saves and leaves with `leave`; a failed save stays on the screen with the draft
+  const saveAndLeave = (leave: () => void) =>
+    run(async () => {
+      if (dirty) saveLessons(timetable);
+      allowLeave();
+      leave();
+    }).catch(saveFailed);
 
   if (periods.length === 0 || subjects.length === 0) {
     const noPeriods = periods.length === 0;
@@ -191,14 +199,14 @@ export default function TimetableEditorScreen() {
               ? { ios: "clock", android: "schedule" }
               : { ios: "books.vertical", android: "menu_book" }
           }
-          title={noPeriods ? "Kein Lektionenraster" : "Noch keine Fächer"}
+          title={noPeriods ? "Kein Lektionenraster" : "Keine Fächer"}
           message={
             noPeriods
               ? "Lege zuerst fest, wann deine Lektionen beginnen und enden."
               : "Erfasse zuerst deine Fächer, dann kannst du sie hier den Lektionen zuteilen."
           }
           action={{
-            label: noPeriods ? "Lektionenraster" : "Fächer erfassen",
+            label: noPeriods ? "Lektionenraster erfassen" : "Fächer erfassen",
             // Instead of this screen, so back still leads to where the timetable was opened from
             onPress: () => router.replace(noPeriods ? routes.periods : routes.subjects),
           }}
@@ -220,14 +228,19 @@ export default function TimetableEditorScreen() {
       <Stack.Title>Stundenplan</Stack.Title>
       <Stack.Toolbar placement="right">
         {/* Setup: the last step, back to the overview (or the timetable tab) it started from */}
-        {routes.setup && doneButton && (
+        {routes.setup && finishButton && (
           <Stack.Toolbar.Button
-            {...doneButton}
+            {...finishButton}
+            disabled={saving}
             onPress={() => saveAndLeave(() => router.dismissAll())}
           />
         )}
         {!routes.setup && saveButton && (
-          <Stack.Toolbar.Button {...saveButton} onPress={() => saveAndLeave(() => router.back())} />
+          <Stack.Toolbar.Button
+            {...saveButton}
+            disabled={saving}
+            onPress={() => saveAndLeave(() => router.back())}
+          />
         )}
       </Stack.Toolbar>
       <DiscardGuard dirty={dirty}>
@@ -241,7 +254,7 @@ export default function TimetableEditorScreen() {
           </FieldGroup.Section>
 
           <FieldGroup.Section
-            title={`${weekdayName(weekday)} · ${lessonCount === 1 ? "1 Lektion" : `${lessonCount} Lektionen`}`}>
+            title={`${weekdayName(weekday)} · ${countOf(lessonCount, "Lektion", "Lektionen")}`}>
             {periods.map((period, index) => {
               const lesson = lessonAt(timetable, weekday, period.id);
               return lessonRows({
@@ -277,17 +290,17 @@ export default function TimetableEditorScreen() {
         isPresented={editing !== null}
         onDismiss={() => setEditing(null)}
         title={editedTitle}
-        value={editedLesson?.subjectId ?? FREE}
+        value={editedLesson?.subjectId ?? NONE}
         subjects={subjects}
         teachers={teachers}
         lessons={timetable}
-        extraChoices={[{ label: "Frei", value: FREE }]}
+        extraChoices={[{ label: "Frei", value: NONE }]}
         onChange={(subjectId) => {
           // The same subject again keeps the lesson and its room as they are
-          if (!editing || subjectId === (editedLesson?.subjectId ?? FREE)) return;
+          if (!editing || subjectId === (editedLesson?.subjectId ?? NONE)) return;
           setSlot(
             editing.id,
-            subjectId === FREE
+            subjectId === NONE
               ? null
               : // The room the subject usually has; it can be changed in the row below the lesson
                 { subjectId, room: usualRoom(subjectId, timetable) }

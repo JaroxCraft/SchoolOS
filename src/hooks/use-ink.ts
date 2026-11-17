@@ -10,9 +10,10 @@ export type Ink = {
   accent: string;
 };
 
-// iOS: text colors for @expo/ui, whose Text only accepts plain color strings. The values are the
-// iOS label, secondary label, tertiary label (on the grouped background), red and blue system
-// colors.
+// Text colors for @expo/ui, whose Text only accepts plain color strings, so the native semantic
+// colors of constants/colors.ts (used by React Native views) cannot be used here. The values are
+// the iOS label, secondary label, tertiary label (on the grouped background), red and blue system
+// colors, in light and dark mode; the light red and blue match SYSTEM_COLORS.
 export function useInk(): Ink {
   const dark = useColorScheme() === "dark";
   return {

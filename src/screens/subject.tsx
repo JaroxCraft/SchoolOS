@@ -3,7 +3,7 @@ import { useLocalSearchParams } from "expo-router";
 import { SubjectForm } from "@/components/subject-form";
 import { useSubjects, useTeachers } from "@/db/queries";
 
-export default function SubjectScreen() {
+export default function SubjectEditScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const subjects = useSubjects();
   const teachers = useTeachers();

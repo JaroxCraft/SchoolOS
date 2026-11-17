@@ -47,8 +47,7 @@ function useHeaderButton({
 export const useSaveButton = () => useHeaderButton(BUTTONS.save);
 
 // "Weiter" to the next setup step, "Fertig" on the last one
-export const useStepButton = (step: "next" | "done") =>
-  useHeaderButton(step === "next" ? BUTTONS.next : BUTTONS.finish);
+export const useStepButton = (step: "next" | "finish") => useHeaderButton(BUTTONS[step]);
 
 // iOS: × "Abbrechen" of a form, at the left of the navigation bar. Android leaves with its back
 // arrow.

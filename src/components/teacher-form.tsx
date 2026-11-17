@@ -7,8 +7,8 @@ import { DestructiveRow } from "@/components/rows";
 import { useTeacherDraft } from "@/components/teacher-draft";
 import type { Teacher } from "@/db/schema";
 import { useClosingForm } from "@/hooks/use-closing-form";
-import { teacherDeletion } from "@/lib/confirm-delete";
 import { useSaveButton } from "@/hooks/use-header-button";
+import { teacherDeletion } from "@/lib/confirm-delete";
 
 type TeacherFormProps = {
   teacher: Teacher | undefined;

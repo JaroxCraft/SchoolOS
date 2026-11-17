@@ -1,10 +1,13 @@
-import { Link, router } from "expo-router";
-import { Pressable, StyleSheet, Text, useColorScheme, View } from "react-native";
+import * as Haptics from "expo-haptics";
+import { Link } from "expo-router";
+import { useState } from "react";
+import { Platform, Pressable, StyleSheet, Text, useColorScheme, View } from "react-native";
 
+import { LessonMenu } from "@/components/lesson-menu";
 import { colors } from "@/constants/colors";
 import type { Lesson, Period, Subject, Teacher } from "@/db/schema";
 import { minutesOf, minutesToTime } from "@/lib/dates";
-import { openEntry, SCHOOL_ROUTES } from "@/lib/routes";
+import { lessonActions, subjectHref } from "@/lib/routes";
 import {
   lessonBlocks,
   type LessonBlock,
@@ -142,7 +145,8 @@ type LessonCardProps = {
 };
 
 // A lesson as a card in the subject color. Tapping it opens the subject in this tab; a long press
-// (iOS) offers a new entry for the subject or editing the timetable.
+// offers the actions of every lesson (lessonActions): iOS as the link's context menu, Android as a
+// Material menu.
 function LessonCard({ block, subject, teacher, compact, top, height, state }: LessonCardProps) {
   const time = `${minutesToTime(block.start)}–${minutesToTime(block.end)}`;
   const details = compact
@@ -156,16 +160,23 @@ function LessonCard({ block, subject, teacher, compact, top, height, state }: Le
         : `${block.firstNumber}.–${block.lastNumber}. Lektion`;
   // Short cards put the details next to the name
   const twoLines = compact || height >= 52;
+  const actions = lessonActions(subject.id);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   return (
     <View style={[styles.cardSlot, { top: top + 1, height: height - 2 }]}>
-      <Link
-        href={{ pathname: "/subject/[subjectId]", params: { subjectId: String(subject.id) } }}
-        push
-        asChild>
+      <Link href={subjectHref(subject.id)} push asChild>
         <Link.Trigger>
           <Pressable
             style={styles.fill}
+            onLongPress={
+              Platform.OS === "android"
+                ? () => {
+                    Haptics.performAndroidHapticsAsync(Haptics.AndroidHaptics.Long_Press);
+                    setMenuOpen(true);
+                  }
+                : undefined
+            }
             accessibilityRole="button"
             accessibilityLabel={joinDetails(
               subject.name,
@@ -215,16 +226,14 @@ function LessonCard({ block, subject, teacher, compact, top, height, state }: Le
           </Pressable>
         </Link.Trigger>
         <Link.Menu title={`${subject.name} · ${periodsLabel}`}>
-          <Link.MenuAction
-            icon="plus"
-            onPress={() => openEntry({ id: "new", subjectId: subject.id })}>
-            Neuer Eintrag
-          </Link.MenuAction>
-          <Link.MenuAction icon="pencil" onPress={() => router.push(SCHOOL_ROUTES.setup.timetable)}>
-            Stundenplan bearbeiten
-          </Link.MenuAction>
+          {actions.map((action) => (
+            <Link.MenuAction key={action.label} icon={action.icon} onPress={action.onPress}>
+              {action.label}
+            </Link.MenuAction>
+          ))}
         </Link.Menu>
       </Link>
+      <LessonMenu actions={actions} open={menuOpen} onClose={() => setMenuOpen(false)} />
     </View>
   );
 }

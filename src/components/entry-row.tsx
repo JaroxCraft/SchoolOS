@@ -1,21 +1,19 @@
 import { ListItem, Text } from "@expo/ui";
-import * as Haptics from "expo-haptics";
 
 import { type RowAction, RowActions } from "@/components/row-actions";
 import type { RowComponent } from "@/components/rows";
-import { TaskCheckbox } from "@/components/task-checkbox";
-import { deleteEntry } from "@/db/actions";
+import { TaskCheckbox, toggleHaptic } from "@/components/task-checkbox";
 import type { Entry, Subject } from "@/db/schema";
-import { type Ink, useInk } from "@/hooks/use-ink";
 import { checkOffEntry } from "@/hooks/use-entry-placement";
+import { type Ink, useInk } from "@/hooks/use-ink";
+import { confirmRowDelete, entryDeletion } from "@/lib/confirm-delete";
 import { formatDate, relativeDay } from "@/lib/dates";
-import { ENTRY_TYPE_INFO } from "@/lib/entry-types";
 import { isOverdue } from "@/lib/entry-status";
+import { ENTRY_TYPE_INFO } from "@/lib/entry-types";
 import { openEntry } from "@/lib/routes";
 import { NEUTRAL_COLOR } from "@/lib/subject-colors";
+import { SYSTEM_COLORS } from "@/lib/system-colors";
 import { typography } from "@/lib/typography";
-
-const DONE_GREEN = "#34C759";
 
 type EntryRowProps = {
   entry: Entry;
@@ -62,18 +60,18 @@ function entryItem({ entry, subject, today }: EntryRowProps, ink: Ink) {
   );
 }
 
-// Swipe right checks an entry off or reopens it, swipe left deletes it, as in Reminders; a
-// long press offers the same and "Bearbeiten" (iOS: swipe actions and context menu; Android: the
-// menu of a long press, see <FormGroup>). Built without hooks, so <FormGroup> can use it as the
-// list item itself.
+// Swipe right checks an entry off or reopens it, with the haptic of the checkbox; swipe left
+// deletes it after asking, like a subject or teacher. A long press offers the same and
+// "Bearbeiten" (iOS: swipe actions and context menu; Android: the menu of a long press, see
+// <FormGroup>). Built without hooks, so <FormGroup> can use it as the list item itself.
 function entryRow(props: EntryRowProps, ink: Ink) {
   const { entry } = props;
   const toggle: RowAction = {
     label: entry.completed ? "Offen" : "Erledigt",
     icon: entry.completed ? "arrow.uturn.backward" : "checkmark",
-    tint: DONE_GREEN,
+    tint: SYSTEM_COLORS.green,
     onPress: () => {
-      Haptics.selectionAsync();
+      toggleHaptic(!entry.completed);
       checkOffEntry(entry, !entry.completed);
     },
   };
@@ -81,7 +79,8 @@ function entryRow(props: EntryRowProps, ink: Ink) {
     label: "Löschen",
     icon: "trash",
     destructive: true,
-    onPress: () => deleteEntry(entry.id),
+    asksFirst: true,
+    onPress: () => confirmRowDelete(entryDeletion(entry)),
   };
   const edit: RowAction = {
     label: "Bearbeiten",

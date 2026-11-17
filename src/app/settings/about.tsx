@@ -12,6 +12,7 @@ import { resetDatabase } from "@/db/actions";
 import { useInk } from "@/hooks/use-ink";
 import { appInfoRows, appInfoText, FEEDBACK_URL, versionLabel, WEBSITE_URL } from "@/lib/app-info";
 import { confirm } from "@/lib/confirm";
+import { SYSTEM_COLORS } from "@/lib/system-colors";
 import { typography } from "@/lib/typography";
 
 // iOS: the home screen icon as rendered by Apple (Liquid Glass, light only, already shaped).
@@ -92,16 +93,16 @@ export default function AboutScreen() {
         </FieldGroup.Section>
 
         <FieldGroup.Section title="Links">
-          <LinkRow icon={{ sf: "globe", md: "code", color: "#8E8E93" }} url={WEBSITE_URL}>
+          <LinkRow icon={{ sf: "globe", md: "code", color: SYSTEM_COLORS.gray }} url={WEBSITE_URL}>
             Website
           </LinkRow>
           <LinkRow
-            icon={{ sf: "bubble.left", md: "chat_bubble", color: "#007AFF" }}
+            icon={{ sf: "bubble.left", md: "chat_bubble", color: SYSTEM_COLORS.blue }}
             url={FEEDBACK_URL}>
             Feedback
           </LinkRow>
           <NavigationRow
-            icon={{ sf: "hand.raised", md: "privacy_tip", color: "#5856D6" }}
+            icon={{ sf: "hand.raised", md: "privacy_tip", color: SYSTEM_COLORS.indigo }}
             onPress={() => router.push("/settings/privacy")}>
             Datenschutz
           </NavigationRow>

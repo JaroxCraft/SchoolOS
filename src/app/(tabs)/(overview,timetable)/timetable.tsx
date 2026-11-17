@@ -69,7 +69,8 @@ export default function TimetableScreen() {
           message="Teile deinen Fächern die Lektionen der Woche zu."
           action={{
             label: "Stundenplan ausfüllen",
-            onPress: () => router.push(SCHOOL_ROUTES.setup.timetable),
+            // The editor of the settings sheet, as from a lesson's menu (lessonActions)
+            onPress: () => router.push(SCHOOL_ROUTES.settings.timetable),
           }}
         />
       </Screen>

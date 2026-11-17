@@ -27,13 +27,13 @@ import { NavigationRow } from "@/components/rows";
 import { type SearchPickerSheetProps, usePickerSections } from "@/components/search-picker";
 import { useInk } from "@/hooks/use-ink";
 import { useSaving } from "@/hooks/use-saving";
-import { showMessage } from "@/lib/confirm";
+import { saveFailed } from "@/lib/save-failed";
 
 const FORM = "form";
 
 // iOS: a sheet like the pickers of the system apps. It opens at half height with the grabber on
 // top, so it can be pulled up or swiped down to close; the xmark at the top left closes it too.
-// The title sits in the navigation bar, the system search field below it. "Neue …" pushes the
+// The title sits in the navigation bar, the system search field below it. "… hinzufügen" pushes the
 // form inside the sheet, with ✓ "Hinzufügen" at the top right; "Bearbeiten" of an item (swipe left
 // or long press) pushes it filled in, with ✓ "Sichern". The form pulls the sheet up to full height,
 // where it stays when the keyboard closes. The SwiftUI sheet is used instead of the universal
@@ -45,8 +45,8 @@ export function SearchPickerSheet<T extends { id: number }>(props: SearchPickerS
   // Follows the grabber, so pulling the sheet up for the form is a change even after the user
   // pulled it down again
   const [detent, setDetent] = useState<PresentationDetent>("medium");
-  // Whether the form changes an item instead of adding one
-  const [editing, setEditing] = useState(false);
+  // The item the form changes; null when it adds one
+  const [editing, setEditing] = useState<T | null>(null);
   // While the form saves, so a second tap cannot add the item twice
   const { saving, run } = useSaving();
   const searchText = useNativeState("");
@@ -64,7 +64,7 @@ export function SearchPickerSheet<T extends { id: number }>(props: SearchPickerS
   // together
   const openForm = (item?: T) => {
     form?.start(item);
-    setEditing(item !== undefined);
+    setEditing(item ?? null);
     setDetent("large");
     setPath([FORM]);
   };
@@ -72,7 +72,7 @@ export function SearchPickerSheet<T extends { id: number }>(props: SearchPickerS
     props,
     query,
     close,
-    form?.editLabel ? openForm : undefined
+    form?.editTitle ? openForm : undefined
   );
 
   return (
@@ -105,7 +105,7 @@ export function SearchPickerSheet<T extends { id: number }>(props: SearchPickerS
                 {form && !query.trim() && (
                   <FieldGroup.Section>
                     <NavigationRow onPress={() => openForm()}>
-                      <Text textStyle={{ color: ink.accent }}>{form.label}</Text>
+                      <Text textStyle={{ color: ink.accent }}>{form.addLabel}</Text>
                     </NavigationRow>
                   </FieldGroup.Section>
                 )}
@@ -124,7 +124,9 @@ export function SearchPickerSheet<T extends { id: number }>(props: SearchPickerS
                 <Toolbar>
                   <FormGroup
                     modifiers={[
-                      navigationTitle(editing ? (form.editLabel ?? form.label) : form.label),
+                      navigationTitle(
+                        editing ? (form.editTitle?.(editing) ?? form.newTitle) : form.newTitle
+                      ),
                       navigationBarTitleDisplayMode("inline"),
                     ]}>
                     <FieldGroup.Section>{form.fields}</FieldGroup.Section>
@@ -144,11 +146,7 @@ export function SearchPickerSheet<T extends { id: number }>(props: SearchPickerS
                               if (editing) setPath([]);
                               else choose(id);
                             } catch {
-                              // Shared by the subject and teacher pickers, so the message names no kind of item
-                              showMessage(
-                                "Nicht gesichert",
-                                "Die Eingaben konnten nicht gesichert werden. Versuche es nochmals."
-                              );
+                              saveFailed();
                             }
                           })
                         }

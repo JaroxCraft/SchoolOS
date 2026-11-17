@@ -20,6 +20,7 @@ import {
 } from "@/db/schema";
 import { today as currentDay } from "@/lib/dates";
 import { completePastEvents } from "@/lib/entry-status";
+import { countOf } from "@/lib/text";
 
 // The file format of export and import. A timetable file holds what a class shares (period grid,
 // teachers, subjects, lessons); a backup also holds the personal data (entries, grades,
@@ -178,7 +179,7 @@ export function parseTransferFile(text: string, today: string = currentDay()): T
   const periodIds = checkRows<Period>(
     data.periods,
     periods,
-    "Lektionen",
+    "Lektionszeiten",
     "Lektionszeit",
     (period, name) => {
       checkTime(name, "Beginn", period.startTime);
@@ -189,7 +190,7 @@ export function parseTransferFile(text: string, today: string = currentDay()): T
       }
       // A timetable import matches periods by their start time
       if (startTimes.has(period.startTime)) {
-        fail(`${name}: Eine Lektion beginnt bereits um ${period.startTime}.`);
+        fail(`${name}: Eine Lektionszeit beginnt bereits um ${period.startTime}.`);
       }
       startTimes.add(period.startTime);
     }
@@ -254,7 +255,11 @@ export function parseTransferFile(text: string, today: string = currentDay()): T
     checkRow(data.settings, settings, "Einstellungen");
     const fileSettings = data.settings as Settings;
     checkTime("Einstellungen", "Die zweite Erinnerung", fileSettings.secondReminderTime);
-    checkTime("Einstellungen", "Die Übersicht", fileSettings.noLessonSummaryTime);
+    checkTime(
+      "Einstellungen",
+      "Die Zusammenfassung an freien Tagen",
+      fileSettings.noLessonSummaryTime
+    );
     if (data.format < 2) {
       data.entries = completePastEvents(data.entries as Entry[], today);
     }
@@ -263,14 +268,14 @@ export function parseTransferFile(text: string, today: string = currentDay()): T
   return data as unknown as TransferFile;
 }
 
-// "11 Lektionen pro Tag, 14 Fächer, 8 Lehrpersonen und 35 Lektionen im Stundenplan"
+// "11 Lektionszeiten pro Tag, 14 Fächer, 1 Lehrperson und 35 Lektionen im Stundenplan"
 export function describeTransferFile(file: TransferFile): string {
   const parts = [
-    `${file.periods.length} Lektionen pro Tag`,
-    `${file.subjects.length} Fächer`,
-    `${file.teachers.length} Lehrpersonen`,
-    `${file.lessons.length} Lektionen im Stundenplan`,
+    `${countOf(file.periods.length, "Lektionszeit", "Lektionszeiten")} pro Tag`,
+    countOf(file.subjects.length, "Fach", "Fächer"),
+    countOf(file.teachers.length, "Lehrperson", "Lehrpersonen"),
+    `${countOf(file.lessons.length, "Lektion", "Lektionen")} im Stundenplan`,
   ];
-  if (file.kind === "backup") parts.push(`${file.entries.length} Einträge`);
+  if (file.kind === "backup") parts.push(countOf(file.entries.length, "Eintrag", "Einträge"));
   return `${parts.slice(0, -1).join(", ")} und ${parts.at(-1)}`;
 }
