@@ -133,6 +133,9 @@ export default function TimetableScreen() {
     <Screen title="Stundenplan">
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
+        // A short timetable can still be pushed up a little, and the indicator flashed at the right
+        // edge when the large title came back
+        showsVerticalScrollIndicator={false}
         onLayout={(event) => setFrameHeight(event.nativeEvent.layout.height)}
         contentContainerStyle={[styles.content, fillPage]}>
         <View style={styles.header}>
