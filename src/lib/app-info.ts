@@ -4,7 +4,6 @@ import * as Device from "expo-device";
 import * as Updates from "expo-updates";
 import { Platform } from "react-native";
 
-export const GITHUB_URL = "https://github.com/JaroxCraft/SchoolOS";
 export const WEBSITE_URL = "https://schoolos.jarox.dev/";
 export const FEEDBACK_URL = `${WEBSITE_URL}feedback/`;
 
@@ -21,11 +20,11 @@ const isDevelopmentClient = Application.applicationId !== ownAppId;
 
 const dateFormat = new Intl.DateTimeFormat("de-CH", { dateStyle: "medium", timeStyle: "short" });
 
-export const appVersion = isDevelopmentClient
+const appVersion = isDevelopmentClient
   ? (Constants.expoConfig?.version ?? "–")
   : (Application.nativeApplicationVersion ?? "–");
 
-export const appBuild = isDevelopmentClient ? null : Application.nativeBuildVersion;
+const appBuild = isDevelopmentClient ? null : Application.nativeBuildVersion;
 
 // "Version 1.1.0 (12)", or "Version 1.1.0 · Entwicklung" in Expo Go.
 export const versionLabel = isDevelopmentClient

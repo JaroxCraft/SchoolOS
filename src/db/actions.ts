@@ -26,12 +26,8 @@ export async function addTeacher(values: NewTeacher): Promise<number> {
   return added.id;
 }
 
-export async function saveTeacher(id: number | null, values: NewTeacher) {
-  if (id === null) {
-    await addTeacher(values);
-  } else {
-    await db.update(teachers).set(values).where(eq(teachers.id, id));
-  }
+export async function updateTeacher(id: number, values: NewTeacher) {
+  await db.update(teachers).set(values).where(eq(teachers.id, id));
 }
 
 export async function deleteTeacher(id: number) {

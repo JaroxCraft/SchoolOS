@@ -84,6 +84,7 @@ export function dataOperations(db: Database) {
     const allLessons = db.select().from(lessons).all();
     const allSubjects = db.select().from(subjects).all();
     const allTeachers = db.select().from(teachers).all();
+    const allPeriods = db.select().from(periods).all();
 
     if (kind === "timetable") {
       // Classmates get the subjects of the timetable only, not the ones someone keeps for grades
@@ -93,7 +94,7 @@ export function dataOperations(db: Database) {
       return {
         ...header,
         kind,
-        periods: db.select().from(periods).all(),
+        periods: allPeriods,
         teachers: allTeachers.filter((teacher) => usedTeacherIds.has(teacher.id)),
         subjects: sharedSubjects,
         lessons: allLessons,
@@ -102,7 +103,7 @@ export function dataOperations(db: Database) {
     return {
       ...header,
       kind,
-      periods: db.select().from(periods).all(),
+      periods: allPeriods,
       teachers: allTeachers,
       subjects: allSubjects,
       lessons: allLessons,
