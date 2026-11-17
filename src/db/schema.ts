@@ -56,7 +56,6 @@ export const entries = sqliteTable("entries", {
   periodId: integer("period_id").references(() => periods.id, { onDelete: "set null" }),
   subjectId: integer("subject_id").references(() => subjects.id, { onDelete: "set null" }),
   completed: integer("completed", { mode: "boolean" }).notNull().default(false),
-  studyStart: text("study_start"),
   topic: text("topic"),
 });
 
@@ -75,9 +74,6 @@ export const grades = sqliteTable("grades", {
 // Single row with id 1
 export const settings = sqliteTable("settings", {
   id: integer("id").primaryKey(),
-  examLeadDays: integer("exam_lead_days").notNull().default(7),
-  presentationLeadDays: integer("presentation_lead_days").notNull().default(7),
-  submissionLeadDays: integer("submission_lead_days").notNull().default(3),
   notificationsEnabled: integer("notifications_enabled", { mode: "boolean" })
     .notNull()
     .default(true),

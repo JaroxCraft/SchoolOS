@@ -24,8 +24,11 @@ import {
 // The file format of export and import. A timetable file holds what a class shares (period grid,
 // teachers, subjects, lessons); a backup also holds the personal data (entries, grades,
 // semesters, settings). Rows keep their database ids, so the references between them stay valid.
+// Format 2 dropped the study start (entries.studyStart, the lead days in the settings): older
+// files still import, their extra fields are dropped (columnValues); format 1 apps reject format 2
+// files with a hint to update instead of failing on the missing lead days.
 
-export const TRANSFER_FORMAT = 1;
+export const TRANSFER_FORMAT = 2;
 
 export type TransferKind = "timetable" | "backup";
 
@@ -107,8 +110,6 @@ const isObject = (value: unknown): value is Record<string, unknown> =>
 
 const TIME = /^(?:[01]\d|2[0-3]):[0-5]\d$/;
 const COLOR = /^#[0-9A-Fa-f]{6}$/;
-// The range the lead day picker in the settings offers
-const MAX_LEAD_DAYS = 21;
 // Rows per insert statement, so a large file stays below SQLite's limit of bound variables
 const INSERT_CHUNK_SIZE = 500;
 
@@ -265,7 +266,6 @@ export function parseTransferFile(text: string): TransferFile {
       "Eintrag",
       (entry, name) => {
         checkDate(name, "Das Datum", entry.date);
-        checkDate(name, "Der Lernbeginn", entry.studyStart);
         checkReference(name, "Das Fach", subjectIds, entry.subjectId);
         checkReference(name, "Die Lektionszeit", periodIds, entry.periodId);
       }
@@ -287,16 +287,6 @@ export function parseTransferFile(text: string): TransferFile {
     const fileSettings = data.settings as Settings;
     checkTime("Einstellungen", "Die zweite Erinnerung", fileSettings.secondReminderTime);
     checkTime("Einstellungen", "Die Übersicht", fileSettings.noLessonSummaryTime);
-    for (const [key, what] of [
-      ["examLeadDays", "Der Lernbeginn für Prüfungen"],
-      ["presentationLeadDays", "Der Lernbeginn für Präsentationen"],
-      ["submissionLeadDays", "Der Lernbeginn für Abgaben"],
-    ] as const) {
-      const days = fileSettings[key];
-      if (!Number.isInteger(days) || days < 0 || days > MAX_LEAD_DAYS) {
-        fail(`Einstellungen: ${what} (${days} Tage) liegt nicht zwischen 0 und ${MAX_LEAD_DAYS}.`);
-      }
-    }
   }
 
   return data as unknown as TransferFile;
