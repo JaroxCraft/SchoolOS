@@ -29,8 +29,7 @@ function fileName(kind: TransferKind) {
 export async function shareExport(kind: TransferKind) {
   try {
     const file = new File(Paths.cache, fileName(kind));
-    if (file.exists) file.delete();
-    file.create();
+    file.create({ overwrite: true });
     await file.write(JSON.stringify(data.exportData(kind), null, 2));
 
     await Sharing.shareAsync(file.uri, {

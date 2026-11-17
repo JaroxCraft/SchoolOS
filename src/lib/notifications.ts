@@ -21,14 +21,22 @@ Notifications.setNotificationHandler({
   }),
 });
 
-// Android 13+ only shows the permission dialog once a channel exists
-async function ensureChannel() {
-  if (Platform.OS !== "android") return;
-  await Notifications.setNotificationChannelAsync(CHANNEL_ID, {
+// Android 13+ only shows the permission dialog once a channel exists. Created once per session.
+let channel: Promise<void> | undefined;
+function ensureChannel() {
+  if (Platform.OS !== "android") return Promise.resolve();
+  channel ??= Notifications.setNotificationChannelAsync(CHANNEL_ID, {
     name: "Erinnerungen",
     description: "Was bis zum nächsten Schultag fällig ist",
     importance: AndroidImportance.HIGH,
-  });
+  }).then(
+    () => undefined,
+    (error) => {
+      channel = undefined;
+      throw error;
+    }
+  );
+  return channel;
 }
 
 function toPermission(status: Notifications.NotificationPermissionsStatus): NotificationPermission {
