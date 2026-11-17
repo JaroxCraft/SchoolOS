@@ -9,9 +9,9 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 
-import type { TimelineDay } from "@/components/lesson-timeline";
 import { useInk } from "@/hooks/use-ink";
 import { weekdayName, weekdayShort } from "@/lib/dates";
+import type { SchoolDay } from "@/lib/schedule";
 
 const CIRCLE = 36;
 // The pop of the selection circle, as a spring with a light overshoot. A tap or swipe starts it,
@@ -21,7 +21,7 @@ const POP = { duration: 320, dampingRatio: 0.62 };
 const FADE = { duration: 200 };
 
 export type WeekStripProps = {
-  days: TimelineDay[];
+  days: SchoolDay[];
   // The day shown in the day view; none in the week view
   selected: number | null;
   today: string;

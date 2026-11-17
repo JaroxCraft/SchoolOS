@@ -1,6 +1,11 @@
+// The school week: the time rules of the period grid (Lektionenraster) and the timetable
+// (Stundenplan). Periods must be sorted by start time (as returned by usePeriods); times are
+// compared as minutes since midnight.
 import type { Lesson, LessonSlot, Period } from "@/db/schema";
-import type { Now } from "@/hooks/use-now";
-import { addDays, isoWeekday, minutesToTime } from "@/lib/dates";
+import { addDays, isoWeekday, minutesOf, SCHOOL_WEEKDAYS } from "@/lib/dates";
+
+// Today's date and the minutes since midnight (see useNow)
+export type Now = { date: string; minutes: number };
 
 export type LessonOccurrence = {
   date: string;
@@ -8,7 +13,27 @@ export type LessonOccurrence = {
   period: Period;
 };
 
-// Periods must be sorted by start time (as returned by usePeriods).
+// One card of the timetable: a lesson, or consecutive lessons of the same subject in the same room
+// (a double lesson), which span the break between them like one event in Calendar and count as
+// one lesson everywhere.
+export type LessonBlock = {
+  key: string;
+  // The lesson and period it starts with; subject and room are those of every lesson in it
+  lesson: Lesson;
+  period: Period;
+  // Minutes since midnight
+  start: number;
+  end: number;
+  // Numbers of the first and last period (1-based)
+  firstNumber: number;
+  lastNumber: number;
+};
+
+// A school day of the shown week
+export type SchoolDay = { weekday: number; date: string };
+
+export type LessonState = "past" | "current" | "upcoming";
+
 export function periodNumber(periods: Period[], periodId: number): number {
   return periods.findIndex((period) => period.id === periodId) + 1;
 }
@@ -27,6 +52,92 @@ export function lessonAt<T extends LessonSlot>(
   return lessons.find((lesson) => lesson.weekday === weekday && lesson.periodId === periodId);
 }
 
+// Where a lesson of `date` stands at `now`: on other days it is upcoming, on today it is current
+// from its start until its end.
+export function lessonState(
+  date: string,
+  span: { start: number; end: number },
+  now: Now
+): LessonState {
+  if (date !== now.date) return "upcoming";
+  if (now.minutes >= span.end) return "past";
+  return now.minutes >= span.start ? "current" : "upcoming";
+}
+
+const spanOf = (period: Period) => ({
+  start: minutesOf(period.startTime),
+  end: minutesOf(period.endTime),
+});
+
+export function lessonBlocks(lessons: Lesson[], periods: Period[], weekday: number): LessonBlock[] {
+  const blocks: LessonBlock[] = [];
+  periods.forEach((period, index) => {
+    const lesson = lessonAt(lessons, weekday, period.id);
+    if (!lesson) return;
+    const previous = blocks.at(-1);
+    if (
+      previous &&
+      previous.lastNumber === index &&
+      previous.lesson.subjectId === lesson.subjectId &&
+      previous.lesson.room === lesson.room
+    ) {
+      previous.end = minutesOf(period.endTime);
+      previous.lastNumber = index + 1;
+      return;
+    }
+    blocks.push({
+      key: `${weekday}-${period.id}`,
+      lesson,
+      period,
+      ...spanOf(period),
+      firstNumber: index + 1,
+      lastNumber: index + 1,
+    });
+  });
+  return blocks;
+}
+
+// The periods the timetable shows: from the first to the last period with a lesson on any day,
+// so neither view ends in a long empty stretch.
+export function visiblePeriods(lessons: Lesson[], periods: Period[]): Period[] {
+  const used = periods
+    .map((period, index) => (lessons.some((lesson) => lesson.periodId === period.id) ? index : -1))
+    .filter((index) => index >= 0);
+  if (used.length === 0) return [];
+  return periods.slice(used[0], used.at(-1)! + 1);
+}
+
+// The weekday a timetable opens on: today, or Monday at the weekend
+export function shownWeekday(date: string): number {
+  const weekday = isoWeekday(date);
+  return weekday <= 5 ? weekday : 1;
+}
+
+// The school days of this week; at the weekend already the coming one
+export function schoolWeek(date: string): SchoolDay[] {
+  const weekday = isoWeekday(date);
+  const monday = addDays(date, weekday <= 5 ? 1 - weekday : 8 - weekday);
+  return SCHOOL_WEEKDAYS.map((day) => ({ weekday: day, date: addDays(monday, day - 1) }));
+}
+
+// The next day after `date` with lessons; the day after if the timetable is empty
+export function nextSchoolDay(date: string, lessons: Lesson[]): string {
+  for (let offset = 1; offset <= 7; offset++) {
+    const day = addDays(date, offset);
+    if (lessons.some((lesson) => lesson.weekday === isoWeekday(day))) return day;
+  }
+  return addDays(date, 1);
+}
+
+// When the last lesson of a weekday ends (minutes since midnight), null on a day without lessons
+export function schoolEnd(weekday: number, lessons: Lesson[], periods: Period[]): number | null {
+  const ends = lessons
+    .filter((lesson) => lesson.weekday === weekday)
+    .flatMap((lesson) => periods.filter((period) => period.id === lesson.periodId))
+    .map((period) => minutesOf(period.endTime));
+  return ends.length > 0 ? Math.max(...ends) : null;
+}
+
 function lessonsOn(date: string, lessons: Lesson[], periods: Period[]): LessonOccurrence[] {
   const weekday = isoWeekday(date);
   return periods.flatMap((period) => {
@@ -35,27 +146,16 @@ function lessonsOn(date: string, lessons: Lesson[], periods: Period[]): LessonOc
   });
 }
 
-// The lessons of a subject on a date. A double lesson (consecutive periods in the same room, one
-// card in the timetable) counts once, at its first period.
-function subjectLessonsOn(
+// The lessons of a subject on a date, as blocks: a double lesson counts once, at its first period.
+function subjectBlocksOn(
   subjectId: number,
   date: string,
   lessons: Lesson[],
   periods: Period[]
-): LessonOccurrence[] {
-  const occurrences = lessonsOn(
-    date,
-    lessons.filter((lesson) => lesson.subjectId === subjectId),
-    periods
+): LessonBlock[] {
+  return lessonBlocks(lessons, periods, isoWeekday(date)).filter(
+    (block) => block.lesson.subjectId === subjectId
   );
-  return occurrences.filter((occurrence, index) => {
-    const previous = occurrences[index - 1];
-    return !(
-      previous &&
-      periods.indexOf(previous.period) + 1 === periods.indexOf(occurrence.period) &&
-      previous.lesson.room === occurrence.lesson.room
-    );
-  });
 }
 
 // The next `count` lessons of a subject after `now`. A lesson later today counts, the one in
@@ -70,11 +170,13 @@ export function upcomingSubjectLessons(
 ): LessonOccurrence[] {
   if (!lessons.some((lesson) => lesson.subjectId === subjectId)) return [];
 
-  const time = minutesToTime(now.minutes);
   const result: LessonOccurrence[] = [];
   for (let offset = 0; result.length < count && offset <= 7 * count; offset++) {
-    const day = subjectLessonsOn(subjectId, addDays(now.date, offset), lessons, periods);
-    result.push(...(offset === 0 ? day.filter(({ period }) => period.startTime > time) : day));
+    const date = addDays(now.date, offset);
+    for (const block of subjectBlocksOn(subjectId, date, lessons, periods)) {
+      if (lessonState(date, block, now) !== "upcoming") continue;
+      result.push({ date, lesson: block.lesson, period: block.period });
+    }
   }
   return result.slice(0, count);
 }
@@ -86,21 +188,16 @@ export function subjectLessonOn(
   lessons: Lesson[],
   periods: Period[]
 ): LessonOccurrence | undefined {
-  return subjectLessonsOn(subjectId, date, lessons, periods)[0];
+  const block = subjectBlocksOn(subjectId, date, lessons, periods)[0];
+  return block && { date, lesson: block.lesson, period: block.period };
 }
 
 // The remaining lessons of today, or all lessons of the next school day after school. Takes the
 // time from useNow, so the screen shows the next lessons again as the day goes on.
 export function nextLessons(lessons: Lesson[], periods: Period[], now: Now): LessonOccurrence[] {
-  const time = minutesToTime(now.minutes);
   const remaining = lessonsOn(now.date, lessons, periods).filter(
-    ({ period }) => period.endTime > time
+    ({ date, period }) => lessonState(date, spanOf(period), now) !== "past"
   );
   if (remaining.length > 0) return remaining;
-
-  for (let offset = 1; offset <= 7; offset++) {
-    const upcoming = lessonsOn(addDays(now.date, offset), lessons, periods);
-    if (upcoming.length > 0) return upcoming;
-  }
-  return [];
+  return lessonsOn(nextSchoolDay(now.date, lessons), lessons, periods);
 }

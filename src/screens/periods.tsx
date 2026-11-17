@@ -12,14 +12,13 @@ import type { PeriodDraft } from "@/db/schema";
 import { useDiscardGuard } from "@/hooks/use-discard-guard";
 import { useSaveButton, useStepButton } from "@/hooks/use-header-button";
 import { confirm } from "@/lib/confirm";
-import { addMinutes, timeToDate } from "@/lib/dates";
+import { addMinutes, minutesOf } from "@/lib/dates";
 import { useSchoolRoutes } from "@/lib/routes";
 
 const LESSON_MINUTES = 50;
 const FIRST_START = "07:25";
 
-const minutesBetween = (start: string, end: string) =>
-  Math.round((timeToDate(end).getTime() - timeToDate(start).getTime()) / 60_000);
+const minutesBetween = (start: string, end: string) => minutesOf(end) - minutesOf(start);
 
 const gridKey = (grid: PeriodDraft[]) =>
   grid.map(({ id, startTime, endTime }) => `${id}:${startTime}-${endTime}`).join(",");

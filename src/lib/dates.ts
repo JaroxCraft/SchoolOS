@@ -81,24 +81,35 @@ export function relativeDay(value: string, from: string): string {
   return days > 0 ? `in ${days} Tagen` : `vor ${-days} Tagen`;
 }
 
+// Minutes since midnight of "07:25". Times are "HH:MM" strings; all arithmetic on them goes
+// through minutes.
+export function minutesOf(time: string): number {
+  const [hours, minutes] = time.split(":").map(Number);
+  return hours * 60 + minutes;
+}
+
 // "07:05" for 425 minutes since midnight
 export function minutesToTime(minutes: number): string {
   return `${pad(Math.floor(minutes / 60))}:${pad(minutes % 60)}`;
 }
 
+// The moment `minutes` after midnight of a date (wall-clock time), for notifications
+export function dateAt(value: string, minutes: number): Date {
+  const result = parseISODate(value);
+  result.setHours(0, minutes, 0, 0);
+  return result;
+}
+
+// Today at the time, for the time pickers
 export function timeToDate(value: string): Date {
-  const [hours, minutes] = value.split(":").map(Number);
-  const date = new Date();
-  date.setHours(hours, minutes, 0, 0);
-  return date;
+  return dateAt(today(), minutesOf(value));
 }
 
 export function dateToTime(date: Date): string {
   return `${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
+// Wraps around midnight like a clock
 export function addMinutes(time: string, minutes: number): string {
-  const date = timeToDate(time);
-  date.setMinutes(date.getMinutes() + minutes);
-  return dateToTime(date);
+  return minutesToTime((((minutesOf(time) + minutes) % 1440) + 1440) % 1440);
 }

@@ -2,8 +2,7 @@ import { useEffect, useState } from "react";
 import { AppState } from "react-native";
 
 import { toISODate } from "@/lib/dates";
-
-export type Now = { date: string; minutes: number };
+import type { Now } from "@/lib/schedule";
 
 // One clock reading for both, so date and minutes cannot disagree around midnight
 const readNow = (): Now => {

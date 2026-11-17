@@ -14,20 +14,14 @@ import {
 import { useReducedMotion } from "react-native-reanimated";
 
 import { EmptyState } from "@/components/empty-state";
-import {
-  COLUMN_GAP,
-  GUTTER_WIDTH,
-  LessonTimeline,
-  type TimelineDay,
-} from "@/components/lesson-timeline";
+import { COLUMN_GAP, GUTTER_WIDTH, LessonTimeline } from "@/components/lesson-timeline";
 import { Screen } from "@/components/screen";
 import { SegmentedControl } from "@/components/segmented-control";
 import { WeekStrip } from "@/components/week-strip";
 import { useLessons, usePeriods, useSubjects, useTeachers } from "@/db/queries";
 import { useNow } from "@/hooks/use-now";
-import { addDays, isoWeekday, SCHOOL_WEEKDAYS } from "@/lib/dates";
 import { SCHOOL_ROUTES } from "@/lib/routes";
-import { visiblePeriods } from "@/lib/timeline";
+import { schoolWeek, shownWeekday, visiblePeriods } from "@/lib/schedule";
 
 const PADDING = 16;
 // Points per minute: a 50-minute lesson is 80 pt tall in the day view, 55 pt in the week view
@@ -52,15 +46,10 @@ export default function TimetableScreen() {
   const reducedMotion = useReducedMotion();
 
   // This week; at the weekend already the coming one
-  const todayWeekday = isoWeekday(now.date);
-  const monday = addDays(now.date, todayWeekday <= 5 ? 1 - todayWeekday : 8 - todayWeekday);
-  const days: TimelineDay[] = SCHOOL_WEEKDAYS.map((weekday) => ({
-    weekday,
-    date: addDays(monday, weekday - 1),
-  }));
+  const days = schoolWeek(now.date);
 
   const [mode, setMode] = useState<Mode>("day");
-  const todaySelection = todayWeekday <= 5 ? todayWeekday : 1;
+  const todaySelection = shownWeekday(now.date);
   const [selected, setSelected] = useState(todaySelection);
   // A new day began while the screen waited in its tab: it opens on today again, as when it was
   // opened. The pager is keyed by the date, so it scrolls there on its first layout.

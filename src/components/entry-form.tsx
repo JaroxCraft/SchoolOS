@@ -1,5 +1,4 @@
 import { FieldGroup } from "@expo/ui";
-import { router } from "expo-router";
 import { useState } from "react";
 
 import { DateField } from "@/components/date-field";
@@ -12,18 +11,15 @@ import { TextField } from "@/components/text-field";
 import { deleteEntry, saveEntry } from "@/db/actions";
 import { useTeachers } from "@/db/queries";
 import type { Entry, EntryType, Lesson, Period, Subject } from "@/db/schema";
-import { confirmDelete } from "@/lib/confirm-delete";
-import { addDays, formatDate } from "@/lib/dates";
+import { formatDate } from "@/lib/dates";
+import { type DueChoice, dueChoiceDates, suggestDue } from "@/lib/due-date";
 import { ENTRY_TYPE_INFO, ENTRY_TYPE_OPTIONS } from "@/lib/entry-types";
-import { subjectLessonOn, upcomingSubjectLessons } from "@/lib/schedule";
 import { NEUTRAL_COLOR } from "@/lib/subject-colors";
-import { useDiscardGuard } from "@/hooks/use-discard-guard";
+import { checkOffEntry } from "@/hooks/use-entry-placement";
+import { useClosingForm } from "@/hooks/use-closing-form";
 import { useNow } from "@/hooks/use-now";
-import { useSaving } from "@/hooks/use-saving";
 
 const NONE = 0;
-
-type DueChoice = "next" | "afterNext" | "custom";
 
 type FormState = {
   type: EntryType;
@@ -50,36 +46,17 @@ type EntryFormProps = {
 
 export function EntryForm({ entry, initialSubjectId, subjects, periods, lessons }: EntryFormProps) {
   const now = useNow();
-  const tomorrow = addDays(now.date, 1);
-  const upcoming = (subjectId: number) =>
-    upcomingSubjectLessons(subjectId, lessons, periods, 2, now);
+  const orNull = (id: number) => (id === NONE ? null : id);
 
   // Fills in the due date and period that follow from the other fields.
   const derive = (state: FormState): FormState => {
-    const next = { ...state };
-
-    if (next.type === "homework") {
-      if (next.dueChoice !== "custom") {
-        const [first, second] = upcoming(next.subjectId);
-        const pick = next.dueChoice === "next" ? first : (second ?? first);
-        next.date = pick?.date ?? tomorrow;
-        next.periodId = pick?.period.id ?? NONE;
-      }
-    } else {
-      if (!next.dateTouched) {
-        // An exam is announced ahead, so it gets the first lesson from tomorrow on
-        next.date =
-          upcomingSubjectLessons(next.subjectId, lessons, periods, 1, {
-            date: tomorrow,
-            minutes: 0,
-          })[0]?.date ?? tomorrow;
-      }
-      if (!next.periodTouched) {
-        next.periodId =
-          subjectLessonOn(next.subjectId, next.date, lessons, periods)?.period.id ?? NONE;
-      }
-    }
-    return next;
+    const due = suggestDue(
+      { ...state, subjectId: orNull(state.subjectId), periodId: orNull(state.periodId) },
+      lessons,
+      periods,
+      now
+    );
+    return { ...state, date: due.date, periodId: due.periodId ?? NONE };
   };
 
   const [form, setForm] = useState<FormState>(() =>
@@ -119,7 +96,7 @@ export function EntryForm({ entry, initialSubjectId, subjects, periods, lessons 
     setForm((state) => ({ ...state, ...changes }));
 
   const info = ENTRY_TYPE_INFO[form.type];
-  const [nextLesson, lessonAfter] = upcoming(form.subjectId);
+  const choiceDates = dueChoiceDates(orNull(form.subjectId), lessons, periods, now);
   const canSave = form.title.trim().length > 0;
 
   // The form as it was opened, to tell whether anything was changed
@@ -127,8 +104,7 @@ export function EntryForm({ entry, initialSubjectId, subjects, periods, lessons 
   const dirty = (
     ["type", "title", "description", "subjectId", "date", "periodId", "completed", "topic"] as const
   ).some((field) => form[field] !== initialForm[field]);
-  const allowLeave = useDiscardGuard(dirty);
-  const { saving, run } = useSaving({ closesOnSuccess: true });
+  const { saving, saveAndClose, deleteAndClose } = useClosingForm(dirty);
 
   const subjectPicker = useSubjectPicker({
     label: "Fach",
@@ -141,7 +117,11 @@ export function EntryForm({ entry, initialSubjectId, subjects, periods, lessons 
   });
 
   const save = () =>
-    run(async () => {
+    saveAndClose(async () => {
+      // Checked off or reopened here, it keeps its place in the list beneath, like from a row
+      if (entry && form.completed !== entry.completed) {
+        await checkOffEntry(entry, form.completed);
+      }
       await saveEntry(entry?.id ?? null, {
         type: form.type,
         title: form.title.trim(),
@@ -152,20 +132,15 @@ export function EntryForm({ entry, initialSubjectId, subjects, periods, lessons 
         completed: form.completed,
         topic: info.gradable ? form.topic.trim() || null : null,
       });
-      allowLeave();
-      router.back();
     });
 
   const remove = () => {
     if (!entry) return;
-    confirmDelete(
-      {
-        title: "Eintrag löschen?",
-        message: `«${entry.title}» wird gelöscht.`,
-        onDelete: () => deleteEntry(entry.id),
-      },
-      allowLeave
-    );
+    deleteAndClose({
+      title: "Eintrag löschen?",
+      message: `«${entry.title}» wird gelöscht.`,
+      onDelete: () => deleteEntry(entry.id),
+    });
   };
 
   return (
@@ -199,13 +174,15 @@ export function EntryForm({ entry, initialSubjectId, subjects, periods, lessons 
               onChange={(dueChoice) => change({ dueChoice })}
               options={[
                 {
-                  label: nextLesson ? `Nächste Lektion (${formatDate(nextLesson.date)})` : "Morgen",
+                  label: choiceDates.next
+                    ? `Nächste Lektion (${formatDate(choiceDates.next)})`
+                    : "Morgen",
                   value: "next",
                 },
-                ...(lessonAfter
+                ...(choiceDates.afterNext
                   ? [
                       {
-                        label: `Übernächste Lektion (${formatDate(lessonAfter.date)})`,
+                        label: `Übernächste Lektion (${formatDate(choiceDates.afterNext)})`,
                         value: "afterNext" as const,
                       },
                     ]
