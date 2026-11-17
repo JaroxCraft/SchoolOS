@@ -15,7 +15,7 @@ import { useInk } from "@/hooks/use-ink";
 import { useSaving } from "@/hooks/use-saving";
 import { confirm } from "@/lib/confirm";
 import { addMinutes, minutesOf } from "@/lib/dates";
-import { useSchoolRoutes } from "@/lib/routes";
+import { openScreen, useSchoolRoutes } from "@/lib/routes";
 import { saveFailed } from "@/lib/save-failed";
 
 const LESSON_MINUTES = 50;
@@ -115,7 +115,7 @@ export default function PeriodsEditScreen() {
           <Stack.Toolbar.Button
             {...nextButton}
             disabled={grid.length === 0 || saving}
-            onPress={() => saveAndLeave(() => router.push(routes.subjects))}
+            onPress={() => saveAndLeave(() => openScreen(routes.subjects))}
           />
         )}
         {!routes.setup && saveButton && (

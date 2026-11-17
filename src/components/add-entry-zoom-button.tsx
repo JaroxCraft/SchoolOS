@@ -3,7 +3,7 @@ import { SymbolView } from "expo-symbols";
 import { Pressable, StyleSheet } from "react-native";
 
 import { useInk } from "@/hooks/use-ink";
-import { NEW_ENTRY } from "@/lib/routes";
+import { claimOpening, NEW_ENTRY } from "@/lib/routes";
 import { isSheetClosing } from "@/lib/sheet-transition";
 
 // iOS: the "+" in the navigation bar, from which the new entry grows (zoom transition, iOS 18+;
@@ -16,9 +16,10 @@ export function AddEntryZoomButton() {
     <Link
       href={NEW_ENTRY}
       asChild
-      // Not while the last entry still shrinks back into this button, see markSheetClosing
+      // Not while the last entry still shrinks back into this button (see markSheetClosing), nor
+      // while another screen is still coming in (claimOpening)
       onPress={(event) => {
-        if (isSheetClosing()) event.preventDefault();
+        if (isSheetClosing() || !claimOpening()) event.preventDefault();
       }}>
       <Link.AppleZoom>
         <Pressable

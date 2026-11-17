@@ -7,7 +7,7 @@ import { LessonMenu } from "@/components/lesson-menu";
 import { colors } from "@/constants/colors";
 import type { Lesson, Period, Subject, Teacher } from "@/db/schema";
 import { minutesOf, minutesToTime } from "@/lib/dates";
-import { lessonActions, subjectHref } from "@/lib/routes";
+import { claimOpening, lessonActions, subjectHref } from "@/lib/routes";
 import {
   lessonBlocks,
   type LessonBlock,
@@ -165,7 +165,14 @@ function LessonCard({ block, subject, teacher, compact, top, height, state }: Le
 
   return (
     <View style={[styles.cardSlot, { top: top + 1, height: height - 2 }]}>
-      <Link href={subjectHref(subject.id)} push asChild>
+      <Link
+        href={subjectHref(subject.id)}
+        push
+        asChild
+        // Two cards touched at once open only one subject screen
+        onPress={(event) => {
+          if (!claimOpening()) event.preventDefault();
+        }}>
         <Link.Trigger>
           <Pressable
             style={styles.fill}

@@ -13,7 +13,7 @@ import { versionLabel } from "@/lib/app-info";
 import { dateToTime, formatDate, toISODate } from "@/lib/dates";
 import { allowNotifications, sendTestReminder } from "@/lib/notifications";
 import { AFTER_SCHOOL_MINUTES } from "@/lib/reminders";
-import { SCHOOL_ROUTES } from "@/lib/routes";
+import { openScreen, SCHOOL_ROUTES } from "@/lib/routes";
 import { SETUP_STEP_ICONS } from "@/lib/setup";
 import { SYSTEM_COLORS } from "@/lib/system-colors";
 import { countOf } from "@/lib/text";
@@ -61,25 +61,25 @@ export default function SettingsScreen() {
         <FieldGroup.Section title="Schule">
           <NavigationRow
             icon={SETUP_STEP_ICONS.periods}
-            onPress={() => router.push(SCHOOL_ROUTES.settings.periods)}
+            onPress={() => openScreen(SCHOOL_ROUTES.settings.periods)}
             supportingText={`${countOf(periods.length, "Lektionszeit", "Lektionszeiten")} pro Tag`}>
             Lektionenraster
           </NavigationRow>
           <NavigationRow
             icon={SETUP_STEP_ICONS.subjects}
-            onPress={() => router.push(SCHOOL_ROUTES.settings.subjects)}
+            onPress={() => openScreen(SCHOOL_ROUTES.settings.subjects)}
             supportingText={countOf(subjects.length, "Fach", "Fächer")}>
             Fächer
           </NavigationRow>
           <NavigationRow
             icon={SETUP_STEP_ICONS.timetable}
-            onPress={() => router.push(SCHOOL_ROUTES.settings.timetable)}
+            onPress={() => openScreen(SCHOOL_ROUTES.settings.timetable)}
             supportingText={`${countOf(lessons.length, "Lektion", "Lektionen")} pro Woche`}>
             Stundenplan
           </NavigationRow>
           <NavigationRow
             icon={SETUP_STEP_ICONS.teachers}
-            onPress={() => router.push("/settings/teachers")}
+            onPress={() => openScreen("/settings/teachers")}
             supportingText={countOf(teachers.length, "Lehrperson", "Lehrpersonen")}>
             Lehrpersonen
           </NavigationRow>
@@ -146,7 +146,7 @@ export default function SettingsScreen() {
         <FieldGroup.Section title="Info">
           <NavigationRow
             icon={{ sf: "info", md: "info", color: SYSTEM_COLORS.gray }}
-            onPress={() => router.push("/settings/about")}
+            onPress={() => openScreen("/settings/about")}
             supportingText={versionLabel}>
             Über SchoolOS
           </NavigationRow>

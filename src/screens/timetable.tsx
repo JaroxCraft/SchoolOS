@@ -22,7 +22,7 @@ import { type Ink, useInk } from "@/hooks/use-ink";
 import { useSaving } from "@/hooks/use-saving";
 import { SCHOOL_WEEKDAYS, today, weekdayName, weekdayShort } from "@/lib/dates";
 import { endEditing } from "@/lib/focused-fields";
-import { useSchoolRoutes } from "@/lib/routes";
+import { openScreen, useSchoolRoutes } from "@/lib/routes";
 import { saveFailed } from "@/lib/save-failed";
 import { lessonAt, periodNumber, periodRange, shownWeekday } from "@/lib/schedule";
 import { countOf } from "@/lib/text";
@@ -279,7 +279,7 @@ export default function TimetableEditScreen() {
           <FieldGroup.Section>
             <ActionRow
               label="Fach hinzufügen"
-              onPress={() => router.push({ pathname: routes.subject, params: { id: "new" } })}
+              onPress={() => openScreen({ pathname: routes.subject, params: { id: "new" } })}
             />
           </FieldGroup.Section>
         </FormList>

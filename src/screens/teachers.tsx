@@ -1,5 +1,5 @@
 import { FieldGroup, Text } from "@expo/ui";
-import { router, Stack } from "expo-router";
+import { Stack } from "expo-router";
 
 import { FormList } from "@/components/form-list";
 import { type RowAction, RowActions } from "@/components/row-actions";
@@ -7,6 +7,7 @@ import { ActionRow, NavigationRow } from "@/components/rows";
 import { useSubjects, useTeachers } from "@/db/queries";
 import { useInk } from "@/hooks/use-ink";
 import { confirmRowDelete, teacherDeletion } from "@/lib/confirm-delete";
+import { openScreen } from "@/lib/routes";
 import { joinDetails } from "@/lib/text";
 
 export default function TeachersScreen() {
@@ -15,7 +16,7 @@ export default function TeachersScreen() {
   const ink = useInk();
 
   const openTeacher = (id: string) =>
-    router.push({ pathname: "/settings/teacher/[id]", params: { id } });
+    openScreen({ pathname: "/settings/teacher/[id]", params: { id } });
 
   return (
     <>

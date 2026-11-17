@@ -1,7 +1,26 @@
-import { router, useRoute } from "expo-router";
+import { type Href, router, useRoute } from "expo-router";
 
 import type { RowAction } from "@/components/row-actions";
 import { isSheetClosing } from "@/lib/sheet-transition";
+
+// About as long as a push or a sheet takes to come in
+const OPENING_MS = 500;
+let openingUntil = 0;
+
+// Two rows touched at the same time, or one tapped twice quickly, would open two screens on top of
+// each other: only the first counts while a screen is still coming in. Returns whether this one may
+// open; a <Link> that opens a screen asks it in its onPress and prevents the default otherwise.
+export function claimOpening(): boolean {
+  const now = Date.now();
+  if (now < openingUntil) return false;
+  openingUntil = now + OPENING_MS;
+  return true;
+}
+
+// Opens a screen or sheet, the one way the app does it (see claimOpening)
+export function openScreen(href: Href) {
+  if (claimOpening()) router.push(href);
+}
 
 export const NEW_ENTRY = { pathname: "/entry/[id]", params: { id: "new" } } as const;
 
@@ -9,7 +28,7 @@ export const NEW_ENTRY = { pathname: "/entry/[id]", params: { id: "new" } } as c
 // zoomed entry still shrinks back into the "+": presenting then makes it jump (isSheetClosing).
 export function openEntry({ id, subjectId }: { id: number | "new"; subjectId?: number }) {
   if (isSheetClosing()) return;
-  router.push({
+  openScreen({
     pathname: "/entry/[id]",
     params:
       subjectId === undefined
@@ -23,7 +42,7 @@ export const subjectHref = (subjectId: number) =>
   ({ pathname: "/subject/[subjectId]", params: { subjectId: String(subjectId) } }) as const;
 
 export function openSubject(subjectId: number) {
-  router.push(subjectHref(subjectId));
+  openScreen(subjectHref(subjectId));
 }
 
 // The long-press actions of a lesson, the same in the overview and on the timetable cards.
@@ -36,7 +55,7 @@ export function lessonActions(subjectId: number): RowAction[] {
     {
       label: "Stundenplan bearbeiten",
       icon: "pencil",
-      onPress: () => router.push(SCHOOL_ROUTES.settings.timetable),
+      onPress: () => openScreen(SCHOOL_ROUTES.settings.timetable),
     },
   ];
 }
