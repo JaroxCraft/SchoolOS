@@ -2,21 +2,33 @@ import * as Notifications from "expo-notifications";
 import { router } from "expo-router";
 import { useEffect } from "react";
 
-import { useEntries, useLessons, usePeriods, useSettings, useSubjects } from "@/db/queries";
+import {
+  getEntries,
+  useEntries,
+  useLessons,
+  usePeriods,
+  useSettings,
+  useSubjects,
+} from "@/db/queries";
 import { useNow } from "@/hooks/use-now";
+import { isCheckable } from "@/lib/entry-types";
 import { scheduleReminders } from "@/lib/notifications";
 import { planReminders } from "@/lib/reminders";
 import { openEntry } from "@/lib/routes";
 
+// A reminder about one entry opens it as a sheet, one about several switches to the agenda. If
+// the entry is done or deleted by now, the tap only opens the app: a sheet with a checked-off task
+// or "Eintrag nicht gefunden" would be in the way.
 function openReminder(response: Notifications.NotificationResponse) {
   Notifications.clearLastNotificationResponse();
   if (response.actionIdentifier !== Notifications.DEFAULT_ACTION_IDENTIFIER) return;
   const entryId = response.notification.request.content.data?.entryId;
-  if (typeof entryId === "number") {
-    openEntry({ id: entryId });
-  } else {
+  if (typeof entryId !== "number") {
     router.navigate("/agenda");
+    return;
   }
+  const entry = getEntries().find((candidate) => candidate.id === entryId);
+  if (entry && !(isCheckable(entry.type) && entry.completed)) openEntry({ id: entryId });
 }
 
 // Keeps the scheduled reminders in step with the data and opens what a tapped reminder is about.

@@ -119,6 +119,11 @@ export function useEntries() {
   return useTable(entriesStore);
 }
 
+// The same entries outside of React, e.g. when a notification is tapped
+export function getEntries() {
+  return entriesStore.getSnapshot();
+}
+
 export function useSettings(): Settings {
   return useTable(settingsStore);
 }
