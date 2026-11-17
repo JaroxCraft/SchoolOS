@@ -94,13 +94,13 @@ export function EntryForm({ entry, initialSubjectId, subjects, periods, lessons 
 
   const info = ENTRY_TYPE_INFO[form.type];
   const choiceDates = dueChoiceDates(orNull(form.subjectId), lessons, periods, now);
-  const canSave = form.title.trim().length > 0;
-
   // The form as it was opened, to tell whether anything was changed
   const [initialForm] = useState(form);
   const dirty = (
     ["type", "title", "description", "subjectId", "date", "periodId", "completed", "topic"] as const
   ).some((field) => form[field] !== initialForm[field]);
+  // ✓ only while there is something to save
+  const canSave = dirty && form.title.trim().length > 0;
   const { saving, saveAndClose, deleteAndClose } = useClosingForm(dirty);
 
   const subjectPicker = useSubjectPicker({
