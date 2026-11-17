@@ -94,22 +94,6 @@ describe("double lessons", () => {
   });
 });
 
-describe("upcoming lessons of a subject", () => {
-  test("a lesson later today counts", () => {
-    const [next] = upcomingSubjectLessons(GERMAN, lessons, periods, 1, at(MONDAY, "09:00"));
-    expect([next.date, next.period.id]).toEqual([MONDAY, 14]);
-  });
-
-  test("the lesson in progress does not count", () => {
-    const [next] = upcomingSubjectLessons(MATH, lessons, periods, 1, at(MONDAY, "08:20"));
-    expect([next.date, next.period.id]).toEqual([TUESDAY, 11]);
-  });
-
-  test("a subject without lessons has none", () => {
-    expect(upcomingSubjectLessons(99, lessons, periods, 2, at(MONDAY, "07:00"))).toEqual([]);
-  });
-});
-
 describe("next lessons", () => {
   test("today's remaining ones, including the one in progress", () => {
     const next = nextLessons(lessons, periods, at(MONDAY, "10:30"));
@@ -168,5 +152,9 @@ test("a lesson is past, current or upcoming only on today", () => {
 
 test("periods are numbered from 1 in the order of the grid", () => {
   expect(periodNumber(periods, 13)).toBe(3);
-  expect(visiblePeriods(lessons, periods)).toEqual(periods);
+});
+
+test("the timetable shows only the periods from the first to the last one with a lesson", () => {
+  const middle = [lesson(1, 12, MATH, null), lesson(3, 13, GERMAN, null)];
+  expect(visiblePeriods(middle, periods).map((period) => period.id)).toEqual([12, 13]);
 });
