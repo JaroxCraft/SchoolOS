@@ -394,4 +394,16 @@ describe("parseTransferFile", () => {
     expect(parse).toThrow(TransferError);
     expect(parse).toThrow("Lektion 2: Das Fach mit der ID 99 fehlt in der Datei.");
   });
+
+  // 0 stands for "no subject" (NONE) in the forms, so a row with it could not be chosen
+  test("rejects an id below 1", () => {
+    const { db, exportData } = setup();
+    seedBackup(db);
+    const file = exportData("backup");
+    file.subjects[0] = { ...file.subjects[0], id: 0 };
+
+    expect(() => parseTransferFile(JSON.stringify(file), TODAY)).toThrow(
+      "Fach 1: Die ID 0 ist ungültig."
+    );
+  });
 });
