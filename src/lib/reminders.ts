@@ -43,7 +43,7 @@ function joinLines(lines: string[]): string {
   return [...shown, `und ${lines.length - shown.length} weitere`].join("\n");
 }
 
-// The local notifications for the coming days (spec 4.5), at most two a day, both about
+// The local notifications for the coming days (spec 4.5), both about
 // everything open that is due up to the next school day, of every type (homework, exams,
 // presentations, submissions, other entries); not sent if there is nothing:
 // - The daily summary, 30 minutes after the last lesson, on a day without lessons at
