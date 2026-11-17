@@ -26,7 +26,7 @@ async function ensureChannel() {
   if (Platform.OS !== "android") return;
   await Notifications.setNotificationChannelAsync(CHANNEL_ID, {
     name: "Erinnerungen",
-    description: "Was bis zum nächsten Schultag fällig ist und wann das Lernen beginnt",
+    description: "Was bis zum nächsten Schultag fällig ist",
     importance: AndroidImportance.HIGH,
   });
 }
