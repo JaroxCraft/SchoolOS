@@ -1,5 +1,4 @@
 import { FieldGroup, Text } from "@expo/ui";
-import { router } from "expo-router";
 
 import { EntryRow } from "@/components/entry-row";
 import { FooterText, FormList, rowsKey } from "@/components/form-list";
@@ -13,7 +12,7 @@ import { useEntryPlacement } from "@/hooks/use-entry-placement";
 import { useInk } from "@/hooks/use-ink";
 import { useNow } from "@/hooks/use-now";
 import { formatDate, relativeDay } from "@/lib/dates";
-import { lessonActions, openSubject, SCHOOL_ROUTES } from "@/lib/routes";
+import { lessonActions, openScreen, openSubject, SCHOOL_ROUTES } from "@/lib/routes";
 import { nextLessons, periodNumber, periodRange } from "@/lib/schedule";
 import { SETUP_STEP_ICONS } from "@/lib/setup";
 import { NEUTRAL_COLOR } from "@/lib/subject-colors";
@@ -65,7 +64,7 @@ function Setup({ periods, subjects }: SetupProps) {
             key={step.title}
             icon={step.done ? DONE_ICON : step.icon}
             supportingText={step.detail}
-            onPress={() => router.push(step.href)}>
+            onPress={() => openScreen(step.href)}>
             {step.title}
           </NavigationRow>
         ))}

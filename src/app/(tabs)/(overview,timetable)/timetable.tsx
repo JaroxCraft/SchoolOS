@@ -1,5 +1,4 @@
 import { Host } from "@expo/ui";
-import { router } from "expo-router";
 import { useRef, useState } from "react";
 import {
   type NativeScrollEvent,
@@ -20,7 +19,7 @@ import { SegmentedControl } from "@/components/segmented-control";
 import { WeekStrip } from "@/components/week-strip";
 import { useLessons, usePeriods, useSubjects, useTeachers } from "@/db/queries";
 import { useNow } from "@/hooks/use-now";
-import { SCHOOL_ROUTES } from "@/lib/routes";
+import { openScreen, SCHOOL_ROUTES } from "@/lib/routes";
 import { schoolWeek, shownWeekday, visiblePeriods } from "@/lib/schedule";
 
 const PADDING = 16;
@@ -70,7 +69,7 @@ export default function TimetableScreen() {
           action={{
             label: "Stundenplan ausfüllen",
             // The editor of the settings sheet, as from a lesson's menu (lessonActions)
-            onPress: () => router.push(SCHOOL_ROUTES.settings.timetable),
+            onPress: () => openScreen(SCHOOL_ROUTES.settings.timetable),
           }}
         />
       </Screen>

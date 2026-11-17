@@ -1,5 +1,5 @@
 import { FieldGroup, Text } from "@expo/ui";
-import { router, Stack } from "expo-router";
+import { Stack } from "expo-router";
 
 import { FormList } from "@/components/form-list";
 import { type RowAction, RowActions } from "@/components/row-actions";
@@ -9,7 +9,7 @@ import { useSubjects, useTeachers } from "@/db/queries";
 import { useStepButton } from "@/hooks/use-header-button";
 import { useInk } from "@/hooks/use-ink";
 import { confirmRowDelete, subjectDeletion } from "@/lib/confirm-delete";
-import { useSchoolRoutes } from "@/lib/routes";
+import { openScreen, useSchoolRoutes } from "@/lib/routes";
 import { joinDetails } from "@/lib/text";
 
 export default function SubjectsScreen() {
@@ -19,7 +19,7 @@ export default function SubjectsScreen() {
   const ink = useInk();
   const nextButton = useStepButton("next");
 
-  const openSubject = (id: string) => router.push({ pathname: routes.subject, params: { id } });
+  const openSubject = (id: string) => openScreen({ pathname: routes.subject, params: { id } });
 
   return (
     <>
@@ -31,7 +31,7 @@ export default function SubjectsScreen() {
             <Stack.Toolbar.Button
               {...nextButton}
               disabled={subjects.length === 0}
-              onPress={() => router.push(routes.timetable)}
+              onPress={() => openScreen(routes.timetable)}
             />
           )}
         </Stack.Toolbar>

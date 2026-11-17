@@ -1,4 +1,4 @@
-import { router, Stack } from "expo-router";
+import { Stack } from "expo-router";
 import type { ReactNode } from "react";
 import { Platform, StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -6,6 +6,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { AddButton } from "@/components/add-button";
 import { AddEntryZoomButton } from "@/components/add-entry-zoom-button";
 import { useSymbol } from "@/hooks/use-symbol";
+import { openScreen } from "@/lib/routes";
 
 type ScreenProps = {
   title: string;
@@ -53,7 +54,7 @@ export function Screen({ title, showAddButton, toolbarItems, children }: ScreenP
             accessibilityLabel="Einstellungen"
             // iOS 26+: a capsule of its own, apart from the "+" (sharesBackground = NO)
             separateBackground
-            onPress={() => router.push("/settings")}
+            onPress={() => openScreen("/settings")}
           />
         )}
       </Stack.Toolbar>

@@ -12,6 +12,7 @@ import { resetDatabase } from "@/db/actions";
 import { useInk } from "@/hooks/use-ink";
 import { appInfoRows, appInfoText, FEEDBACK_URL, versionLabel, WEBSITE_URL } from "@/lib/app-info";
 import { confirm } from "@/lib/confirm";
+import { openScreen } from "@/lib/routes";
 import { SYSTEM_COLORS } from "@/lib/system-colors";
 import { typography } from "@/lib/typography";
 
@@ -103,7 +104,7 @@ export default function AboutScreen() {
           </LinkRow>
           <NavigationRow
             icon={{ sf: "hand.raised", md: "privacy_tip", color: SYSTEM_COLORS.indigo }}
-            onPress={() => router.push("/settings/privacy")}>
+            onPress={() => openScreen("/settings/privacy")}>
             Datenschutz
           </NavigationRow>
         </FieldGroup.Section>
