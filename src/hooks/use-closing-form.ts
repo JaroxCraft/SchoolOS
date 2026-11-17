@@ -9,7 +9,7 @@ import { saveFailed } from "@/lib/save-failed";
 // with unsaved changes asks "Änderungen verwerfen?" first (useDiscardGuard); saving with ✓ runs at
 // most once (useSaving) and closes without asking, as does deleting after its confirmation. A save
 // that fails keeps the form open with its input and says so (saveFailed), like the editors and
-// pickers. A pushed form also wraps its content in <DiscardGuard>.
+// pickers. A pushed form shows its content in <PushedForm>, with the same `dirty`.
 export function useClosingForm(dirty: boolean) {
   const allowLeave = useDiscardGuard(dirty);
   const { saving, run } = useSaving({ closesOnSuccess: true });

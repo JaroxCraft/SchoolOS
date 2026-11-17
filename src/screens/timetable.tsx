@@ -3,9 +3,9 @@ import { router, Stack } from "expo-router";
 import { useState } from "react";
 import { Platform } from "react-native";
 
-import { DiscardGuard } from "@/components/discard-guard";
 import { EmptyState } from "@/components/empty-state";
-import { FooterText, FormList } from "@/components/form-list";
+import { FooterText } from "@/components/form-list";
+import { PushedForm } from "@/components/pushed-form";
 import { RowActions } from "@/components/row-actions";
 import { ActionRow } from "@/components/rows";
 import { NONE } from "@/components/search-picker";
@@ -16,16 +16,14 @@ import { TextField } from "@/components/text-field";
 import { saveLessons } from "@/db/actions";
 import { useLessons, usePeriods, useSubjects, useTeachers } from "@/db/queries";
 import type { LessonSlot, Period, Subject } from "@/db/schema";
-import { useDiscardGuard } from "@/hooks/use-discard-guard";
-import { useSaveButton, useStepButton } from "@/hooks/use-header-button";
+import { useDraftEditor } from "@/hooks/use-draft-editor";
+import { useStepButton } from "@/hooks/use-header-button";
 import { type Ink, useInk } from "@/hooks/use-ink";
-import { useSaving } from "@/hooks/use-saving";
 import { SCHOOL_WEEKDAYS, today, weekdayName, weekdayShort } from "@/lib/dates";
 import { findById } from "@/lib/find";
 import { endEditing } from "@/lib/focused-fields";
 import { openScreen, useSchoolRoutes } from "@/lib/routes";
 import type { RowAction } from "@/lib/row-action";
-import { saveFailed } from "@/lib/save-failed";
 import { lessonAt, periodLabel, periodNumber, periodRange, shownWeekday } from "@/lib/schedule";
 import { countOf } from "@/lib/text";
 import { typography } from "@/lib/typography";
@@ -156,20 +154,28 @@ export default function TimetableEditScreen() {
   const teachers = useTeachers();
   const ink = useInk();
   const routes = useSchoolRoutes();
-  const saveButton = useSaveButton();
   const finishButton = useStepButton("finish");
   // Start on the current weekday, or on Monday at the weekend
   const [weekday, setWeekday] = useState(() => shownWeekday(today()));
   // The period whose sheet is open
   const [editing, setEditing] = useState<Period | null>(null);
-  // null until the first change: until then the screen shows the saved timetable
-  const [draft, setDraft] = useState<LessonSlot[] | null>(null);
-  // A subject deleted meanwhile ("Fach hinzufügen" opens the subject form) leaves the draft
-  const timetable = (draft ?? lessons).filter((lesson) =>
-    subjects.some((subject) => subject.id === lesson.subjectId)
-  );
-  const dirty = draft !== null && timetableKey(timetable) !== timetableKey(lessons);
-  const allowLeave = useDiscardGuard(dirty);
+  const {
+    current: timetable,
+    setDraft,
+    dirty,
+    saving,
+    saveAndLeave,
+  } = useDraftEditor<LessonSlot[]>({
+    saved: lessons,
+    keyOf: timetableKey,
+    save: saveLessons,
+    // Both buttons leave the screen, so the lock stays after saving: ✓ can still be tapped while
+    // the screen slides away
+    closesOnSuccess: true,
+    // A subject deleted meanwhile ("Fach hinzufügen" opens the subject form) leaves the draft
+    tidy: (slots) =>
+      slots.filter((lesson) => subjects.some((subject) => subject.id === lesson.subjectId)),
+  });
 
   // Sets the lesson of a slot on the shown weekday; null makes it free
   const setSlot = (periodId: number, lesson: Omit<LessonSlot, "weekday" | "periodId"> | null) =>
@@ -177,18 +183,6 @@ export default function TimetableEditScreen() {
       ...timetable.filter((slot) => slot.weekday !== weekday || slot.periodId !== periodId),
       ...(lesson ? [{ weekday, periodId, ...lesson }] : []),
     ]);
-
-  // Both buttons leave the screen, so the lock stays after saving: ✓ can still be tapped while
-  // the screen slides away
-  const { saving, run } = useSaving({ closesOnSuccess: true });
-
-  // Saves and leaves with `leave`; a failed save stays on the screen with the draft
-  const saveAndLeave = (leave: () => void) =>
-    run(async () => {
-      if (dirty) saveLessons(timetable);
-      allowLeave();
-      leave();
-    }).catch(saveFailed);
 
   if (periods.length === 0 || subjects.length === 0) {
     const noPeriods = periods.length === 0;
@@ -226,65 +220,61 @@ export default function TimetableEditScreen() {
 
   return (
     <>
-      <Stack.Title>Stundenplan</Stack.Title>
-      <Stack.Toolbar placement="right">
-        {/* Setup: the last step, back to the overview (or the timetable tab) it started from */}
-        {routes.setup && finishButton && (
-          <Stack.Toolbar.Button
-            {...finishButton}
-            disabled={saving}
-            onPress={() => saveAndLeave(() => router.dismissAll())}
-          />
-        )}
-        {!routes.setup && saveButton && (
-          <Stack.Toolbar.Button
-            {...saveButton}
-            disabled={!dirty || saving}
-            onPress={() => saveAndLeave(() => router.back())}
-          />
-        )}
-      </Stack.Toolbar>
-      <DiscardGuard dirty={dirty}>
-        <FormList>
-          <FieldGroup.Section>
-            <SegmentedControl
-              value={weekday}
-              onChange={setWeekday}
-              options={SCHOOL_WEEKDAYS.map((day) => ({ label: weekdayShort(day), value: day }))}
+      <PushedForm
+        title="Stundenplan"
+        canSave={dirty && !saving}
+        dirty={dirty}
+        // Settings: ✓ saves and goes back. Setup: "Fertig" in the toolbar takes its place.
+        onSave={routes.setup ? undefined : () => saveAndLeave(() => router.back())}
+        toolbar={
+          // Setup: the last step, back to the overview (or the timetable tab) it started from
+          routes.setup &&
+          finishButton && (
+            <Stack.Toolbar.Button
+              {...finishButton}
+              disabled={saving}
+              onPress={() => saveAndLeave(() => router.dismissAll())}
             />
-          </FieldGroup.Section>
+          )
+        }>
+        <FieldGroup.Section>
+          <SegmentedControl
+            value={weekday}
+            onChange={setWeekday}
+            options={SCHOOL_WEEKDAYS.map((day) => ({ label: weekdayShort(day), value: day }))}
+          />
+        </FieldGroup.Section>
 
-          <FieldGroup.Section
-            title={`${weekdayName(weekday)} · ${countOf(lessonCount, "Lektion", "Lektionen")}`}>
-            {periods.map((period, index) => {
-              const lesson = lessonAt(timetable, weekday, period.id);
-              return lessonRows({
-                period,
-                number: index + 1,
-                lesson,
-                subject: subjectOf(lesson),
-                onPress: () => setEditing(period),
-                onClear: () => setSlot(period.id, null),
-                onRoomChange: (room) => lesson && setSlot(period.id, { ...lesson, room }),
-                ink,
-              });
-            })}
-            <FieldGroup.SectionFooter>
-              <FooterText>
-                Tippe auf eine Lektion, um das Fach zu wählen. Das Zimmer wird vom Fach übernommen
-                und lässt sich darunter ändern.
-              </FooterText>
-            </FieldGroup.SectionFooter>
-          </FieldGroup.Section>
+        <FieldGroup.Section
+          title={`${weekdayName(weekday)} · ${countOf(lessonCount, "Lektion", "Lektionen")}`}>
+          {periods.map((period, index) => {
+            const lesson = lessonAt(timetable, weekday, period.id);
+            return lessonRows({
+              period,
+              number: index + 1,
+              lesson,
+              subject: subjectOf(lesson),
+              onPress: () => setEditing(period),
+              onClear: () => setSlot(period.id, null),
+              onRoomChange: (room) => lesson && setSlot(period.id, { ...lesson, room }),
+              ink,
+            });
+          })}
+          <FieldGroup.SectionFooter>
+            <FooterText>
+              Tippe auf eine Lektion, um das Fach zu wählen. Das Zimmer wird vom Fach übernommen und
+              lässt sich darunter ändern.
+            </FooterText>
+          </FieldGroup.SectionFooter>
+        </FieldGroup.Section>
 
-          <FieldGroup.Section>
-            <ActionRow
-              label="Fach hinzufügen"
-              onPress={() => openScreen({ pathname: routes.subject, params: { id: "new" } })}
-            />
-          </FieldGroup.Section>
-        </FormList>
-      </DiscardGuard>
+        <FieldGroup.Section>
+          <ActionRow
+            label="Fach hinzufügen"
+            onPress={() => openScreen({ pathname: routes.subject, params: { id: "new" } })}
+          />
+        </FieldGroup.Section>
+      </PushedForm>
 
       {/* Outside the form: inside it, the sheet would take up an empty row */}
       <SubjectPickerSheet

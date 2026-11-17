@@ -4,8 +4,10 @@ import type { ReactNode } from "react";
 
 import { RowActions } from "@/components/row-actions";
 import { useInk } from "@/hooks/use-ink";
+import { useSaving } from "@/hooks/use-saving";
 import { useSymbol } from "@/hooks/use-symbol";
 import { editAction } from "@/lib/confirm-delete";
+import { saveFailed } from "@/lib/save-failed";
 import { SYSTEM_COLORS } from "@/lib/system-colors";
 
 // "None" in every picker and select: no Fach ("Allgemein"), no Lehrperson ("Keine"), a free period
@@ -28,9 +30,8 @@ export type PickerForm<T> = {
   addLabel: string;
   // Title of the form for a new item, e.g. "Neue Lehrperson"
   newTitle: string;
-  // Title of the form for an existing item, its name like the form screens. Without it, items
-  // cannot be changed in the sheet.
-  editTitle?: (item: T) => string;
+  // Title of the form for an existing item, its name like the form screens
+  editTitle: (item: T) => string;
   // The rows of the form
   fields: ReactNode;
   canSave: boolean;
@@ -65,9 +66,9 @@ export type SearchPickerSheetProps<T extends { id: number }> = {
 };
 
 // The sections of the list: the extra choices (hidden while searching) and the matching items,
-// returned as an array, so they are direct children of the sheet's <FieldGroup>. `choose` picks
-// a value and closes the sheet. With `onEdit`, every item can be changed from its row actions
-// (iOS: swipe left or long press; Android: long press).
+// returned as an array, so they are direct children of the sheet's <FieldGroup>. With `onEdit`,
+// every item can be changed from its row actions (iOS: swipe left or long press; Android: long
+// press). Also the title of the form and saving it, with `saving` while the save runs.
 export function usePickerSections<T extends { id: number }>(
   {
     items,
@@ -78,6 +79,7 @@ export function usePickerSections<T extends { id: number }>(
     getSupportingText,
     extraChoices = [],
     extraLeading,
+    form,
     value,
     onChange,
   }: SearchPickerSheetProps<T>,
@@ -100,6 +102,28 @@ export function usePickerSections<T extends { id: number }>(
     }
     close();
   };
+
+  // While the form saves, so a second tap cannot add the item twice
+  const { saving, run } = useSaving();
+  // The name of the item the form changes, or the title for a new item
+  const formTitle = (item: T | undefined) => {
+    if (!form) return "";
+    return item ? form.editTitle(item) : form.newTitle;
+  };
+  // A new item is picked, which closes the sheet. A changed item stays as it was picked:
+  // `backToList` shows the list again with the change.
+  const saveForm = (isEdit: boolean, backToList: () => void) =>
+    run(async () => {
+      if (!form) return;
+      try {
+        const id = await form.save();
+        if (isEdit) backToList();
+        else choose(id);
+      } catch {
+        saveFailed();
+      }
+    });
+
   // The accent color marks the selection, like a checked row in the iOS settings
   const checkmark = (selected: boolean) =>
     selected && check ? <Icon name={check} size={17} color={ink.accent} /> : undefined;
@@ -149,5 +173,5 @@ export function usePickerSections<T extends { id: number }>(
     ),
   ];
 
-  return { sections, choose };
+  return { sections, saving, formTitle, saveForm };
 }

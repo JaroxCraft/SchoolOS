@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import { AbbreviationField, abbreviationToSave, canSaveNamed } from "@/components/name-fields";
 import { TextField } from "@/components/text-field";
 import { addTeacher, updateTeacher } from "@/db/actions";
 import type { Teacher } from "@/db/schema";
@@ -29,10 +30,9 @@ export function useTeacherDraft(initial?: Teacher) {
 
   // Returns the id of the saved teacher
   const save = async (): Promise<number> => {
-    const trimmedName = name.trim();
     const values = {
-      name: trimmedName,
-      abbreviation: abbreviation.trim() || teacherAbbreviation(trimmedName),
+      name: name.trim(),
+      abbreviation: abbreviationToSave(abbreviation, name, teacherAbbreviation),
       email: email.trim() || null,
     };
     if (!teacher) return addTeacher(values);
@@ -50,14 +50,13 @@ export function useTeacherDraft(initial?: Teacher) {
       autoCapitalize="words"
       onChangeText={setName}
     />,
-    <TextField
+    <AbbreviationField
       key={`abbreviation-${version}`}
-      placeholder={
-        name.trim() ? `Kürzel (sonst «${teacherAbbreviation(name)}»)` : "Kürzel, z. B. JRi"
-      }
+      name={name}
+      makeAbbreviation={teacherAbbreviation}
+      example="Kürzel, z. B. JRi"
       defaultValue={abbreviation}
       autoCapitalize="none"
-      maxLength={5}
       onChangeText={setAbbreviation}
     />,
     <TextField
@@ -78,8 +77,7 @@ export function useTeacherDraft(initial?: Teacher) {
 
   return {
     fields,
-    // ✓ only while there is something to save
-    canSave: dirty && name.trim().length > 0,
+    canSave: canSaveNamed(dirty, name),
     dirty,
     start,
     save,
