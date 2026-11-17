@@ -121,6 +121,7 @@ function checkRows<T extends { id: number }>(
     const name = `${label} ${index + 1}`;
     checkRow(row, table, name);
     const { id } = row as T;
+    if (id < 1) fail(`${name}: Die ID ${id} ist ungültig.`);
     if (ids.has(id)) fail(`${name}: Die ID ${id} kommt in der Datei mehrfach vor.`);
     ids.add(id);
     check(row as T, name);
