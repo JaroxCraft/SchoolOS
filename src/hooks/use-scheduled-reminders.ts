@@ -1,9 +1,7 @@
 import { useEffect, useState } from "react";
 
-import { getScheduledReminders, type ScheduledReminder } from "@/lib/notifications";
+import { getScheduledReminders, type ScheduledReminder } from "@/lib/notification-dev-tools";
 
-// The reminders the system has scheduled, for the development tools. Read when the screen opens
-// and on `refresh`, since the plan is applied in the background after every change.
 export function useScheduledReminders() {
   const [scheduled, setScheduled] = useState<ScheduledReminder[]>([]);
 
