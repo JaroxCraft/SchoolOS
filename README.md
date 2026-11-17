@@ -8,7 +8,7 @@ A school planner for iOS and Android that replaces the "Semesterheft": timetable
 - [Expo Router](https://docs.expo.dev/router/introduction/) with native tabs
 - [`@expo/ui`](https://docs.expo.dev/versions/v58.0.0/sdk/ui/) for native controls (SwiftUI and Jetpack Compose)
 - `expo-sqlite` with [Drizzle ORM](https://orm.drizzle.team) for local storage
-- `expo-notifications` for local notifications (planned)
+- `expo-notifications` for local reminders (planned on the device, no push server)
 - [bun](https://bun.sh) as package manager, ESLint and Prettier for code quality
 
 ## Getting started

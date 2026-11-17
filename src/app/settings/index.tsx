@@ -1,11 +1,15 @@
-import { FieldGroup } from "@expo/ui";
+import { FieldGroup, Switch } from "@expo/ui";
 import { router, Stack } from "expo-router";
 import { Platform } from "react-native";
 
+import { DateField } from "@/components/date-field";
 import { FooterText, FormList } from "@/components/form-list";
 import { ActionRow, NavigationRow } from "@/components/rows";
-import { useLessons, usePeriods, useSubjects, useTeachers } from "@/db/queries";
+import { updateSettings } from "@/db/actions";
+import { useLessons, usePeriods, useSettings, useSubjects, useTeachers } from "@/db/queries";
+import { useNotificationPermission } from "@/hooks/use-notification-permission";
 import { versionLabel } from "@/lib/app-info";
+import { allowNotifications } from "@/lib/notifications";
 import { SCHOOL_ROUTES } from "@/lib/routes";
 import { SETUP_STEP_ICONS } from "@/lib/setup";
 import { pickAndImport, shareExport } from "@/lib/transfer-file";
@@ -15,6 +19,14 @@ export default function SettingsScreen() {
   const subjects = useSubjects();
   const teachers = useTeachers();
   const lessons = useLessons();
+  const settings = useSettings();
+  const [permission, setPermission] = useNotificationPermission();
+
+  const notificationsFooter = !settings.notificationsEnabled
+    ? "Keine Erinnerungen an Aufgaben, Prüfungen und den Lernbeginn."
+    : permission === "denied"
+      ? "Mitteilungen sind für SchoolOS in den Systemeinstellungen ausgeschaltet, deshalb kommen keine Erinnerungen."
+      : `Nach der letzten Lektion zeigt eine Übersicht, was bis zum nächsten Schultag fällig ist und wofür das Lernen beginnt, an Tagen ohne Unterricht um ${settings.noLessonSummaryTime}. Die zweite Erinnerung nennt die Aufgaben, die dann noch offen sind.`;
 
   return (
     <>
@@ -75,6 +87,39 @@ export default function SettingsScreen() {
               Importieren lassen sich nur Stundenplan- und Backup-Dateien von SchoolOS (JSON), keine
               PDFs oder Bilder.
             </FooterText>
+          </FieldGroup.SectionFooter>
+        </FieldGroup.Section>
+
+        <FieldGroup.Section title="Mitteilungen">
+          <Switch
+            label="Erinnerungen"
+            value={settings.notificationsEnabled}
+            onValueChange={(notificationsEnabled) => updateSettings({ notificationsEnabled })}
+          />
+          {settings.notificationsEnabled && permission === "denied" && (
+            <ActionRow
+              label="Mitteilungen erlauben"
+              onPress={() => allowNotifications().then(setPermission)}
+            />
+          )}
+          {settings.notificationsEnabled && (
+            <DateField
+              mode="time"
+              label="Zweite Erinnerung"
+              value={settings.secondReminderTime}
+              onChange={(secondReminderTime) => updateSettings({ secondReminderTime })}
+            />
+          )}
+          {settings.notificationsEnabled && (
+            <DateField
+              mode="time"
+              label="Übersicht an freien Tagen"
+              value={settings.noLessonSummaryTime}
+              onChange={(noLessonSummaryTime) => updateSettings({ noLessonSummaryTime })}
+            />
+          )}
+          <FieldGroup.SectionFooter>
+            <FooterText>{notificationsFooter}</FooterText>
           </FieldGroup.SectionFooter>
         </FieldGroup.Section>
 
