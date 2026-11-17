@@ -3,7 +3,7 @@ import { useCallback, useSyncExternalStore } from "react";
 
 import type { Entry } from "@/db/schema";
 
-// Tasks checked or unchecked on the current screen, with the state they had before. They stay in
+// Entries checked or unchecked on the current screen, with the state they had before. They stay in
 // the list and section they were in until the screen is left, so a tap never makes a row jump
 // away and a mistaken tap can simply be undone.
 let toggled: ReadonlyMap<number, boolean> = new Map();
@@ -27,7 +27,7 @@ function subscribe(listener: () => void) {
   return () => listeners.delete(listener);
 }
 
-// Whether a task counts as completed for placing it in a list: the state it had when the screen
+// Whether an entry counts as completed for placing it in a list: the state it had when the screen
 // was opened. Cleared when the screen is left, but not when a root modal (an entry, the settings)
 // merely covers it: the user comes back to the same list.
 export function useWasCompleted(): (entry: Entry) => boolean {

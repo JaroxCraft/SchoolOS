@@ -1,6 +1,5 @@
 import type { Entry, Lesson, Period, Settings, Subject } from "@/db/schema";
 import { addDays, isoWeekday, parseISODate, toISODate, weekdayName } from "@/lib/dates";
-import { isCheckable } from "@/lib/entry-types";
 import {
   type DueItem,
   dueLine,
@@ -88,7 +87,7 @@ export function planReminders({
 }: ReminderData): Reminder[] {
   if (!settings.notificationsEnabled) return [];
 
-  const open = entries.filter((entry) => !(isCheckable(entry.type) && entry.completed));
+  const open = entries.filter((entry) => !entry.completed);
   const subjectOf = (entry: Entry) => subjects.find((subject) => subject.id === entry.subjectId);
   const today = toISODate(now);
   const reminders: Reminder[] = [];

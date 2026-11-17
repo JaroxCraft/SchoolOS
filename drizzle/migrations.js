@@ -4,6 +4,7 @@ import m0001 from './0001_teachers.sql';
 import m0002 from './0002_drop_subject_teacher.sql';
 import m0003 from './0003_subject_teacher_set_null.sql';
 import m0004 from './0004_drop_study_start.sql';
+import m0005 from './0005_complete_past_events.sql';
 
   export default {
     journal,
@@ -12,7 +13,8 @@ import m0004 from './0004_drop_study_start.sql';
 m0001,
 m0002,
 m0003,
-m0004
+m0004,
+m0005
     }
   }
   

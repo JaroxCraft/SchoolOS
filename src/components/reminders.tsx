@@ -16,13 +16,12 @@ import {
   useSubjects,
 } from "@/db/queries";
 import { useNow } from "@/hooks/use-now";
-import { isCheckable } from "@/lib/entry-types";
 import { scheduleReminders } from "@/lib/notifications";
 import { planReminders } from "@/lib/reminders";
 import { openEntry } from "@/lib/routes";
 
 // A reminder about one entry opens it as a sheet, one about several switches to the agenda. If
-// the entry is done or deleted by now, the tap only opens the app: a sheet with a checked-off task
+// the entry is done or deleted by now, the tap only opens the app: a sheet with a checked-off entry
 // or "Eintrag nicht gefunden" would be in the way.
 function openReminder(
   response: Notifications.NotificationResponse,
@@ -47,7 +46,7 @@ function openReminder(
     return;
   }
   const entry = getEntries().find((candidate) => candidate.id === entryId);
-  if (entry && !(isCheckable(entry.type) && entry.completed)) openEntry({ id: entryId });
+  if (entry && !entry.completed) openEntry({ id: entryId });
 }
 
 // Keeps the scheduled reminders in step with the data and opens what a tapped reminder is about.

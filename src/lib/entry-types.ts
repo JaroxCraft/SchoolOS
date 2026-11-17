@@ -24,8 +24,3 @@ export const ENTRY_TYPE_OPTIONS = ENTRY_TYPES.map((type) => ({
   label: ENTRY_TYPE_INFO[type].label,
   value: type,
 }));
-
-// Entries that are done by the student and can be checked off
-export function isCheckable(type: EntryType): boolean {
-  return type === "homework" || type === "submission";
-}

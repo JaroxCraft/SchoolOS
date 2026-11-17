@@ -20,13 +20,16 @@ import {
   type Subject,
   type Teacher,
 } from "@/db/schema";
+import { toISODate } from "@/lib/dates";
 
 // The file format of export and import. A timetable file holds what a class shares (period grid,
 // teachers, subjects, lessons); a backup also holds the personal data (entries, grades,
 // semesters, settings). Rows keep their database ids, so the references between them stay valid.
 // Format 2 dropped the study start (entries.studyStart, the lead days in the settings): older
 // files still import, their extra fields are dropped (columnValues); format 1 apps reject format 2
-// files with a hint to update instead of failing on the missing lead days.
+// files with a hint to update instead of failing on the missing lead days. Format 2 also made
+// every entry type checkable: past exams, presentations and other entries of a format 1 backup
+// are imported as done, as the database migration 0005 does, so they do not return as missed.
 
 export const TRANSFER_FORMAT = 2;
 
@@ -287,6 +290,14 @@ export function parseTransferFile(text: string): TransferFile {
     const fileSettings = data.settings as Settings;
     checkTime("Einstellungen", "Die zweite Erinnerung", fileSettings.secondReminderTime);
     checkTime("Einstellungen", "Die Übersicht", fileSettings.noLessonSummaryTime);
+    if (data.format < 2) {
+      const today = toISODate(new Date());
+      data.entries = (data.entries as Entry[]).map((entry) =>
+        entry.type !== "homework" && entry.type !== "submission" && entry.date < today
+          ? { ...entry, completed: true }
+          : entry
+      );
+    }
   }
 
   return data as unknown as TransferFile;
