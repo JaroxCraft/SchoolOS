@@ -1,0 +1,23 @@
+import { sql } from "drizzle-orm";
+import type { BaseSQLiteDatabase } from "drizzle-orm/sqlite-core";
+
+import type * as schema from "@/db/schema";
+
+// The seam to the database: drizzle's synchronous SQLite flavour with the app's schema. The app
+// opens it with expo-sqlite (src/db/client.ts), the tests with an in-memory bun:sqlite database
+// (src/db/test-database.ts). Code that only needs this type runs on both, so it must not import
+// expo modules.
+export type Database = BaseSQLiteDatabase<"sync", unknown, typeof schema>;
+
+// Foreign keys stay off while migrating, as SQLite requires for changing a table: a migration that
+// rebuilds one (the only way to change a column or its foreign key) would otherwise delete the rows
+// that reference it when it drops the old table. PRAGMA foreign_keys has no effect inside the
+// migration transaction, so it is switched on after the migrations, once the references are
+// checked.
+export function enableForeignKeys(db: Database) {
+  const broken = db.all(sql`PRAGMA foreign_key_check;`);
+  if (broken.length > 0) {
+    throw new Error(`${broken.length} Verweise in der Datenbank zeigen ins Leere.`);
+  }
+  db.run(sql`PRAGMA foreign_keys = ON;`);
+}

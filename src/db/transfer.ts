@@ -1,8 +1,6 @@
 import { type Column, getTableColumns } from "drizzle-orm";
 
-import { db } from "@/db/client";
 import {
-  DATA_TABLES,
   entries,
   grades,
   lessons,
@@ -20,16 +18,18 @@ import {
   type Subject,
   type Teacher,
 } from "@/db/schema";
-import { toISODate } from "@/lib/dates";
+import { today as currentDay } from "@/lib/dates";
+import { completePastEvents } from "@/lib/entry-status";
 
 // The file format of export and import. A timetable file holds what a class shares (period grid,
 // teachers, subjects, lessons); a backup also holds the personal data (entries, grades,
 // semesters, settings). Rows keep their database ids, so the references between them stay valid.
 // Format 2 dropped the study start (entries.studyStart, the lead days in the settings): older
-// files still import, their extra fields are dropped (columnValues); format 1 apps reject format 2
-// files with a hint to update instead of failing on the missing lead days. Format 2 also made
-// every entry type checkable: past exams, presentations and other entries of a format 1 backup
-// are imported as done, as the database migration 0005 does, so they do not return as missed.
+// files still import, their extra fields are dropped on import (src/db/data.ts); format 1 apps
+// reject format 2 files with a hint to update instead of failing on the missing lead days.
+// Format 2 also made every entry type checkable: past exams, presentations and other entries of a
+// format 1 backup are imported as done, as the database migration 0005 does, so they do not
+// return as missed. Export and import themselves live in src/db/data.ts, with the database.
 
 export const TRANSFER_FORMAT = 2;
 
@@ -63,40 +63,6 @@ type Table =
   | typeof grades
   | typeof settings;
 
-export function exportData(kind: TransferKind): TransferFile {
-  const header = { app: "SchoolOS", format: TRANSFER_FORMAT, exportedAt: new Date().toISOString() };
-  const allLessons = db.select().from(lessons).all();
-  const allSubjects = db.select().from(subjects).all();
-  const allTeachers = db.select().from(teachers).all();
-
-  if (kind === "timetable") {
-    // Classmates get the subjects of the timetable only, not the ones someone keeps for grades
-    const usedSubjectIds = new Set(allLessons.map((lesson) => lesson.subjectId));
-    const sharedSubjects = allSubjects.filter((subject) => usedSubjectIds.has(subject.id));
-    const usedTeacherIds = new Set(sharedSubjects.map((subject) => subject.teacherId));
-    return {
-      ...header,
-      kind,
-      periods: db.select().from(periods).all(),
-      teachers: allTeachers.filter((teacher) => usedTeacherIds.has(teacher.id)),
-      subjects: sharedSubjects,
-      lessons: allLessons,
-    } as TransferFile;
-  }
-  return {
-    ...header,
-    kind,
-    periods: db.select().from(periods).all(),
-    teachers: allTeachers,
-    subjects: allSubjects,
-    lessons: allLessons,
-    entries: db.select().from(entries).all(),
-    grades: db.select().from(grades).all(),
-    semesters: db.select().from(semesters).all(),
-    settings: db.select().from(settings).all()[0],
-  } as TransferFile;
-}
-
 // Thrown for files that are not a valid SchoolOS export; the message is shown to the user.
 export class TransferError extends Error {}
 
@@ -113,8 +79,6 @@ const isObject = (value: unknown): value is Record<string, unknown> =>
 
 const TIME = /^(?:[01]\d|2[0-3]):[0-5]\d$/;
 const COLOR = /^#[0-9A-Fa-f]{6}$/;
-// Rows per insert statement, so a large file stays below SQLite's limit of bound variables
-const INSERT_CHUNK_SIZE = 500;
 
 // A real calendar day as "YYYY-MM-DD"; Date.UTC rolls "2026-02-30" over, so it would not match.
 function isDate(value: string) {
@@ -186,7 +150,8 @@ function checkReference(
 }
 
 // Parses and validates the text of an export file, so the import cannot fail on its content.
-export function parseTransferFile(text: string): TransferFile {
+// `today` decides which entries of a format 1 backup lie in the past.
+export function parseTransferFile(text: string, today: string = currentDay()): TransferFile {
   let data: unknown;
   try {
     data = JSON.parse(text);
@@ -291,12 +256,7 @@ export function parseTransferFile(text: string): TransferFile {
     checkTime("Einstellungen", "Die zweite Erinnerung", fileSettings.secondReminderTime);
     checkTime("Einstellungen", "Die Übersicht", fileSettings.noLessonSummaryTime);
     if (data.format < 2) {
-      const today = toISODate(new Date());
-      data.entries = (data.entries as Entry[]).map((entry) =>
-        entry.type !== "homework" && entry.type !== "submission" && entry.date < today
-          ? { ...entry, completed: true }
-          : entry
-      );
+      data.entries = completePastEvents(data.entries as Entry[], today);
     }
   }
 
@@ -313,106 +273,4 @@ export function describeTransferFile(file: TransferFile): string {
   ];
   if (file.kind === "backup") parts.push(`${file.entries.length} Einträge`);
   return `${parts.slice(0, -1).join(", ")} und ${parts.at(-1)}`;
-}
-
-// The values of a row for its table: fields the table does not have are dropped, missing
-// nullable ones become null.
-function columnValues<T extends Table>(table: T, row: object): T["$inferInsert"] {
-  return Object.fromEntries(
-    Object.keys(getTableColumns(table)).map((key) => [
-      key,
-      (row as Record<string, unknown>)[key] ?? null,
-    ])
-  ) as T["$inferInsert"];
-}
-
-// Replaces the data with the content of the file in one transaction, so a failing import leaves
-// everything as it was. A timetable file keeps entries, grades and semesters: entries and grades
-// move to the imported subject and period with the same name and start time. Old subjects that
-// are not in the file but still have grades stay (without lessons), so no grade is lost; other
-// entries lose their subject or period ("Allgemein").
-export function importData(file: TransferFile) {
-  db.transaction((tx) => {
-    const insert = <T extends Table>(table: T, rows: object[]) => {
-      for (let start = 0; start < rows.length; start += INSERT_CHUNK_SIZE) {
-        tx.insert(table)
-          .values(
-            rows
-              .slice(start, start + INSERT_CHUNK_SIZE)
-              .map((row) => columnValues(table, row)) as T["$inferInsert"][]
-          )
-          .run();
-      }
-    };
-
-    if (file.kind === "backup") {
-      for (const table of DATA_TABLES) {
-        tx.delete(table).run();
-      }
-      insert(periods, file.periods);
-      insert(teachers, file.teachers);
-      insert(subjects, file.subjects);
-      insert(lessons, file.lessons);
-      insert(semesters, file.semesters);
-      insert(entries, file.entries);
-      insert(grades, file.grades);
-      const { id: _id, ...values } = columnValues(settings, file.settings);
-      tx.update(settings).set(values).run();
-      return;
-    }
-
-    // Matched before the old rows are deleted
-    const oldEntries = tx.select().from(entries).all();
-    const oldGrades = tx.select().from(grades).all();
-    const gradedSubjectIds = new Set(oldGrades.map((grade) => grade.subjectId));
-    const importedSubjectIds = new Map(file.subjects.map((subject) => [subject.name, subject.id]));
-    const importedPeriodIds = new Map(file.periods.map((period) => [period.startTime, period.id]));
-
-    // Old subject id → id after the import. Kept subjects get ids after the imported ones and
-    // lose their teacher, since all old teachers are replaced.
-    const subjectIds = new Map<number, number>();
-    const keptSubjects: Subject[] = [];
-    let nextSubjectId = Math.max(0, ...file.subjects.map((subject) => subject.id)) + 1;
-    for (const subject of tx.select().from(subjects).all()) {
-      const importedId = importedSubjectIds.get(subject.name);
-      if (importedId !== undefined) {
-        subjectIds.set(subject.id, importedId);
-      } else if (gradedSubjectIds.has(subject.id)) {
-        keptSubjects.push({ ...subject, id: nextSubjectId, teacherId: null });
-        subjectIds.set(subject.id, nextSubjectId++);
-      }
-    }
-    const periodIds = new Map(
-      tx
-        .select()
-        .from(periods)
-        .all()
-        .flatMap((period) => {
-          const importedId = importedPeriodIds.get(period.startTime);
-          return importedId === undefined ? [] : [[period.id, importedId] as const];
-        })
-    );
-
-    // Semesters do not depend on the timetable and stay
-    for (const table of DATA_TABLES.filter((table) => table !== semesters)) {
-      tx.delete(table).run();
-    }
-    insert(periods, file.periods);
-    insert(teachers, file.teachers);
-    insert(subjects, [...file.subjects, ...keptSubjects]);
-    insert(lessons, file.lessons);
-    insert(
-      entries,
-      oldEntries.map((entry) => ({
-        ...entry,
-        subjectId: entry.subjectId === null ? null : (subjectIds.get(entry.subjectId) ?? null),
-        periodId: entry.periodId === null ? null : (periodIds.get(entry.periodId) ?? null),
-      }))
-    );
-    // Every graded subject is either matched or kept
-    insert(
-      grades,
-      oldGrades.map((grade) => ({ ...grade, subjectId: subjectIds.get(grade.subjectId)! }))
-    );
-  });
 }
