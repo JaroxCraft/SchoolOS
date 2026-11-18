@@ -1,5 +1,6 @@
 import * as Haptics from "expo-haptics";
 
+import { t } from "@/i18n";
 import { confirm } from "@/lib/confirm-native";
 
 export type ConfirmOptions = {
@@ -16,7 +17,7 @@ export type ConfirmOptions = {
 export { confirm };
 
 export function showMessage(title: string, message: string) {
-  confirm({ title, message, confirmLabel: "OK", onConfirm: () => {}, messageOnly: true });
+  confirm({ title, message, confirmLabel: t.common.ok, onConfirm: () => {}, messageOnly: true });
 }
 
 export function showError(title: string, message: string) {

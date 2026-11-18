@@ -3,6 +3,7 @@ import { DatePickerDialog, TimePickerDialog } from "@expo/ui/jetpack-compose";
 import { useState } from "react";
 
 import { LabeledRow } from "@/components/labeled-row";
+import { t } from "@/i18n";
 import { type ClockTime, dateToTime, formatDate, type IsoDate } from "@/lib/dates";
 
 export type DateFieldProps = {
@@ -33,8 +34,8 @@ export function DateField({ label, value, onChange, mode = "date" }: DateFieldPr
             // The Material picker returns UTC midnight, so the UTC date is the picked day
             onChange(date.toISOString().slice(0, 10));
           }}
-          confirmButtonLabel="OK"
-          dismissButtonLabel="Abbrechen"
+          confirmButtonLabel={t.common.ok}
+          dismissButtonLabel={t.common.cancel}
           onDismissRequest={() => setOpen(false)}
         />
       )}
@@ -46,8 +47,8 @@ export function DateField({ label, value, onChange, mode = "date" }: DateFieldPr
             setOpen(false);
             onChange(dateToTime(date));
           }}
-          confirmButtonLabel="OK"
-          dismissButtonLabel="Abbrechen"
+          confirmButtonLabel={t.common.ok}
+          dismissButtonLabel={t.common.cancel}
           onDismissRequest={() => setOpen(false)}
         />
       )}

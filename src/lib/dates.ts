@@ -1,34 +1,11 @@
+import { t } from "@/i18n";
+
 // A local date like "2026-11-02"; as a string it never shifts with time zones
 export type IsoDate = string;
 // A time of day like "07:25"
 export type ClockTime = string;
 // 1 = Monday … 7 = Sunday
 export type Weekday = 1 | 2 | 3 | 4 | 5 | 6 | 7;
-
-const WEEKDAYS_SHORT = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
-const WEEKDAYS_LONG = [
-  "Sonntag",
-  "Montag",
-  "Dienstag",
-  "Mittwoch",
-  "Donnerstag",
-  "Freitag",
-  "Samstag",
-];
-const MONTHS_SHORT = [
-  "Jan.",
-  "Feb.",
-  "März",
-  "Apr.",
-  "Mai",
-  "Juni",
-  "Juli",
-  "Aug.",
-  "Sept.",
-  "Okt.",
-  "Nov.",
-  "Dez.",
-];
 
 export const SCHOOL_WEEKDAYS = [1, 2, 3, 4, 5] as const;
 
@@ -63,24 +40,28 @@ export function isoWeekday(value: IsoDate): Weekday {
 }
 
 export function weekdayName(weekday: number): string {
-  return WEEKDAYS_LONG[weekday % 7];
+  return t.dates.weekdays[weekday % 7];
 }
 
 export function weekdayShort(weekday: number): string {
-  return WEEKDAYS_SHORT[weekday % 7];
+  return t.dates.weekdaysShort[weekday % 7];
 }
 
 export function formatDate(value: IsoDate): string {
   const date = parseISODate(value);
-  return `${WEEKDAYS_SHORT[date.getDay()]}, ${date.getDate()}. ${MONTHS_SHORT[date.getMonth()]}`;
+  return t.dates.date({
+    weekday: t.dates.weekdaysShort[date.getDay()],
+    day: date.getDate(),
+    month: t.dates.monthsShort[date.getMonth()],
+  });
 }
 
 export function relativeDay(value: IsoDate, from: IsoDate): string {
   const days = daysBetween(from, value);
-  if (days === 0) return "heute";
-  if (days === 1) return "morgen";
-  if (days === -1) return "gestern";
-  return days > 0 ? `in ${days} Tagen` : `vor ${-days} Tagen`;
+  if (days === 0) return t.dates.today;
+  if (days === 1) return t.dates.tomorrow;
+  if (days === -1) return t.dates.yesterday;
+  return days > 0 ? t.dates.inDays(days) : t.dates.daysAgo(-days);
 }
 
 // Minutes since midnight; all arithmetic on clock times goes through them

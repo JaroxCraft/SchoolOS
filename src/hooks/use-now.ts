@@ -45,7 +45,7 @@ function subscribe(listener: () => void) {
 const getNow = () => now;
 
 // Today's date and the minutes since midnight, updated every half minute, for everything that
-// depends on the time: the current lesson, overdue tasks, "heute"/"morgen". Screens must take the
+// depends on the time: the current lesson, overdue tasks, "today"/"tomorrow". Screens must take the
 // time from here instead of reading the clock while rendering, since native tabs keep them mounted
 // for days and nothing else would render them again. Only re-renders when either actually changed.
 export function useNow(): Now {

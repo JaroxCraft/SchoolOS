@@ -1,5 +1,6 @@
 import * as Notifications from "expo-notifications";
 
+import { t } from "@/i18n";
 import { CHANNEL_ID, ensureChannel } from "@/lib/notifications";
 
 export type ScheduledReminder = {
@@ -31,8 +32,8 @@ export async function sendTestReminder(reminder: ScheduledReminder | undefined) 
   await ensureChannel();
   await Notifications.scheduleNotificationAsync({
     content: {
-      title: reminder?.title ?? "Testmitteilung",
-      body: reminder?.body ?? "Gerade ist keine Erinnerung geplant.",
+      title: reminder?.title ?? t.notifications.test.title,
+      body: reminder?.body ?? t.notifications.test.body,
       sound: "default",
       data: { entryId: null, ...reminder?.data },
     },

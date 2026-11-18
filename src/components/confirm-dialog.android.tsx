@@ -1,5 +1,6 @@
 import { AlertDialog, Host, Text, TextButton } from "@expo/ui/jetpack-compose";
 
+import { t } from "@/i18n";
 import { closeConfirmDialog, useConfirmDialog } from "@/lib/confirm-dialog-store";
 
 export function ConfirmDialog() {
@@ -28,7 +29,7 @@ export function ConfirmDialog() {
         {!options.messageOnly && (
           <AlertDialog.DismissButton>
             <TextButton onClick={closeConfirmDialog}>
-              <Text>Abbrechen</Text>
+              <Text>{t.common.cancel}</Text>
             </TextButton>
           </AlertDialog.DismissButton>
         )}

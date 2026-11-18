@@ -6,8 +6,9 @@ import { SearchPickerSheet } from "@/components/search-picker-sheet";
 import { SubjectDot } from "@/components/subject-dot";
 import type { LessonDraft, Subject, Teacher } from "@/db/schema";
 import { useInk } from "@/hooks/use-ink";
+import { t } from "@/i18n";
 import { findById } from "@/lib/find";
-import { ALLGEMEIN_COLOR } from "@/lib/subject-colors";
+import { NO_SUBJECT_COLOR } from "@/lib/subject-colors";
 import { joinDetails } from "@/lib/text";
 
 export function sortSubjectsByUse(subjects: Subject[], lessons: LessonDraft[]): Subject[] {
@@ -43,9 +44,9 @@ export function SubjectPickerSheet({
   return (
     <SearchPickerSheet
       {...props}
-      searchPlaceholder="Fach oder Lehrperson suchen"
+      searchPlaceholder={t.school.subjectPicker.searchPlaceholder}
       items={sortSubjectsByUse(subjects, lessons)}
-      itemsTitle="Fächer"
+      itemsTitle={t.school.subjects.title}
       getLabel={(subject) => subject.name}
       getSearchText={(subject) => [
         subject.name,
@@ -55,7 +56,7 @@ export function SubjectPickerSheet({
       ]}
       renderLeading={(subject) => <SubjectDot color={subject.color} />}
       getSupportingText={(subject) => joinDetails(subject.abbreviation, teacherOf(subject)?.name)}
-      extraLeading={<SubjectDot color={ALLGEMEIN_COLOR} />}
+      extraLeading={<SubjectDot color={NO_SUBJECT_COLOR} />}
     />
   );
 }

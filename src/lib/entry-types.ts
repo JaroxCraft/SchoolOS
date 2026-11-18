@@ -1,31 +1,27 @@
 import { ENTRY_TYPES, type EntryType } from "@/db/schema";
+import { t } from "@/i18n";
 
 type EntryTypeInfo = {
   label: string;
-  // Not "Titel": iOS reads that as a contact field and offers the own phone number as AutoFill
   titlePlaceholder: string;
   gradable: boolean;
 };
 
-export const ENTRY_TYPE_INFO: Record<EntryType, EntryTypeInfo> = {
-  homework: {
-    label: "Hausaufgabe",
-    titlePlaceholder: "Aufgabe, z. B. S. 42, Nr. 3",
-    gradable: false,
-  },
-  exam: { label: "Prüfung", titlePlaceholder: "Prüfung, z. B. Vokabeltest Unit 3", gradable: true },
-  presentation: {
-    label: "Präsentation",
-    titlePlaceholder: "Präsentation, z. B. Vortrag Klimawandel",
-    gradable: true,
-  },
-  submission: { label: "Abgabe", titlePlaceholder: "Abgabe, z. B. Laborbericht", gradable: true },
-  other: { label: "Sonstiges", titlePlaceholder: "Eintrag, z. B. Exkursion", gradable: false },
+const GRADABLE: Record<EntryType, boolean> = {
+  homework: false,
+  exam: true,
+  presentation: true,
+  submission: true,
+  other: false,
 };
+
+export const ENTRY_TYPE_INFO = Object.fromEntries(
+  ENTRY_TYPES.map((type) => [type, { ...t.entries.types[type], gradable: GRADABLE[type] }])
+) as Record<EntryType, EntryTypeInfo>;
 
 export const ENTRY_TYPE_OPTIONS = ENTRY_TYPES.map((type) => ({
   label: ENTRY_TYPE_INFO[type].label,
   value: type,
 }));
 
-export const NO_SUBJECT_LABEL = "Allgemein";
+export const NO_SUBJECT_LABEL = t.entries.noSubject;

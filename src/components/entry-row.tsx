@@ -6,13 +6,14 @@ import { TaskCheckbox, toggleHaptic } from "@/components/task-checkbox";
 import type { Entry, Subject } from "@/db/schema";
 import { checkOffEntry } from "@/hooks/use-entry-placement";
 import { type Ink, useInk } from "@/hooks/use-ink";
+import { t } from "@/i18n";
 import { deleteAction, editAction, entryDeletion } from "@/lib/confirm-delete";
 import { formatDate, relativeDay } from "@/lib/dates";
 import { isOverdue } from "@/lib/entry-status";
 import { ENTRY_TYPE_INFO, NO_SUBJECT_LABEL } from "@/lib/entry-types";
 import { openEntry } from "@/lib/routes";
 import type { RowAction } from "@/lib/row-action";
-import { ALLGEMEIN_COLOR } from "@/lib/subject-colors";
+import { NO_SUBJECT_COLOR } from "@/lib/subject-colors";
 import { SYSTEM_COLORS } from "@/lib/system-colors";
 import { typography } from "@/lib/typography";
 
@@ -24,11 +25,12 @@ type EntryRowProps = {
 
 function entryItem({ entry, subject, today }: EntryRowProps, ink: Ink) {
   const overdue = isOverdue(entry, today);
-  const details = [
-    ENTRY_TYPE_INFO[entry.type].label,
-    subject?.name ?? NO_SUBJECT_LABEL,
-    `${formatDate(entry.date)}, ${relativeDay(entry.date, today)}`,
-  ].join(" · ");
+  const details = t.entries.rowDetails({
+    type: ENTRY_TYPE_INFO[entry.type].label,
+    subject: subject?.name ?? NO_SUBJECT_LABEL,
+    date: formatDate(entry.date),
+    relative: relativeDay(entry.date, today),
+  });
 
   return (
     <ListItem
@@ -37,7 +39,7 @@ function entryItem({ entry, subject, today }: EntryRowProps, ink: Ink) {
         <TaskCheckbox
           value={entry.completed}
           accessibilityLabel={entry.title}
-          color={subject?.color ?? ALLGEMEIN_COLOR}
+          color={subject?.color ?? NO_SUBJECT_COLOR}
           onValueChange={(completed) => checkOffEntry(entry, completed)}
         />
       }
@@ -58,7 +60,7 @@ function entryItem({ entry, subject, today }: EntryRowProps, ink: Ink) {
 function entryRow(props: EntryRowProps, ink: Ink) {
   const { entry } = props;
   const toggle: RowAction = {
-    label: entry.completed ? "Offen" : "Erledigt",
+    label: entry.completed ? t.entries.open : t.entries.done,
     icon: entry.completed ? "arrow.uturn.backward" : "checkmark",
     tint: SYSTEM_COLORS.green,
     onPress: () => {

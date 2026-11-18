@@ -26,14 +26,15 @@ import { FormGroup } from "@/components/form-group";
 import { NavigationRow } from "@/components/rows";
 import { type SearchPickerSheetProps, usePickerSections } from "@/components/search-picker";
 import { useInk } from "@/hooks/use-ink";
+import { t } from "@/i18n";
 
 const FORM = "form";
 
 // iOS: a sheet like the pickers of the system apps. It opens at half height with the grabber on
 // top, so it can be pulled up or swiped down to close; the xmark at the top left closes it too.
-// The title sits in the navigation bar, the system search field below it. "… hinzufügen" pushes the
-// form inside the sheet, with ✓ "Hinzufügen" at the top right; "Bearbeiten" of an item (swipe left
-// or long press) pushes it filled in, with ✓ "Sichern". The form pulls the sheet up to full height,
+// The title sits in the navigation bar, the system search field below it. "Add …" pushes the
+// form inside the sheet, with ✓ "Add" at the top right; "Edit" of an item (swipe left or long
+// press) pushes it filled in, with ✓ "Save". The form pulls the sheet up to full height,
 // where it stays when the keyboard closes. The SwiftUI sheet is used instead of the universal
 // BottomSheet, which does not offer to choose the height.
 export function SearchPickerSheet<T extends { id: number }>(props: SearchPickerSheetProps<T>) {
@@ -107,7 +108,7 @@ export function SearchPickerSheet<T extends { id: number }>(props: SearchPickerS
               <Toolbar.Content>
                 <ToolbarItem placement="cancellationAction">
                   {/* Label and icon are needed: without them the button is empty before iOS 26 */}
-                  <Button role="close" label="Schliessen" systemImage="xmark" onPress={close} />
+                  <Button role="close" label={t.common.close} systemImage="xmark" onPress={close} />
                 </ToolbarItem>
               </Toolbar.Content>
             </Toolbar>
@@ -125,7 +126,7 @@ export function SearchPickerSheet<T extends { id: number }>(props: SearchPickerS
                   <Toolbar.Content>
                     <ToolbarItem placement="confirmationAction">
                       <Button
-                        label={editing ? "Sichern" : "Hinzufügen"}
+                        label={editing ? t.common.save : t.common.add}
                         systemImage="checkmark"
                         modifiers={[disabled(!form.canSave || saving)]}
                         onPress={() => saveForm(editing !== undefined, () => setPath([]))}

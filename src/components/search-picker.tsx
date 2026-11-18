@@ -6,12 +6,13 @@ import { RowActions } from "@/components/row-actions";
 import { useInk } from "@/hooks/use-ink";
 import { useSaving } from "@/hooks/use-saving";
 import { useSymbol } from "@/hooks/use-symbol";
+import { t } from "@/i18n";
 import { editAction } from "@/lib/confirm-delete";
 import { saveFailed } from "@/lib/save-failed";
 import { SYSTEM_COLORS } from "@/lib/system-colors";
 
-// "None" in every picker and select: no Fach ("Allgemein"), no Lehrperson ("Keine"), a free period
-// ("Frei") or no Lektion. Ids of saved rows start at 1, so 0 never collides with one.
+// "None" in every picker and select: no subject ("General"), no teacher ("None"), a free period
+// ("Free") or no period. Ids of saved rows start at 1, so 0 never collides with one.
 export const NONE = 0;
 
 export function noneToNull(id: number): number | null {
@@ -27,7 +28,7 @@ export type PickerForm<T> = {
   fields: ReactNode;
   canSave: boolean;
   // Fills the form: empty for a new item, with the values of `item` to change it. Called each
-  // time the form is opened, so a draft that was left with back or "Abbrechen" is not saved later.
+  // time the form is opened, so a draft that was left with back or "Cancel" is not saved later.
   start: (item?: T) => void;
   save: () => Promise<number>;
 };
@@ -129,11 +130,11 @@ export function usePickerSections<T extends { id: number }>(
     ),
     (search || items.length > 0) && (
       <FieldGroup.Section
-        // Android draws a second line that appears or goes later (e.g. after "Bearbeiten") only
+        // Android draws a second line that appears or goes later (e.g. after "Edit") only
         // in new rows, and its sections key their rows by position, so the section is rebuilt
         key={`items:${matches.map((item) => (getSupportingText?.(item) ? 1 : 0)).join("")}`}
         title={itemsTitle}>
-        {matches.length === 0 && <Text>{`Nichts gefunden für «${query.trim()}»`}</Text>}
+        {matches.length === 0 && <Text>{t.school.searchPicker.noMatches(query.trim())}</Text>}
         {matches.map((item) => {
           const row = (
             <ListItem

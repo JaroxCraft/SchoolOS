@@ -4,6 +4,7 @@ import { AbbreviationField, abbreviationToSave, canSaveNamed } from "@/component
 import { TextField } from "@/components/text-field";
 import { addTeacher, updateTeacher } from "@/db/actions";
 import type { Teacher } from "@/db/schema";
+import { t } from "@/i18n";
 import { teacherAbbreviation } from "@/lib/text";
 
 export function useTeacherDraft(initial?: Teacher) {
@@ -35,7 +36,7 @@ export function useTeacherDraft(initial?: Teacher) {
   const fields = [
     <TextField
       key={`name-${version}`}
-      placeholder="Name, z. B. Julian Riegger"
+      placeholder={t.school.teachers.namePlaceholder}
       defaultValue={name}
       autoFocus={!teacher}
       autoCapitalize="words"
@@ -45,14 +46,14 @@ export function useTeacherDraft(initial?: Teacher) {
       key={`abbreviation-${version}`}
       name={name}
       makeAbbreviation={teacherAbbreviation}
-      example="Kürzel, z. B. JRi"
+      example={t.school.teachers.abbreviationExample}
       defaultValue={abbreviation}
       autoCapitalize="none"
       onChangeText={setAbbreviation}
     />,
     <TextField
       key={`email-${version}`}
-      placeholder="E-Mail, z. B. julian.riegger@schule.ch"
+      placeholder={t.school.teachers.emailPlaceholder}
       defaultValue={email}
       keyboardType="email-address"
       autoCapitalize="none"

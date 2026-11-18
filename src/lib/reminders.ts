@@ -1,4 +1,5 @@
 import type { Entry, Lesson, Period, Settings, Subject } from "@/db/schema";
+import { t } from "@/i18n";
 import { addDays, dateAt, isoWeekday, minutesOf, toISODate } from "@/lib/dates";
 import { findById } from "@/lib/find";
 import {
@@ -14,7 +15,7 @@ import { nextSchoolDay, schoolEnd } from "@/lib/schedule";
 // two; the plan is renewed whenever the data changes or a new day begins in the open app.
 const REMINDER_DAYS = 21;
 export const AFTER_SCHOOL_MINUTES = 30;
-// The rest is counted as "und 2 weitere"
+// The rest is counted as "and 2 more"
 const MAX_LINES_PER_NOTIFICATION = 4;
 
 export type Reminder = {
@@ -37,7 +38,7 @@ export type ReminderData = {
 function joinLines(lines: string[]): string {
   if (lines.length <= MAX_LINES_PER_NOTIFICATION) return lines.join("\n");
   const shown = lines.slice(0, MAX_LINES_PER_NOTIFICATION - 1);
-  return [...shown, `und ${lines.length - shown.length} weitere`].join("\n");
+  return [...shown, t.notifications.reminders.more(lines.length - shown.length)].join("\n");
 }
 
 export function planReminders({

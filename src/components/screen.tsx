@@ -6,6 +6,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { AddButton } from "@/components/add-button";
 import { AddEntryZoomButton } from "@/components/add-entry-zoom-button";
 import { useSymbol } from "@/hooks/use-symbol";
+import { t } from "@/i18n";
 import { openScreen } from "@/lib/routes";
 
 type ScreenProps = {
@@ -50,7 +51,7 @@ export function Screen({ title, showAddButton, toolbarItems, children }: ScreenP
         {settingsIcon && (
           <Stack.Toolbar.Button
             icon={settingsIcon}
-            accessibilityLabel="Einstellungen"
+            accessibilityLabel={t.common.settingsButton}
             // iOS 26+: a capsule of its own, apart from the "+" (sharesBackground = NO)
             separateBackground
             onPress={() => openScreen("/settings")}

@@ -8,6 +8,7 @@ import { SubjectDot } from "@/components/subject-dot";
 import { useSubjects, useTeachers } from "@/db/queries";
 import { useStepButton } from "@/hooks/use-header-button";
 import { useInk } from "@/hooks/use-ink";
+import { t } from "@/i18n";
 import { deleteAction, editAction, subjectDeletion } from "@/lib/confirm-delete";
 import { findById } from "@/lib/find";
 import { openScreen, useSchoolRoutes } from "@/lib/routes";
@@ -24,7 +25,7 @@ export default function SubjectsScreen() {
 
   return (
     <>
-      <Stack.Title>Fächer</Stack.Title>
+      <Stack.Title>{t.school.subjects.title}</Stack.Title>
       {routes.setup && (
         <Stack.Toolbar placement="right">
           {nextButton && (
@@ -38,7 +39,9 @@ export default function SubjectsScreen() {
       )}
       <FormList>
         <FieldGroup.Section>
-          {subjects.length === 0 && <Text textStyle={{ color: ink.secondary }}>Keine Fächer</Text>}
+          {subjects.length === 0 && (
+            <Text textStyle={{ color: ink.secondary }}>{t.school.subjects.empty}</Text>
+          )}
           {subjects.map((subject) => {
             const remove = deleteAction(subjectDeletion(subject));
             const menu = [editAction(() => openSubject(String(subject.id))), remove];
@@ -56,7 +59,7 @@ export default function SubjectsScreen() {
               </RowActions>
             );
           })}
-          <ActionRow label="Fach hinzufügen" onPress={() => openSubject("new")} />
+          <ActionRow label={t.school.subjects.add} onPress={() => openSubject("new")} />
         </FieldGroup.Section>
       </FormList>
     </>

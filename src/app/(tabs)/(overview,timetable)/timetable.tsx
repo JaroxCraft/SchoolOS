@@ -21,6 +21,7 @@ import { SegmentedControl } from "@/components/segmented-control";
 import { WeekStrip } from "@/components/week-strip";
 import { useLessons, usePeriods, useSubjects, useTeachers } from "@/db/queries";
 import { useNow } from "@/hooks/use-now";
+import { t } from "@/i18n";
 import type { Weekday } from "@/lib/dates";
 import { openScreen, SCHOOL_ROUTES } from "@/lib/routes";
 import { schoolWeek, shownWeekday, visiblePeriods } from "@/lib/schedule";
@@ -60,13 +61,13 @@ export default function TimetableScreen() {
   const shown = visiblePeriods(lessons, periods);
   if (shown.length === 0) {
     return (
-      <Screen title="Stundenplan">
+      <Screen title={t.common.tabs.timetable}>
         <EmptyState
           icon={{ ios: "calendar", android: "calendar_view_week" }}
-          title="Kein Stundenplan"
-          message="Teile deinen Fächern die Lektionen der Woche zu."
+          title={t.school.timetable.empty.title}
+          message={t.school.timetable.empty.message}
           action={{
-            label: "Stundenplan ausfüllen",
+            label: t.school.setupSteps.timetable,
             onPress: () => openScreen(SCHOOL_ROUTES.settings.timetable),
           }}
         />
@@ -130,7 +131,7 @@ export default function TimetableScreen() {
     Platform.OS === "ios" ? { minHeight: frameHeight - headerHeight - insets.bottom } : styles.fill;
 
   return (
-    <Screen title="Stundenplan">
+    <Screen title={t.common.tabs.timetable}>
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
         // A short timetable can still be pushed up a little, and the indicator flashed at the right
@@ -144,8 +145,8 @@ export default function TimetableScreen() {
               value={mode}
               onChange={setMode}
               options={[
-                { label: "Tag", value: "day" },
-                { label: "Woche", value: "week" },
+                { label: t.school.timetable.modes.day, value: "day" },
+                { label: t.school.timetable.modes.week, value: "week" },
               ]}
             />
           </Host>

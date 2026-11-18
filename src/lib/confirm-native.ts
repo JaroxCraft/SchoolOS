@@ -1,5 +1,6 @@
 import { ActionSheetIOS, Alert } from "react-native";
 
+import { t } from "@/i18n";
 import type { ConfirmOptions } from "@/lib/confirm";
 
 // A destructive choice is an action sheet, anything else an alert (Apple HIG).
@@ -20,7 +21,7 @@ export function confirm({
       {
         title,
         message,
-        options: [confirmLabel, "Abbrechen"],
+        options: [confirmLabel, t.common.cancel],
         destructiveButtonIndex: 0,
         cancelButtonIndex: 1,
       },
@@ -31,7 +32,7 @@ export function confirm({
     return;
   }
   Alert.alert(title, message, [
-    { text: "Abbrechen", style: "cancel" },
+    { text: t.common.cancel, style: "cancel" },
     { text: confirmLabel, onPress: onConfirm },
   ]);
 }

@@ -6,9 +6,10 @@ import { SearchPickerSheet } from "@/components/search-picker-sheet";
 import { useTeacherDraft } from "@/components/teacher-draft";
 import type { Teacher } from "@/db/schema";
 import { useInk } from "@/hooks/use-ink";
+import { t } from "@/i18n";
 import { findById } from "@/lib/find";
 
-const NO_TEACHER_CHOICE: ExtraChoice = { label: "Keine", value: NONE };
+const NO_TEACHER_CHOICE: ExtraChoice = { label: t.school.teachers.none, value: NONE };
 
 type TeacherPickerSheetProps = {
   isPresented: boolean;
@@ -25,16 +26,16 @@ function TeacherPickerSheet({ teachers, ...props }: TeacherPickerSheetProps) {
   return (
     <SearchPickerSheet
       {...props}
-      searchPlaceholder="Name oder Kürzel suchen"
+      searchPlaceholder={t.school.teachers.searchPlaceholder}
       items={[...teachers].sort((a, b) => a.name.localeCompare(b.name))}
-      itemsTitle="Lehrpersonen"
+      itemsTitle={t.school.teachers.title}
       getLabel={(teacher) => teacher.name}
       getSearchText={(teacher) => [teacher.name, teacher.abbreviation]}
       getSupportingText={(teacher) => teacher.abbreviation || undefined}
       extraChoices={[NO_TEACHER_CHOICE]}
       form={{
-        addLabel: "Lehrperson hinzufügen",
-        newTitle: "Neue Lehrperson",
+        addLabel: t.school.teachers.add,
+        newTitle: t.school.teachers.newTitle,
         editTitle: (teacher) => teacher.name,
         canSave: draft.canSave,
         start: draft.start,

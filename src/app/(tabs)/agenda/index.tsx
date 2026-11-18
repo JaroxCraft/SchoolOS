@@ -16,12 +16,13 @@ import type { Entry, EntryType } from "@/db/schema";
 import { useEntryPlacement } from "@/hooks/use-entry-placement";
 import { useInk } from "@/hooks/use-ink";
 import { useNow } from "@/hooks/use-now";
+import { t } from "@/i18n";
 import { ENTRY_TYPE_OPTIONS, NO_SUBJECT_LABEL } from "@/lib/entry-types";
 import { findById } from "@/lib/find";
 import { openEntry } from "@/lib/routes";
 
 const ALL = "all";
-// "Alle Fächer"; NONE instead filters the entries without a subject (Allgemein)
+// "All subjects"; NONE instead filters the entries without a subject (shown as "General")
 const ALL_SUBJECTS = -1;
 
 export default function AgendaScreen() {
@@ -38,15 +39,18 @@ export default function AgendaScreen() {
   const now = useNow();
 
   const typeOptions: SelectOption<EntryType | typeof ALL>[] = [
-    { label: Platform.OS === "ios" ? "Alle Typen" : "Alle", value: ALL },
+    { label: Platform.OS === "ios" ? t.entries.agenda.allTypes : t.entries.agenda.all, value: ALL },
     ...ENTRY_TYPE_OPTIONS,
   ];
   const subjectChoices = [
-    { label: Platform.OS === "ios" ? "Alle Fächer" : "Alle", value: ALL_SUBJECTS },
+    {
+      label: Platform.OS === "ios" ? t.entries.agenda.allSubjects : t.entries.agenda.all,
+      value: ALL_SUBJECTS,
+    },
     { label: NO_SUBJECT_LABEL, value: NONE },
   ];
   const subjectPicker = useSubjectPicker({
-    label: "Fach",
+    label: t.entries.agenda.subject,
     value: subjectFilter,
     subjects,
     teachers: useTeachers(),
@@ -57,12 +61,12 @@ export default function AgendaScreen() {
 
   if (entries.length === 0) {
     return (
-      <Screen title="Agenda" showAddButton>
+      <Screen title={t.common.tabs.agenda} showAddButton>
         <EmptyState
           icon={{ ios: "checklist", android: "checklist" }}
-          title="Keine Einträge"
-          message="Hausaufgaben, Prüfungen, Präsentationen, Abgaben und andere Einträge erscheinen hier."
-          action={{ label: "Eintrag hinzufügen", onPress: () => openEntry({ id: "new" }) }}
+          title={t.entries.agenda.empty.title}
+          message={t.entries.agenda.empty.message}
+          action={{ label: t.entries.add, onPress: () => openEntry({ id: "new" }) }}
         />
       </Screen>
     );
@@ -80,8 +84,8 @@ export default function AgendaScreen() {
   const { open, done } = placeEntries(visible);
 
   const sections = [
-    { title: "Offen", items: open },
-    { title: "Erledigt", items: done },
+    { title: t.entries.open, items: open },
+    { title: t.entries.done, items: done },
   ];
 
   const subjectOptions = [
@@ -92,13 +96,13 @@ export default function AgendaScreen() {
     })),
   ];
   const filtered = typeFilter !== ALL || subjectFilter !== ALL_SUBJECTS;
-  const filterLabel = [
-    typeFilter !== ALL && typeOptions.find((option) => option.value === typeFilter)?.label,
-    subjectFilter !== ALL_SUBJECTS &&
-      subjectOptions.find((option) => option.value === subjectFilter)?.label,
-  ]
-    .filter(Boolean)
-    .join(" · ");
+  const filterLabel = t.entries.agenda.filterSummary(
+    [
+      typeFilter !== ALL && typeOptions.find((option) => option.value === typeFilter)?.label,
+      subjectFilter !== ALL_SUBJECTS &&
+        subjectOptions.find((option) => option.value === subjectFilter)?.label,
+    ].filter((part): part is string => Boolean(part))
+  );
   const resetFilter = () => {
     setTypeFilter(ALL);
     setSubjectFilter(ALL_SUBJECTS);
@@ -109,8 +113,8 @@ export default function AgendaScreen() {
       icon={
         filtered ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle"
       }
-      accessibilityLabel="Filter">
-      <Stack.Toolbar.Menu inline title="Typ">
+      accessibilityLabel={t.entries.agenda.filter}>
+      <Stack.Toolbar.Menu inline title={t.entries.agenda.type}>
         {typeOptions.map((option) => (
           <Stack.Toolbar.MenuAction
             key={option.value}
@@ -120,7 +124,7 @@ export default function AgendaScreen() {
           </Stack.Toolbar.MenuAction>
         ))}
       </Stack.Toolbar.Menu>
-      <Stack.Toolbar.Menu title="Fach" icon="books.vertical">
+      <Stack.Toolbar.Menu title={t.entries.agenda.subject} icon="books.vertical">
         {subjectOptions.map((option) => (
           <Stack.Toolbar.MenuAction
             key={option.value}
@@ -134,12 +138,12 @@ export default function AgendaScreen() {
   );
 
   return (
-    <Screen title="Agenda" showAddButton toolbarItems={filterMenu}>
+    <Screen title={t.common.tabs.agenda} showAddButton toolbarItems={filterMenu}>
       <FormList floatingButton rowsKey={rowsKey(open, done)}>
         {Platform.OS === "android" && (
-          <FieldGroup.Section title="Filter">
+          <FieldGroup.Section title={t.entries.agenda.filter}>
             <SelectRow
-              label="Typ"
+              label={t.entries.agenda.type}
               value={typeFilter}
               onChange={setTypeFilter}
               options={typeOptions}
@@ -149,8 +153,8 @@ export default function AgendaScreen() {
         )}
 
         {Platform.OS === "ios" && filtered && visible.length > 0 && (
-          <FieldGroup.Section title={`Gefiltert: ${filterLabel}`}>
-            <ActionRow label="Filter zurücksetzen" onPress={resetFilter} />
+          <FieldGroup.Section title={t.entries.agenda.filtered(filterLabel)}>
+            <ActionRow label={t.entries.agenda.resetFilter} onPress={resetFilter} />
           </FieldGroup.Section>
         )}
 
@@ -172,9 +176,9 @@ export default function AgendaScreen() {
         {visible.length === 0 && (
           <FieldGroup.Section>
             <Text textStyle={{ color: ink.secondary }}>
-              {`Keine Einträge für «${filterLabel}»`}
+              {t.entries.agenda.noMatches(filterLabel)}
             </Text>
-            <ActionRow label="Filter zurücksetzen" onPress={resetFilter} />
+            <ActionRow label={t.entries.agenda.resetFilter} onPress={resetFilter} />
           </FieldGroup.Section>
         )}
       </FormList>

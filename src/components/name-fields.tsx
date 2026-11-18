@@ -1,20 +1,21 @@
 import { TextField } from "@/components/text-field";
+import { t } from "@/i18n";
 
-// The rules of the name and Kürzel of a Fach and a Lehrperson, shared by their forms.
+// The rules of the name and abbreviation of a subject and a teacher, shared by their forms.
 
 type AbbreviationFieldProps = {
   name: string;
-  // Makes the Kürzel from the name, e.g. subjectAbbreviation
+  // Makes the abbreviation from the name, e.g. subjectAbbreviation
   makeAbbreviation: (name: string) => string;
-  // The placeholder while there is no name yet, e.g. "Kürzel, z. B. M"
+  // The placeholder while there is no name yet, e.g. "Abbreviation, e.g. M"
   example: string;
   defaultValue: string;
   autoCapitalize: "characters" | "none";
   onChangeText: (abbreviation: string) => void;
 };
 
-// The Kürzel field: its placeholder shows the Kürzel made from the name, which is saved when the
-// field is left empty (abbreviationToSave)
+// The abbreviation field: its placeholder shows the abbreviation made from the name, which is
+// saved when the field is left empty (abbreviationToSave)
 export function AbbreviationField({
   name,
   makeAbbreviation,
@@ -23,14 +24,14 @@ export function AbbreviationField({
 }: AbbreviationFieldProps) {
   return (
     <TextField
-      placeholder={name.trim() ? `Kürzel (sonst «${makeAbbreviation(name)}»)` : example}
+      placeholder={name.trim() ? t.school.abbreviationPlaceholder(makeAbbreviation(name)) : example}
       maxLength={5}
       {...props}
     />
   );
 }
 
-// The Kürzel to save: the one typed, or else the one made from the name
+// The abbreviation to save: the one typed, or else the one made from the name
 export function abbreviationToSave(
   abbreviation: string,
   name: string,

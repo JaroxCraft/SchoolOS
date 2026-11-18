@@ -11,6 +11,7 @@ import type { PeriodDraft } from "@/db/schema";
 import { useDraftEditor } from "@/hooks/use-draft-editor";
 import { useStepButton } from "@/hooks/use-header-button";
 import { useInk } from "@/hooks/use-ink";
+import { t } from "@/i18n";
 import { confirm } from "@/lib/confirm";
 import { addMinutes, minutesOf } from "@/lib/dates";
 import { openScreen, useSchoolRoutes } from "@/lib/routes";
@@ -86,19 +87,17 @@ export default function PeriodsEditScreen() {
       remove();
       return;
     }
-    const lessonsText = used === 1 ? "Eine Lektion" : `${used} Lektionen`;
-    const verb = used === 1 ? "wird" : "werden";
     confirm({
-      title: "Letzte Lektionszeit entfernen?",
-      message: `${lessonsText} im Stundenplan zu dieser Zeit ${verb} beim Sichern ebenfalls entfernt.`,
-      confirmLabel: "Entfernen",
+      title: t.school.periodGrid.removeLastConfirm.title,
+      message: t.school.periodGrid.removeLastConfirm.message(used),
+      confirmLabel: t.common.remove,
       onConfirm: remove,
     });
   };
 
   return (
     <PushedForm
-      title="Lektionenraster"
+      title={t.school.periodGrid.title}
       canSave={dirty && !saving}
       dirty={dirty}
       onSave={routes.setup ? undefined : () => saveAndLeave(() => router.back())}
@@ -114,7 +113,7 @@ export default function PeriodsEditScreen() {
       }>
       <FieldGroup.Section>
         {grid.length === 0 && (
-          <Text textStyle={{ color: ink.secondary }}>Keine Lektionszeiten</Text>
+          <Text textStyle={{ color: ink.secondary }}>{t.school.periodGrid.empty}</Text>
         )}
         {grid.map((period, index) => (
           <TimeRangeRow
@@ -125,19 +124,15 @@ export default function PeriodsEditScreen() {
             onChange={(start, end) => setDraft(changePeriod(grid, index, start, end))}
           />
         ))}
-        <ActionRow label="Lektionszeit hinzufügen" onPress={add} />
+        <ActionRow label={t.school.periodGrid.add} onPress={add} />
         <FieldGroup.SectionFooter>
-          <FooterText>
-            Das Raster gilt für jeden Schultag. Tippe auf eine Zeit, um sie zu ändern; die
-            Lektionszeit behält dabei ihre Länge, folgende rücken bei Überschneidung nach. Neue
-            Lektionszeiten schliessen direkt an die letzte an.
-          </FooterText>
+          <FooterText>{t.school.periodGrid.footer}</FooterText>
         </FieldGroup.SectionFooter>
       </FieldGroup.Section>
 
       {last && (
         <FieldGroup.Section>
-          <DestructiveRow label="Letzte Lektionszeit entfernen" onPress={removeLast} />
+          <DestructiveRow label={t.school.periodGrid.removeLast} onPress={removeLast} />
         </FieldGroup.Section>
       )}
     </PushedForm>

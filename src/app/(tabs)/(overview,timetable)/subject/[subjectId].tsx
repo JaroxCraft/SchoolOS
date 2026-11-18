@@ -11,6 +11,7 @@ import { useEntryPlacement } from "@/hooks/use-entry-placement";
 import { useInk } from "@/hooks/use-ink";
 import { useLastDefined } from "@/hooks/use-last-defined";
 import { useNow } from "@/hooks/use-now";
+import { t } from "@/i18n";
 import { weekdayName } from "@/lib/dates";
 import { findById } from "@/lib/find";
 import { openEntry } from "@/lib/routes";
@@ -54,33 +55,36 @@ export default function SubjectDetailScreen() {
       <Stack.Title>{subject.name}</Stack.Title>
       <FormList rowsKey={rowsKey(openEntries)}>
         <FieldGroup.Section>
-          <LabeledRow label="Kürzel">
+          <LabeledRow label={t.school.subjectDetail.abbreviation}>
             <Text textStyle={{ color: ink.secondary }}>{subject.abbreviation}</Text>
           </LabeledRow>
           {teacher && (
-            <LabeledRow label="Lehrperson">
+            <LabeledRow label={t.school.subjectDetail.teacher}>
               <Text textStyle={{ color: ink.secondary }}>
                 {joinDetails(teacher.abbreviation, teacher.name)}
               </Text>
             </LabeledRow>
           )}
           {teacher?.email && (
-            <LabeledRow label="E-Mail">
+            <LabeledRow label={t.school.subjectDetail.email}>
               <Text textStyle={{ color: ink.secondary }}>{teacher.email}</Text>
             </LabeledRow>
           )}
         </FieldGroup.Section>
 
-        <FieldGroup.Section title="Lektionen">
+        <FieldGroup.Section title={t.school.subjectDetail.lessons}>
           {lessons.length === 0 && (
-            <Text textStyle={{ color: ink.secondary }}>Keine Lektionen</Text>
+            <Text textStyle={{ color: ink.secondary }}>{t.school.noLessons}</Text>
           )}
           {lessons.map((lesson) => {
             const period = findById(periods, lesson.periodId);
             return (
               <LabeledRow
                 key={lesson.id}
-                label={`${weekdayName(lesson.weekday)}, ${periodLabel(periodNumber(periods, lesson.periodId))}`}>
+                label={t.school.period.onWeekday({
+                  weekday: weekdayName(lesson.weekday),
+                  period: periodLabel(periodNumber(periods, lesson.periodId)),
+                })}>
                 <Text textStyle={{ color: ink.secondary }}>
                   {joinDetails(period?.startTime, lesson.room)}
                 </Text>
@@ -89,15 +93,15 @@ export default function SubjectDetailScreen() {
           })}
         </FieldGroup.Section>
 
-        <FieldGroup.Section title="Offene Einträge">
+        <FieldGroup.Section title={t.entries.openEntries}>
           {openEntries.length === 0 && (
-            <Text textStyle={{ color: ink.secondary }}>Keine offenen Einträge</Text>
+            <Text textStyle={{ color: ink.secondary }}>{t.school.subjectDetail.noOpenEntries}</Text>
           )}
           {openEntries.map((entry) => (
             <EntryRow key={entry.id} entry={entry} subject={subject} today={now.date} />
           ))}
           <ActionRow
-            label="Eintrag hinzufügen"
+            label={t.entries.add}
             onPress={() => openEntry({ id: "new", subjectId: subject.id })}
           />
         </FieldGroup.Section>

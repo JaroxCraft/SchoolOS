@@ -13,6 +13,7 @@ import { TextField } from "@/components/text-field";
 import { saveSubject } from "@/db/actions";
 import type { Subject, Teacher } from "@/db/schema";
 import { useClosingForm } from "@/hooks/use-closing-form";
+import { t } from "@/i18n";
 import { subjectDeletion } from "@/lib/confirm-delete";
 import { SUBJECT_COLORS } from "@/lib/subject-colors";
 import { subjectAbbreviation } from "@/lib/text";
@@ -34,7 +35,7 @@ export function SubjectForm({ subject, usedColors, teachers }: SubjectFormProps)
   const [teacherId, setTeacherId] = useState(subject?.teacherId ?? NONE);
   const [color, setColor] = useState(() => subject?.color ?? firstFreeColor(usedColors));
   const teacherPicker = useTeacherPicker({
-    label: "Lehrperson",
+    label: t.school.subjectForm.teacher,
     teachers,
     value: teacherId,
     onChange: setTeacherId,
@@ -67,13 +68,13 @@ export function SubjectForm({ subject, usedColors, teachers }: SubjectFormProps)
   return (
     <>
       <PushedForm
-        title={subject ? subject.name : "Neues Fach"}
+        title={subject ? subject.name : t.school.subjectForm.newTitle}
         canSave={canSaveNamed(dirty, name) && !saving}
         dirty={dirty}
         onSave={save}>
         <FieldGroup.Section>
           <TextField
-            placeholder="Name, z. B. Mathematik"
+            placeholder={t.school.subjectForm.namePlaceholder}
             defaultValue={name}
             autoFocus={!subject}
             autoCapitalize="words"
@@ -82,23 +83,24 @@ export function SubjectForm({ subject, usedColors, teachers }: SubjectFormProps)
           <AbbreviationField
             name={name}
             makeAbbreviation={subjectAbbreviation}
-            example="Kürzel, z. B. M"
+            example={t.school.subjectForm.abbreviationExample}
             defaultValue={abbreviation}
             autoCapitalize="characters"
             onChangeText={setAbbreviation}
           />
           <FieldGroup.SectionFooter>
-            <FooterText>Das Kürzel erscheint im Stundenplan.</FooterText>
+            <FooterText>{t.school.subjectForm.abbreviationFooter}</FooterText>
           </FieldGroup.SectionFooter>
         </FieldGroup.Section>
 
-        <FieldGroup.Section title={Platform.OS === "android" ? "Farbe" : undefined}>
+        <FieldGroup.Section
+          title={Platform.OS === "android" ? t.school.subjectForm.color : undefined}>
           <ColorField value={color} onChange={setColor} usedColors={usedColors} />
           <FieldGroup.SectionFooter>
             <FooterText>
               {Platform.OS === "android"
-                ? "Die Farbe erscheint im Stundenplan und bei den Einträgen. Ein Punkt markiert Farben, die schon ein anderes Fach hat."
-                : "Die Farbe erscheint im Stundenplan und bei den Einträgen."}
+                ? t.school.subjectForm.colorFooterWithUsed
+                : t.school.subjectForm.colorFooter}
             </FooterText>
           </FieldGroup.SectionFooter>
         </FieldGroup.Section>
@@ -107,7 +109,7 @@ export function SubjectForm({ subject, usedColors, teachers }: SubjectFormProps)
 
         {subject && (
           <FieldGroup.Section>
-            <DestructiveRow label="Fach löschen" onPress={remove} />
+            <DestructiveRow label={t.school.subjectForm.delete} onPress={remove} />
           </FieldGroup.Section>
         )}
       </PushedForm>

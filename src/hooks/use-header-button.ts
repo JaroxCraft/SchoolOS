@@ -4,6 +4,7 @@ import type { ComponentProps } from "react";
 import { Platform } from "react-native";
 
 import { useSymbol } from "@/hooks/use-symbol";
+import { t } from "@/i18n";
 
 type ToolbarButtonProps = ComponentProps<typeof Stack.Toolbar.Button>;
 
@@ -18,9 +19,9 @@ type HeaderButton = {
 };
 
 const BUTTONS = {
-  save: { label: "Sichern", done: true, iconOnIOS: true, sf: "checkmark", md: "check" },
-  next: { label: "Weiter", sf: "arrow.right", md: "arrow_forward" },
-  finish: { label: "Fertig", done: true, sf: "checkmark", md: "check" },
+  save: { label: t.common.save, done: true, iconOnIOS: true, sf: "checkmark", md: "check" },
+  next: { label: t.common.next, sf: "arrow.right", md: "arrow_forward" },
+  finish: { label: t.common.finish, done: true, sf: "checkmark", md: "check" },
 } satisfies Record<string, HeaderButton>;
 
 // Props for a button in the navigation bar: text or icon on iOS, an icon on Android. Spread them
@@ -46,4 +47,4 @@ export const useSaveButton = () => useHeaderButton(BUTTONS.save);
 
 export const useStepButton = (step: "next" | "finish") => useHeaderButton(BUTTONS[step]);
 
-export const CANCEL_BUTTON = { icon: "xmark", accessibilityLabel: "Abbrechen" } as const;
+export const CANCEL_BUTTON = { icon: "xmark", accessibilityLabel: t.common.cancel } as const;

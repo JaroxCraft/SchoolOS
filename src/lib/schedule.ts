@@ -1,7 +1,7 @@
-// The school week: the time rules of the period grid (Lektionenraster) and the timetable
-// (Stundenplan). Periods must be sorted by start time (as returned by usePeriods); times are
-// compared as minutes since midnight.
+// The school week: the time rules of the period grid and the timetable. Periods must be sorted by
+// start time (as returned by usePeriods); times are compared as minutes since midnight.
 import type { Lesson, LessonDraft, Period } from "@/db/schema";
+import { t } from "@/i18n";
 import { addDays, isoWeekday, minutesOf, SCHOOL_WEEKDAYS, type Weekday } from "@/lib/dates";
 
 export type Now = { date: string; minutes: number };
@@ -31,11 +31,11 @@ export function periodNumber(periods: Period[], periodId: number): number {
 }
 
 export function periodLabel(number: number): string {
-  return `${number}. Lektion`;
+  return t.school.period.label(number);
 }
 
 export function periodRange(period: Period): string {
-  return `${period.startTime}–${period.endTime}`;
+  return t.dates.timeRange(period.startTime, period.endTime);
 }
 
 // The lesson in a slot of the timetable (saved or being edited); each slot holds at most one.

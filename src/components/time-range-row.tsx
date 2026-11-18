@@ -3,6 +3,7 @@ import { TimePickerDialog } from "@expo/ui/jetpack-compose";
 import { useState } from "react";
 
 import { useInk } from "@/hooks/use-ink";
+import { t } from "@/i18n";
 import { type ClockTime, dateToTime } from "@/lib/dates";
 
 export type TimeRangeRowProps = {
@@ -33,8 +34,8 @@ export function TimeRangeRow({ label, start, end, onChange }: TimeRangeRowProps)
             if (editing === "start") onChange(time, end);
             else onChange(start, time);
           }}
-          confirmButtonLabel="OK"
-          dismissButtonLabel="Abbrechen"
+          confirmButtonLabel={t.common.ok}
+          dismissButtonLabel={t.common.cancel}
           onDismissRequest={() => setEditing(null)}
         />
       )}

@@ -3,6 +3,7 @@ import { SymbolView } from "expo-symbols";
 import { Pressable, StyleSheet } from "react-native";
 
 import { useInk } from "@/hooks/use-ink";
+import { t } from "@/i18n";
 import { claimOpening, NEW_ENTRY } from "@/lib/routes";
 import { isSheetClosing } from "@/lib/sheet-transition";
 
@@ -22,7 +23,7 @@ export function AddEntryZoomButton() {
       <Link.AppleZoom>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Neuer Eintrag"
+          accessibilityLabel={t.entries.newEntry}
           style={styles.button}>
           <SymbolView name="plus" size={19} weight="medium" tintColor={ink.label} />
         </Pressable>

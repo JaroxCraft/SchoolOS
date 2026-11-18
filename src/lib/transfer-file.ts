@@ -7,12 +7,12 @@ import { Platform } from "react-native";
 import { data } from "@/db/client";
 import {
   describeTransferFile,
-  NOT_A_SCHOOLOS_FILE,
   parseTransferFile,
   TransferError,
   type TransferFile,
   type TransferKind,
 } from "@/db/transfer";
+import { t } from "@/i18n";
 import { confirm, showError } from "@/lib/confirm";
 import { today } from "@/lib/dates";
 import { showOverview } from "@/lib/routes";
@@ -21,7 +21,8 @@ import { showOverview } from "@/lib/routes";
 const MAX_EXPORT_FILE_BYTES = 5 * 1024 * 1024;
 
 function fileName(kind: TransferKind) {
-  return kind === "timetable" ? "SchoolOS-Stundenplan.json" : `SchoolOS-Backup-${today()}.json`;
+  const names = t.transfer.fileNames;
+  return kind === "timetable" ? names.timetable : names.backup(today());
 }
 
 // Writes the export to a file in the cache and opens the system share sheet with it, so it can
@@ -36,10 +37,10 @@ export async function shareExport(kind: TransferKind) {
     await Sharing.shareAsync(file.uri, {
       mimeType: "application/json",
       UTI: "public.json",
-      dialogTitle: kind === "timetable" ? "Stundenplan teilen" : "Backup sichern",
+      dialogTitle: t.transfer.actions[kind],
     });
   } catch {
-    showError("Teilen nicht möglich", "Versuche es noch einmal.");
+    showError(t.transfer.shareFailed.title, t.transfer.shareFailed.message);
   }
 }
 
@@ -60,15 +61,12 @@ export async function pickAndImport() {
     if (result.canceled) return;
     const picked = result.assets[0];
     if ((picked.size ?? new File(picked.uri).size) > MAX_EXPORT_FILE_BYTES) {
-      showError("Import nicht möglich", NOT_A_SCHOOLOS_FILE);
+      showError(t.transfer.importFailed.title, t.transfer.errors.notSchoolOSFile);
       return;
     }
     text = await new File(picked.uri).text();
   } catch {
-    showError(
-      "Öffnen nicht möglich",
-      "Die Datei konnte nicht geöffnet werden. Versuche es noch einmal."
-    );
+    showError(t.transfer.openFailed.title, t.transfer.openFailed.message);
     return;
   }
 
@@ -77,25 +75,26 @@ export async function pickAndImport() {
     file = parseTransferFile(text);
   } catch (error) {
     showError(
-      "Import nicht möglich",
-      error instanceof TransferError ? error.message : "Die Datei konnte nicht gelesen werden."
+      t.transfer.importFailed.title,
+      error instanceof TransferError ? error.message : t.transfer.importFailed.unreadable
     );
     return;
   }
 
+  const contents = describeTransferFile(file);
   confirm(
     file.kind === "timetable"
       ? {
-          title: "Stundenplan importieren?",
-          message: `Die Datei enthält ${describeTransferFile(file)}. Dein Lektionenraster, deine Fächer, Lehrpersonen und dein Stundenplan werden ersetzt. Einträge und Noten bleiben erhalten.`,
-          confirmLabel: "Importieren",
+          title: t.transfer.confirmTimetable.title,
+          message: t.transfer.confirmTimetable.message(contents),
+          confirmLabel: t.transfer.confirmTimetable.confirm,
           destructive: false,
           onConfirm: () => runImport(file),
         }
       : {
-          title: "Backup wiederherstellen?",
-          message: `Die Datei enthält ${describeTransferFile(file)}. Alle Daten auf diesem Gerät werden durch das Backup ersetzt.`,
-          confirmLabel: "Wiederherstellen",
+          title: t.transfer.confirmBackup.title,
+          message: t.transfer.confirmBackup.message(contents),
+          confirmLabel: t.transfer.confirmBackup.confirm,
           onConfirm: () => runImport(file),
         }
   );
@@ -105,10 +104,7 @@ function runImport(file: TransferFile) {
   try {
     data.importData(file);
   } catch {
-    showError(
-      "Import nicht möglich",
-      "Die Datei konnte nicht importiert werden. Es wurde nichts geändert."
-    );
+    showError(t.transfer.importFailed.title, t.transfer.importFailed.notImported);
     return;
   }
   Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);

@@ -9,6 +9,7 @@ import { updateSettings } from "@/db/actions";
 import { useLessons, usePeriods, useSettings, useSubjects, useTeachers } from "@/db/queries";
 import { useNotificationPermission } from "@/hooks/use-notification-permission";
 import { useScheduledReminders } from "@/hooks/use-scheduled-reminders";
+import { t } from "@/i18n";
 import { versionLabel } from "@/lib/app-info";
 import { dateToTime, formatDate, toISODate } from "@/lib/dates";
 import { sendTestReminder } from "@/lib/notification-dev-tools";
@@ -17,8 +18,9 @@ import { AFTER_SCHOOL_MINUTES } from "@/lib/reminders";
 import { openScreen, SCHOOL_ROUTES } from "@/lib/routes";
 import { SETUP_STEP_ICONS } from "@/lib/setup";
 import { SYSTEM_COLORS } from "@/lib/system-colors";
-import { countOf } from "@/lib/text";
 import { pickAndImport, shareExport } from "@/lib/transfer-file";
+
+const texts = t.settings;
 
 export default function SettingsScreen() {
   const periods = usePeriods();
@@ -44,72 +46,71 @@ export default function SettingsScreen() {
 
   return (
     <>
-      <Stack.Title>Einstellungen</Stack.Title>
+      <Stack.Title>{texts.title}</Stack.Title>
       {/* Android closes the settings with the back arrow */}
       {Platform.OS === "ios" && (
         <Stack.Toolbar placement="right">
           <Stack.Toolbar.Button variant="done" onPress={() => router.back()}>
-            Fertig
+            {t.common.finish}
           </Stack.Toolbar.Button>
         </Stack.Toolbar>
       )}
 
       <FormList>
         {/* In the order they build on each other; teachers are optional */}
-        <FieldGroup.Section title="Schule">
+        <FieldGroup.Section title={texts.school.title}>
           <NavigationRow
             icon={SETUP_STEP_ICONS.periods}
             onPress={() => openScreen(SCHOOL_ROUTES.settings.periods)}
-            supportingText={`${countOf(periods.length, "Lektionszeit", "Lektionszeiten")} pro Tag`}>
-            Lektionenraster
+            supportingText={t.school.counts.periodsPerDay(periods.length)}>
+            {t.school.periodGrid.title}
           </NavigationRow>
           <NavigationRow
             icon={SETUP_STEP_ICONS.subjects}
             onPress={() => openScreen(SCHOOL_ROUTES.settings.subjects)}
-            supportingText={countOf(subjects.length, "Fach", "Fächer")}>
-            Fächer
+            supportingText={t.school.counts.subjects(subjects.length)}>
+            {t.school.subjects.title}
           </NavigationRow>
           <NavigationRow
             icon={SETUP_STEP_ICONS.timetable}
             onPress={() => openScreen(SCHOOL_ROUTES.settings.timetable)}
-            supportingText={`${countOf(lessons.length, "Lektion", "Lektionen")} pro Woche`}>
-            Stundenplan
+            supportingText={t.school.counts.lessonsPerWeek(lessons.length)}>
+            {t.common.tabs.timetable}
           </NavigationRow>
           <NavigationRow
             icon={SETUP_STEP_ICONS.teachers}
             onPress={() => openScreen("/settings/teachers")}
-            supportingText={countOf(teachers.length, "Lehrperson", "Lehrpersonen")}>
-            Lehrpersonen
+            supportingText={t.school.counts.teachers(teachers.length)}>
+            {t.school.teachers.title}
           </NavigationRow>
         </FieldGroup.Section>
 
-        <FieldGroup.Section title="Teilen">
+        <FieldGroup.Section title={texts.share.title}>
           <ActionRow
             icon={{ sf: "square.and.arrow.up", md: "share", color: SYSTEM_COLORS.indigo }}
-            label="Stundenplan teilen"
+            label={t.transfer.actions.timetable}
             onPress={() => shareExport("timetable")}
           />
           <ActionRow
             icon={{ sf: "square.and.arrow.down", md: "download", color: SYSTEM_COLORS.teal }}
-            label="Datei importieren"
+            label={t.transfer.actions.importFile}
             onPress={pickAndImport}
           />
           <FieldGroup.SectionFooter>
-            <FooterText>
-              Schick deiner Klasse Lektionenraster, Fächer, Lehrpersonen und Stundenplan als Datei,
-              damit niemand alles von Hand erfassen muss. Einträge und Noten bleiben privat.
-              Importieren lassen sich nur Stundenplan- und Backup-Dateien von SchoolOS (JSON), keine
-              PDFs oder Bilder.
-            </FooterText>
+            <FooterText>{texts.share.footer}</FooterText>
           </FieldGroup.SectionFooter>
         </FieldGroup.Section>
 
-        <FieldGroup.Section title="Mitteilungen">
-          <Switch label="Erinnerungen" value={remindersOn} onValueChange={setRemindersOn} />
+        <FieldGroup.Section title={texts.notifications.title}>
+          <Switch
+            label={texts.notifications.reminders}
+            value={remindersOn}
+            onValueChange={setRemindersOn}
+          />
           {remindersOn && (
             <DateField
               mode="time"
-              label="Zweite Erinnerung"
+              label={texts.notifications.secondReminder}
               value={settings.secondReminderTime}
               onChange={(secondReminderTime) => updateSettings({ secondReminderTime })}
             />
@@ -117,7 +118,7 @@ export default function SettingsScreen() {
           {remindersOn && (
             <DateField
               mode="time"
-              label="Zusammenfassung an freien Tagen"
+              label={texts.notifications.noLessonSummary}
               value={settings.noLessonSummaryTime}
               onChange={(noLessonSummaryTime) => updateSettings({ noLessonSummaryTime })}
             />
@@ -127,54 +128,53 @@ export default function SettingsScreen() {
           </FieldGroup.SectionFooter>
         </FieldGroup.Section>
 
-        <FieldGroup.Section title="Backup">
+        <FieldGroup.Section title={texts.backup.title}>
           <ActionRow
             icon={{ sf: "externaldrive", md: "backup", color: SYSTEM_COLORS.gray }}
-            label="Backup sichern"
+            label={t.transfer.actions.backup}
             onPress={() => shareExport("backup")}
           />
           <FieldGroup.SectionFooter>
-            <FooterText>
-              Sichert alle Daten in einer Datei, zum Beispiel für ein neues Gerät. Wiederherstellen
-              mit «Datei importieren».
-            </FooterText>
+            <FooterText>{texts.backup.footer}</FooterText>
           </FieldGroup.SectionFooter>
         </FieldGroup.Section>
 
-        <FieldGroup.Section title="Info">
+        <FieldGroup.Section title={texts.info.title}>
           <NavigationRow
             icon={{ sf: "info", md: "info", color: SYSTEM_COLORS.gray }}
             onPress={() => openScreen("/settings/about")}
             supportingText={versionLabel}>
-            Über SchoolOS
+            {texts.about.title}
           </NavigationRow>
         </FieldGroup.Section>
 
         {__DEV__ && (
-          <FieldGroup.Section title="Entwicklung: Erinnerungen">
-            {reminders.scheduled.length === 0 && <ListItem>Keine Mitteilungen geplant</ListItem>}
+          <FieldGroup.Section title={texts.developer.title}>
+            {reminders.scheduled.length === 0 && (
+              <ListItem>{texts.developer.nothingScheduled}</ListItem>
+            )}
             {reminders.scheduled.map((reminder) => (
               <ListItem key={reminder.id} supportingText={reminder.body}>
                 {reminder.at
-                  ? `${formatDate(toISODate(reminder.at))} ${dateToTime(reminder.at)} · ${reminder.title}`
-                  : `Gleich · ${reminder.title}`}
+                  ? texts.developer.scheduledAt({
+                      date: formatDate(toISODate(reminder.at)),
+                      time: dateToTime(reminder.at),
+                      title: reminder.title,
+                    })
+                  : texts.developer.scheduledNow(reminder.title)}
               </ListItem>
             ))}
             <ActionRow
-              label="Nächste in 10 s senden"
+              label={texts.developer.sendNext}
               onPress={() =>
                 sendTestReminder(reminders.scheduled.find((reminder) => reminder.at)).then(
                   reminders.refresh
                 )
               }
             />
-            <ActionRow label="Liste aktualisieren" onPress={reminders.refresh} />
+            <ActionRow label={texts.developer.refresh} onPress={reminders.refresh} />
             <FieldGroup.SectionFooter>
-              <FooterText>
-                Nur in der Entwicklung sichtbar. Die Kopie kommt nach 10 Sekunden, auch bei offener
-                App; zum Prüfen des Antippens die App vorher in den Hintergrund schicken. Jede
-                Änderung der Daten plant neu und verwirft die Kopie.
-              </FooterText>
+              <FooterText>{texts.developer.footer}</FooterText>
             </FieldGroup.SectionFooter>
           </FieldGroup.Section>
         )}
@@ -185,10 +185,8 @@ export default function SettingsScreen() {
 
 function notificationsFooterText(remindersOn: boolean, denied: boolean, noLessonTime: string) {
   if (remindersOn) {
-    return `${AFTER_SCHOOL_MINUTES} Minuten nach der letzten Lektion kommt eine Zusammenfassung von allem, was bis zum nächsten Schultag ansteht: Hausaufgaben, Prüfungen, Präsentationen, Abgaben und andere Einträge. An freien Tagen kommt sie um ${noLessonTime}. Die zweite Erinnerung wiederholt das am Abend, solange noch etwas offen ist.`;
+    return texts.notifications.footerOn({ minutes: AFTER_SCHOOL_MINUTES, time: noLessonTime });
   }
-  if (denied) {
-    return "Mitteilungen sind für SchoolOS in den Systemeinstellungen ausgeschaltet. Beim Einschalten öffnen sich die Einstellungen, um sie zu erlauben.";
-  }
-  return "Keine Erinnerungen an Hausaufgaben, Prüfungen und andere Einträge.";
+  if (denied) return texts.notifications.footerDenied;
+  return texts.notifications.footerOff;
 }

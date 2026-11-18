@@ -3,6 +3,17 @@ const { defineConfig } = require("eslint/config");
 const expoConfig = require("eslint-config-expo/flat");
 const eslintPluginPrettierRecommended = require("eslint-plugin-prettier/recommended");
 
+// Props and fields that hold a text the user sees or hears
+const TEXT_KEYS =
+  "/^(label|title|message|body|text|placeholder|supportingText|confirmLabel|confirmButtonLabel|dismissButtonLabel|addLabel|newTitle|searchPlaceholder|accessibilityLabel|accessibilityHint|accessibilityValue|description)$/";
+// Contains a letter and is no color like "#FFFFFF"
+const LETTER = "/^(?!#)[\\s\\S]*[A-Za-zÄÖÜäöü]/";
+// A literal text as the value itself or as a branch of `a ? b : c` / `a ?? b`
+const TEXT_VALUES = ["", "ConditionalExpression > ", "LogicalExpression > "].flatMap((branch) => [
+  `${branch}Literal[value=${LETTER}]`,
+  `${branch}TemplateLiteral > TemplateElement[value.cooked=${LETTER}]`,
+]);
+
 module.exports = defineConfig([
   expoConfig,
   eslintPluginPrettierRecommended,
@@ -18,6 +29,27 @@ module.exports = defineConfig([
           "newlines-between": "always",
           alphabetize: { order: "asc", caseInsensitive: true },
         },
+      ],
+    },
+  },
+  {
+    // Texts live in the catalog (src/i18n/de/) and are used through `t` from "@/i18n"
+    files: ["src/**/*.{ts,tsx}"],
+    ignores: ["src/i18n/**", "src/**/*.test.ts"],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        ...[
+          `JSXText[value=${LETTER}]`,
+          ...TEXT_VALUES.flatMap((value) => [
+            `JSXAttribute[name.name=${TEXT_KEYS}] > ${value}`,
+            `JSXAttribute[name.name=${TEXT_KEYS}] > JSXExpressionContainer > ${value}`,
+            `Property[key.name=${TEXT_KEYS}] > ${value}`,
+          ]),
+        ].map((selector) => ({
+          selector,
+          message: 'Move this text to the catalog in src/i18n/de/ and use `t` from "@/i18n".',
+        })),
       ],
     },
   },

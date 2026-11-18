@@ -1,6 +1,7 @@
 import { usePreventRemove } from "expo-router";
 import { useState } from "react";
 
+import { t } from "@/i18n";
 import { confirm } from "@/lib/confirm";
 
 export function useDiscardGuard(dirty: boolean) {
@@ -9,9 +10,9 @@ export function useDiscardGuard(dirty: boolean) {
   const [leaving, setLeaving] = useState(false);
   const disablePrevention = usePreventRemove(dirty && !leaving, ({ repeat }) =>
     confirm({
-      title: "Änderungen verwerfen?",
-      message: "Deine Eingaben sind noch nicht gesichert.",
-      confirmLabel: "Änderungen verwerfen",
+      title: t.common.discard.title,
+      message: t.common.discard.message,
+      confirmLabel: t.common.discard.confirm,
       onConfirm: () => {
         setLeaving(true);
         repeat();

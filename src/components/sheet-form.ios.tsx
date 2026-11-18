@@ -10,6 +10,7 @@ import { useEffect, useMemo, useRef } from "react";
 
 import { FormGroup } from "@/components/form-group";
 import type { SheetFormProps } from "@/components/sheet-form";
+import { t } from "@/i18n";
 import { holdSheetClosing, releaseSheetClosing } from "@/lib/sheet-transition";
 
 // Longer than any presentation, in case the end of the transition is never reported
@@ -18,7 +19,7 @@ const PRESENTED_FALLBACK_MS = 1500;
 // (INTERNAL_EXPO_ROUTER_ZOOM_TRANSITION_SOURCE_ID_PARAM_NAME, not exported by expo-router)
 const ZOOM_SOURCE_PARAM = "__internal_expo_router_zoom_transition_source_id";
 
-// iOS: the sheet draws its own navigation bar in SwiftUI, with × "Abbrechen" and ✓ "Sichern" as in
+// iOS: the sheet draws its own navigation bar in SwiftUI, with × "Cancel" and ✓ "Save" as in
 // the forms of Music and Calendar. The route hides the header of the stack (src/app/_layout.tsx):
 // with it, react-native-screens nests a second stack in the sheet, and the zoom transition from the
 // "+" (Link.AppleZoom) would be set on that inner screen instead of the presented one, so the
@@ -94,14 +95,14 @@ export function SheetForm({ title, canSave, dirty, onSave, children }: SheetForm
               <ToolbarItem placement="cancellationAction">
                 <Button
                   role="close"
-                  label="Abbrechen"
+                  label={t.common.cancel}
                   systemImage="xmark"
                   onPress={() => whenPresented(() => router.back())}
                 />
               </ToolbarItem>
               <ToolbarItem placement="confirmationAction">
                 <Button
-                  label="Sichern"
+                  label={t.common.save}
                   systemImage="checkmark"
                   modifiers={[disabled(!canSave)]}
                   onPress={() => whenPresented(onSave)}

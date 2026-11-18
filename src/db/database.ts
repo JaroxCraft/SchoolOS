@@ -3,6 +3,7 @@ import type { BaseSQLiteDatabase } from "drizzle-orm/sqlite-core";
 
 import { settings, SETTINGS_ID } from "@/db/schema";
 import type * as schema from "@/db/schema";
+import { t } from "@/i18n";
 
 // The seam to the database: drizzle's synchronous SQLite flavour with the app's schema. The app
 // opens it with expo-sqlite (src/db/client.ts), the tests with an in-memory bun:sqlite database
@@ -18,7 +19,7 @@ export type Database = BaseSQLiteDatabase<"sync", unknown, typeof schema>;
 function enableForeignKeys(db: Database) {
   const broken = db.all(sql`PRAGMA foreign_key_check;`);
   if (broken.length > 0) {
-    throw new Error(`${broken.length} Verweise in der Datenbank zeigen ins Leere.`);
+    throw new Error(t.common.database.brokenReferences(broken.length));
   }
   db.run(sql`PRAGMA foreign_keys = ON;`);
 }

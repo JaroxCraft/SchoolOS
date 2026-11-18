@@ -19,9 +19,9 @@ import {
   type Table,
   type Teacher,
 } from "@/db/schema";
+import { t } from "@/i18n";
 import { today as currentDay } from "@/lib/dates";
 import { completePastEvents } from "@/lib/entry-status";
-import { countOf } from "@/lib/text";
 
 // The file format of export and import. A timetable file holds what a class shares (period grid,
 // teachers, subjects, lessons); a backup also holds the personal data (entries, grades,
@@ -57,8 +57,7 @@ export type TransferFile = { app: "SchoolOS"; format: number; exportedAt: string
 
 export class TransferError extends Error {}
 
-export const NOT_A_SCHOOLOS_FILE =
-  "Die Datei ist keine SchoolOS-Datei. Importieren lassen sich nur JSON-Dateien, die SchoolOS mit «Stundenplan teilen» oder «Backup sichern» erstellt hat, keine PDFs oder Bilder.";
+const errors = t.transfer.errors;
 
 const fail = (message: string): never => {
   throw new TransferError(message);
@@ -79,7 +78,7 @@ function isDate(value: string) {
 }
 
 function checkRow(row: unknown, table: Table, name: string) {
-  if (!isObject(row)) fail(`${name} ist ungültig.`);
+  if (!isObject(row)) fail(errors.invalidRow(name));
   const fields = row as Record<string, unknown>;
   for (const [key, column] of Object.entries(getTableColumns(table)) as [string, Column][]) {
     const value = fields[key];
@@ -87,9 +86,9 @@ function checkRow(row: unknown, table: Table, name: string) {
     const valid =
       typeof value === column.dataType &&
       (column.columnType !== "SQLiteInteger" || Number.isInteger(value));
-    if (!valid) fail(`${name}: Die Angabe «${key}» fehlt oder ist ungültig.`);
+    if (!valid) fail(errors.invalidField({ row: name, field: key }));
     if (column.enumValues && !column.enumValues.includes(value as string)) {
-      fail(`${name}: «${String(value)}» ist keine gültige Angabe für «${key}».`);
+      fail(errors.invalidChoice({ row: name, value: String(value), field: key }));
     }
   }
 }
@@ -97,18 +96,18 @@ function checkRow(row: unknown, table: Table, name: string) {
 function checkRows<T extends { id: number }>(
   value: unknown,
   table: Table,
-  plural: string,
-  label: string,
+  list: string,
+  rowName: (position: number) => string,
   check: (row: T, name: string) => void = () => {}
 ): Set<number> {
-  if (!Array.isArray(value)) fail(`Die Datei enthält keine ${plural}.`);
+  if (!Array.isArray(value)) fail(errors.missingList(list));
   const ids = new Set<number>();
   (value as unknown[]).forEach((row, index) => {
-    const name = `${label} ${index + 1}`;
+    const name = rowName(index + 1);
     checkRow(row, table, name);
     const { id } = row as T;
-    if (id < 1) fail(`${name}: Die ID ${id} ist ungültig.`);
-    if (ids.has(id)) fail(`${name}: Die ID ${id} kommt in der Datei mehrfach vor.`);
+    if (id < 1) fail(errors.invalidId({ row: name, id }));
+    if (ids.has(id)) fail(errors.duplicateId({ row: name, id }));
     ids.add(id);
     check(row as T, name);
   });
@@ -116,12 +115,12 @@ function checkRows<T extends { id: number }>(
 }
 
 function checkTime(name: string, what: string, value: string) {
-  if (!TIME.test(value)) fail(`${name}: ${what} «${value}» ist keine gültige Uhrzeit.`);
+  if (!TIME.test(value)) fail(errors.invalidTime({ row: name, what, value }));
 }
 
 function checkDate(name: string, what: string, value: string | null | undefined) {
   if (value !== null && value !== undefined && !isDate(value)) {
-    fail(`${name}: ${what} «${value}» ist kein gültiges Datum.`);
+    fail(errors.invalidDate({ row: name, what, value }));
   }
 }
 
@@ -132,7 +131,7 @@ function checkReference(
   id: number | null | undefined
 ) {
   if (id !== null && id !== undefined && !ids.has(id)) {
-    fail(`${name}: ${what} mit der ID ${id} fehlt in der Datei.`);
+    fail(errors.missingReference({ row: name, what, id }));
   }
 }
 
@@ -141,108 +140,102 @@ export function parseTransferFile(text: string, today: string = currentDay()): T
   try {
     data = JSON.parse(text);
   } catch {
-    throw new TransferError(NOT_A_SCHOOLOS_FILE);
+    throw new TransferError(errors.notSchoolOSFile);
   }
   if (!isObject(data) || data.app !== "SchoolOS") {
-    throw new TransferError(NOT_A_SCHOOLOS_FILE);
+    throw new TransferError(errors.notSchoolOSFile);
   }
   if (typeof data.format !== "number" || !Number.isInteger(data.format) || data.format < 1) {
-    throw new TransferError("Die Dateiversion ist ungültig.");
+    throw new TransferError(errors.invalidFormat);
   }
   if (data.format > TRANSFER_FORMAT) {
-    throw new TransferError(
-      "Die Datei stammt aus einer neueren Version von SchoolOS. Aktualisiere SchoolOS, um sie zu importieren."
-    );
+    throw new TransferError(errors.newerFormat);
   }
   if (data.kind !== "timetable" && data.kind !== "backup") {
-    throw new TransferError(NOT_A_SCHOOLOS_FILE);
+    throw new TransferError(errors.notSchoolOSFile);
   }
 
+  const { lists, rows, fields } = t.transfer;
   const startTimes = new Set<string>();
   const slots = new Set<string>();
   const periodIds = checkRows<Period>(
     data.periods,
     periods,
-    "Lektionszeiten",
-    "Lektionszeit",
+    lists.periods,
+    rows.period,
     (period, name) => {
-      checkTime(name, "Beginn", period.startTime);
-      checkTime(name, "Ende", period.endTime);
+      const { startTime, endTime } = period;
+      checkTime(name, fields.periodStart, startTime);
+      checkTime(name, fields.periodEnd, endTime);
       // "HH:MM" compares like the time it stands for
-      if (period.startTime >= period.endTime) {
-        fail(`${name}: Beginn ${period.startTime} liegt nicht vor dem Ende ${period.endTime}.`);
+      if (startTime >= endTime) {
+        fail(errors.periodNotBeforeEnd({ row: name, start: startTime, end: endTime }));
       }
-      if (startTimes.has(period.startTime)) {
-        fail(`${name}: Eine Lektionszeit beginnt bereits um ${period.startTime}.`);
+      if (startTimes.has(startTime)) {
+        fail(errors.duplicatePeriodStart({ row: name, start: startTime }));
       }
-      startTimes.add(period.startTime);
+      startTimes.add(startTime);
     }
   );
-  const teacherIds = checkRows<Teacher>(data.teachers, teachers, "Lehrpersonen", "Lehrperson");
+  const teacherIds = checkRows<Teacher>(data.teachers, teachers, lists.teachers, rows.teacher);
   const subjectIds = checkRows<Subject>(
     data.subjects,
     subjects,
-    "Fächer",
-    "Fach",
+    lists.subjects,
+    rows.subject,
     (subject, name) => {
       if (!COLOR.test(subject.color)) {
-        fail(`${name}: Die Farbe «${subject.color}» ist ungültig.`);
+        fail(errors.invalidColor({ row: name, color: subject.color }));
       }
-      checkReference(name, "Die Lehrperson", teacherIds, subject.teacherId);
+      checkReference(name, fields.teacher, teacherIds, subject.teacherId);
     }
   );
-  checkRows<Lesson>(
-    data.lessons,
-    lessons,
-    "Lektionen im Stundenplan",
-    "Lektion",
-    (lesson, name) => {
-      if (lesson.weekday < 1 || lesson.weekday > 5) {
-        fail(`${name}: Wochentag ${lesson.weekday} gibt es nicht.`);
-      }
-      checkReference(name, "Das Fach", subjectIds, lesson.subjectId);
-      checkReference(name, "Die Lektionszeit", periodIds, lesson.periodId);
-      const slot = `${lesson.weekday}-${lesson.periodId}`;
-      if (slots.has(slot)) {
-        fail(`${name}: Am selben Tag liegt zur selben Lektionszeit schon eine Lektion.`);
-      }
-      slots.add(slot);
+  checkRows<Lesson>(data.lessons, lessons, lists.lessons, rows.lesson, (lesson, name) => {
+    if (lesson.weekday < 1 || lesson.weekday > 5) {
+      fail(errors.invalidWeekday({ row: name, weekday: lesson.weekday }));
     }
-  );
+    checkReference(name, fields.subject, subjectIds, lesson.subjectId);
+    checkReference(name, fields.period, periodIds, lesson.periodId);
+    const slot = `${lesson.weekday}-${lesson.periodId}`;
+    if (slots.has(slot)) fail(errors.duplicateLesson(name));
+    slots.add(slot);
+  });
 
   if (data.kind === "backup") {
     const entryIds = checkRows<Entry>(
       data.entries,
       entries,
-      "Einträge",
-      "Eintrag",
+      lists.entries,
+      rows.entry,
       (entry, name) => {
-        checkDate(name, "Das Datum", entry.date);
-        checkReference(name, "Das Fach", subjectIds, entry.subjectId);
-        checkReference(name, "Die Lektionszeit", periodIds, entry.periodId);
+        checkDate(name, fields.date, entry.date);
+        checkReference(name, fields.subject, subjectIds, entry.subjectId);
+        checkReference(name, fields.period, periodIds, entry.periodId);
       }
     );
-    checkRows<Grade>(data.grades, grades, "Noten", "Note", (grade, name) => {
+    checkRows<Grade>(data.grades, grades, lists.grades, rows.grade, (grade, name) => {
       if (grade.value < 1 || grade.value > 6) {
-        fail(`${name}: Die Note ${grade.value} liegt nicht zwischen 1 und 6.`);
+        fail(errors.gradeOutOfRange({ row: name, grade: grade.value }));
       }
-      checkDate(name, "Das Datum", grade.date);
-      checkReference(name, "Das Fach", subjectIds, grade.subjectId);
-      checkReference(name, "Der Eintrag", entryIds, grade.entryId);
+      checkDate(name, fields.date, grade.date);
+      checkReference(name, fields.subject, subjectIds, grade.subjectId);
+      checkReference(name, fields.entry, entryIds, grade.entryId);
     });
-    checkRows<Semester>(data.semesters, semesters, "Semester", "Semester", (semester, name) => {
-      checkDate(name, "Der Beginn", semester.startDate);
-      checkDate(name, "Das Ende", semester.endDate);
-    });
-    if (!isObject(data.settings)) fail("Die Datei enthält keine Einstellungen.");
-    checkRow(data.settings, settings, "Einstellungen");
-    const fileSettings = data.settings as Settings;
-    checkTime("Einstellungen", "Die zweite Erinnerung", fileSettings.secondReminderTime);
-    checkTime(
-      "Einstellungen",
-      "Die Zusammenfassung an freien Tagen",
-      fileSettings.noLessonSummaryTime
+    checkRows<Semester>(
+      data.semesters,
+      semesters,
+      lists.semesters,
+      rows.semester,
+      (semester, name) => {
+        checkDate(name, fields.semesterStart, semester.startDate);
+        checkDate(name, fields.semesterEnd, semester.endDate);
+      }
     );
+    if (!isObject(data.settings)) fail(errors.missingList(lists.settings));
+    checkRow(data.settings, settings, rows.settings);
+    const fileSettings = data.settings as Settings;
+    checkTime(rows.settings, fields.secondReminder, fileSettings.secondReminderTime);
+    checkTime(rows.settings, fields.noLessonSummary, fileSettings.noLessonSummaryTime);
     if (data.format < 2) {
       data.entries = completePastEvents(data.entries as Entry[], today);
     }
@@ -251,13 +244,15 @@ export function parseTransferFile(text: string, today: string = currentDay()): T
   return data as unknown as TransferFile;
 }
 
+// What a file holds, for the import confirmation: "8 periods per day, 12 subjects, …"
 export function describeTransferFile(file: TransferFile): string {
+  const { contents } = t.transfer;
   const parts = [
-    `${countOf(file.periods.length, "Lektionszeit", "Lektionszeiten")} pro Tag`,
-    countOf(file.subjects.length, "Fach", "Fächer"),
-    countOf(file.teachers.length, "Lehrperson", "Lehrpersonen"),
-    `${countOf(file.lessons.length, "Lektion", "Lektionen")} im Stundenplan`,
+    contents.periods(file.periods.length),
+    contents.subjects(file.subjects.length),
+    contents.teachers(file.teachers.length),
+    contents.lessons(file.lessons.length),
   ];
-  if (file.kind === "backup") parts.push(countOf(file.entries.length, "Eintrag", "Einträge"));
-  return `${parts.slice(0, -1).join(", ")} und ${parts.at(-1)}`;
+  if (file.kind === "backup") parts.push(contents.entries(file.entries.length));
+  return t.common.list(parts);
 }
