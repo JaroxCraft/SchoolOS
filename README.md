@@ -33,7 +33,7 @@ bun start
 A release starts on GitHub: draft a new release with a new tag of the form `vX.Y.Z` (e.g. `v1.3.0`), write what changed for the testers, untick "Set as the latest release", then publish it. Publishing creates the tag, which runs `.eas/workflows/release.yml`:
 
 - it reads the text of the release and stops if there is none,
-- builds iOS and uploads it to TestFlight with the text as "What to Test",
+- builds iOS and uploads it to App Store Connect; once Apple reports the upload as complete, `.eas/workflows/testflight-notes.yml` sets the text of the release as "What to Test" (adding the build to the external TestFlight group stays a step in App Store Connect),
 - builds the Android APK, attaches it to the release as `SchoolOS.apk` and only then makes the release the latest one (unless a newer release already is).
 
 `schoolos.jarox.dev/apk` downloads the `SchoolOS.apk` of the latest release, so it keeps the previous APK until the new one is attached, or for good if the Android build fails. A release published with "Set as the latest release" ticked has no APK until its build is done: `/apk` fails in the meantime.
