@@ -78,15 +78,37 @@ jobs:
           fi
           API="https://api.github.com/repos/JaroxCraft/SchoolOS"
           AUTH="Authorization: Bearer $GITHUB_RELEASE_TOKEN"
+          # Reads stdin as JSON and prints the expression $1 of it (`j`)
+          json() { node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{const j=JSON.parse(s);process.stdout.write(String($1))})"; }
+          rename() { curl -fsSL -X PATCH -H "$AUTH" -H "Content-Type: application/json" -d "{\"name\":\"$2\"}" "$API/releases/assets/$1" > /dev/null; }
+          remove() { curl -fsSL -X DELETE -H "$AUTH" "$API/releases/assets/$1"; }
           RELEASE=$(curl -fsSL -H "$AUTH" "$API/releases/tags/$TAG")
-          RELEASE_ID=$(printf '%s' "$RELEASE" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>process.stdout.write(String(JSON.parse(s).id)))')
-          # A rerun replaces the APK of the release
-          OLD_ASSET=$(printf '%s' "$RELEASE" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const a=JSON.parse(s).assets.find(a=>a.name==="SchoolOS.apk");process.stdout.write(a?String(a.id):"")})')
-          if [ -n "$OLD_ASSET" ]; then
-            curl -fsSL -X DELETE -H "$AUTH" "$API/releases/assets/$OLD_ASSET"
-          fi
-          curl -fsSL -X POST -H "$AUTH" \
+          RELEASE_ID=$(printf '%s' "$RELEASE" | json 'j.id')
+          asset() { printf '%s' "$RELEASE" | json "(j.assets.find(a=>a.name==='$1')||{}).id||''"; }
+
+          # A rerun replaces the APK of the release: the new one is uploaded under a temporary
+          # name first, so SchoolOS.apk stays downloadable if the upload fails
+          OLD=$(asset SchoolOS.apk)
+          for LEFTOVER in $(asset SchoolOS.new.apk) $([ -n "$OLD" ] && asset SchoolOS.old.apk); do
+            remove "$LEFTOVER"
+          done
+          NEW=$(curl -fsSL -X POST -H "$AUTH" \
             -H "Content-Type: application/vnd.android.package-archive" \
             --data-binary @"${{ steps.download.outputs.artifact_path }}" \
-            "https://uploads.github.com/repos/JaroxCraft/SchoolOS/releases/$RELEASE_ID/assets?name=SchoolOS.apk" > /dev/null
+            "https://uploads.github.com/repos/JaroxCraft/SchoolOS/releases/$RELEASE_ID/assets?name=SchoolOS.new.apk" | json 'j.id') || NEW=""
+          if [ -z "$NEW" ]; then
+            echo "Uploading the APK failed; the release keeps its previous SchoolOS.apk, if any"
+            exit 1
+          fi
+          [ -n "$OLD" ] && rename "$OLD" SchoolOS.old.apk
+          if ! rename "$NEW" SchoolOS.apk; then
+            # Give the old APK its name back
+            [ -n "$OLD" ] && rename "$OLD" SchoolOS.apk
+            remove "$NEW"
+            echo "Could not name the new APK SchoolOS.apk"
+            exit 1
+          fi
+          if [ -n "$OLD" ] && ! remove "$OLD"; then
+            echo "The previous APK is left as SchoolOS.old.apk"
+          fi
           echo "Attached SchoolOS.apk to $TAG"
