@@ -18,9 +18,14 @@ jobs:
       notes: ${{ steps.read.outputs.notes }}
     env:
       TAG: v${{ app_store_connect.build_upload.cf_bundle_short_version_string }}
+      ASC_BUILD_ID: ${{ app_store_connect.build_upload.build.id || '' }}
     steps:
       - id: read
         run: |
+          if [ -z "$ASC_BUILD_ID" ]; then
+            echo "App Store Connect build ID is missing: set \"What to Test\" in App Store Connect by hand."
+            exit 1
+          fi
           # The same request as in release.yml: with the token when there is one, and once more
           # without it if GitHub rejects the token
           URL="https://api.github.com/repos/JaroxCraft/SchoolOS/releases/tags/$TAG"
