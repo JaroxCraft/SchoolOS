@@ -22,7 +22,7 @@ export const overview = {
     title: "Schneller",
     action: "Stundenplan importieren",
     footer:
-      "Hat jemand aus deiner Klasse SchoolOS schon eingerichtet? Unter Einstellungen › Teilen lässt sich der Stundenplan als Datei schicken. Importieren lassen sich nur solche SchoolOS-Dateien (JSON), keine PDFs oder Bilder eines Stundenplans.",
+      "Hat jemand aus deiner Klasse SchoolOS schon eingerichtet? Unter Einstellungen › Teilen und Backup lässt sich der Stundenplan als Datei schicken. Importieren lassen sich nur solche SchoolOS-Dateien (JSON), keine PDFs oder Bilder eines Stundenplans.",
   },
   lessons: {
     title: "Lektionen",

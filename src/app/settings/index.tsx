@@ -85,11 +85,17 @@ export default function SettingsScreen() {
           </NavigationRow>
         </FieldGroup.Section>
 
-        <FieldGroup.Section title={texts.share.title}>
+        {/* Both exports, then the import that takes either file */}
+        <FieldGroup.Section title={texts.files.title}>
           <ActionRow
             icon={{ sf: "square.and.arrow.up", md: "share", color: SYSTEM_COLORS.indigo }}
             label={t.transfer.actions.timetable}
             onPress={() => shareExport("timetable")}
+          />
+          <ActionRow
+            icon={{ sf: "externaldrive", md: "backup", color: SYSTEM_COLORS.gray }}
+            label={t.transfer.actions.backup}
+            onPress={() => shareExport("backup")}
           />
           <ActionRow
             icon={{ sf: "square.and.arrow.down", md: "download", color: SYSTEM_COLORS.teal }}
@@ -97,7 +103,7 @@ export default function SettingsScreen() {
             onPress={pickAndImport}
           />
           <FieldGroup.SectionFooter>
-            <FooterText>{texts.share.footer}</FooterText>
+            <FooterText>{texts.files.footer}</FooterText>
           </FieldGroup.SectionFooter>
         </FieldGroup.Section>
 
@@ -125,17 +131,6 @@ export default function SettingsScreen() {
           )}
           <FieldGroup.SectionFooter>
             <FooterText>{notificationsFooter}</FooterText>
-          </FieldGroup.SectionFooter>
-        </FieldGroup.Section>
-
-        <FieldGroup.Section title={texts.backup.title}>
-          <ActionRow
-            icon={{ sf: "externaldrive", md: "backup", color: SYSTEM_COLORS.gray }}
-            label={t.transfer.actions.backup}
-            onPress={() => shareExport("backup")}
-          />
-          <FieldGroup.SectionFooter>
-            <FooterText>{texts.backup.footer}</FooterText>
           </FieldGroup.SectionFooter>
         </FieldGroup.Section>
 
