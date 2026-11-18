@@ -20,11 +20,14 @@ jobs:
     steps:
       - id: read
         run: |
-          # With the token when there is one: unauthenticated calls share a small rate limit
-          AUTH=()
-          [ -n "$GITHUB_RELEASE_TOKEN" ] && AUTH=(-H "Authorization: Bearer $GITHUB_RELEASE_TOKEN")
+          # With the token when there is one: unauthenticated calls share a small rate limit. A
+          # token GitHub rejects (expired, revoked) fails even on this public release, so then
+          # once more without it; a wrong token should only stop attaching the APK.
           URL="https://api.github.com/repos/JaroxCraft/SchoolOS/releases/tags/$TAG"
-          NOTES=$(curl -fsSL "${AUTH[@]}" "$URL" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>process.stdout.write((JSON.parse(s).body||"").trim()))') || NOTES=""
+          RELEASE=""
+          [ -n "$GITHUB_RELEASE_TOKEN" ] && RELEASE=$(curl -fsSL -H "Authorization: Bearer $GITHUB_RELEASE_TOKEN" "$URL") || RELEASE=""
+          [ -z "$RELEASE" ] && RELEASE=$(curl -fsSL "$URL") || true
+          NOTES=$(printf '%s' "$RELEASE" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>process.stdout.write((JSON.parse(s).body||"").trim()))') || NOTES=""
           if [ -z "$NOTES" ]; then
             echo "No GitHub release with text for $TAG: publish the release on GitHub with the notes for the testers, which creates the tag."
             exit 1
