@@ -20,13 +20,14 @@ import {
   presentationDragIndicator,
   searchable,
 } from "@expo/ui/swift-ui/modifiers";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { FormGroup } from "@/components/form-group";
 import { NavigationRow } from "@/components/rows";
 import { type SearchPickerSheetProps, usePickerSections } from "@/components/search-picker";
 import { useInk } from "@/hooks/use-ink";
 import { t } from "@/i18n";
+import { endEditing } from "@/lib/focused-fields";
 
 const FORM = "form";
 
@@ -45,6 +46,12 @@ export function SearchPickerSheet<T extends { id: number }>(props: SearchPickerS
   const [editing, setEditing] = useState<T>();
   const searchText = useNativeState("");
   const { form } = props;
+
+  // Leave the form's text field first: SwiftUI gives the focus back to it when the sheet closes,
+  // and the keyboard would come up again over the form
+  useEffect(() => {
+    if (props.isPresented) endEditing();
+  }, [props.isPresented]);
 
   const close = () => {
     setQuery("");
