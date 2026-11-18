@@ -17,6 +17,14 @@
     "production": {
       "autoIncrement": true,
       "channel": "production"
+    },
+    "simulator": {
+      "distribution": "internal",
+      "channel": "simulator",
+      "ios": {
+        "simulator": true,
+        "buildConfiguration": "Release"
+      }
     }
   },
   "submit": {
