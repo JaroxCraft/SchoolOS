@@ -27,10 +27,11 @@ function fnv1a(values: number[]): number {
   return hash >>> 0;
 }
 
-// Explanation below a section. Use it inside <FieldGroup.SectionFooter> directly in the section:
-// the section only recognizes its footer when that element is its direct child, otherwise the
-// text is drawn as a row of its own.
-export function FooterText({ children }: { children: string }) {
+// Secondary text in the footnote style: the explanation below a section and the details of a row.
+// As a footer, use it inside <FieldGroup.SectionFooter> directly in the section: the section only
+// recognizes its footer when that element is its direct child, otherwise the text is drawn as a
+// row of its own.
+export function SecondaryText({ children }: { children: string }) {
   const ink = useInk();
 
   return <Text {...typography("footnote", { color: ink.secondary })}>{children}</Text>;

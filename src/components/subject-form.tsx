@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Platform } from "react-native";
 
 import { ColorField } from "@/components/color-field";
-import { FooterText } from "@/components/form-list";
+import { SecondaryText } from "@/components/form-list";
 import { AbbreviationField, abbreviationToSave, canSaveNamed } from "@/components/name-fields";
 import { PushedForm } from "@/components/pushed-form";
 import { DestructiveRow } from "@/components/rows";
@@ -89,7 +89,7 @@ export function SubjectForm({ subject, usedColors, teachers }: SubjectFormProps)
             onChangeText={setAbbreviation}
           />
           <FieldGroup.SectionFooter>
-            <FooterText>{t.school.subjectForm.abbreviationFooter}</FooterText>
+            <SecondaryText>{t.school.subjectForm.abbreviationFooter}</SecondaryText>
           </FieldGroup.SectionFooter>
         </FieldGroup.Section>
 
@@ -97,11 +97,11 @@ export function SubjectForm({ subject, usedColors, teachers }: SubjectFormProps)
           title={Platform.OS === "android" ? t.school.subjectForm.color : undefined}>
           <ColorField value={color} onChange={setColor} usedColors={usedColors} />
           <FieldGroup.SectionFooter>
-            <FooterText>
+            <SecondaryText>
               {Platform.OS === "android"
                 ? t.school.subjectForm.colorFooterWithUsed
                 : t.school.subjectForm.colorFooter}
-            </FooterText>
+            </SecondaryText>
           </FieldGroup.SectionFooter>
         </FieldGroup.Section>
 

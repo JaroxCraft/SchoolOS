@@ -5,7 +5,7 @@ import { Stack } from "expo-router";
 import { useEffect, useState } from "react";
 import { Image, Platform, useColorScheme } from "react-native";
 
-import { FooterText, FormList } from "@/components/form-list";
+import { FormList, SecondaryText } from "@/components/form-list";
 import { LabeledRow } from "@/components/labeled-row";
 import { ActionRow, DestructiveRow, LinkRow, NavigationRow } from "@/components/rows";
 import { resetDatabase } from "@/db/actions";
@@ -45,7 +45,7 @@ export default function AboutScreen() {
   const ink = useInk();
   const dark = useColorScheme() === "dark";
   // The copy row confirms with "Kopiert" for a moment. Kept in the screen so the row stays a
-  // direct <ActionRow> of its section (Android would otherwise wrap it as a small text button).
+  // direct <ActionRow> of its section (Android would otherwise wrap it in a list item of its own).
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -117,7 +117,7 @@ export default function AboutScreen() {
         <FieldGroup.Section>
           <DestructiveRow label={texts.reset} onPress={confirmReset} />
           <FieldGroup.SectionFooter>
-            <FooterText>{texts.resetFooter}</FooterText>
+            <SecondaryText>{texts.resetFooter}</SecondaryText>
           </FieldGroup.SectionFooter>
         </FieldGroup.Section>
       </FormList>

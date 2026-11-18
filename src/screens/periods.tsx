@@ -1,7 +1,7 @@
 import { FieldGroup, Text } from "@expo/ui";
 import { router, Stack } from "expo-router";
 
-import { FooterText } from "@/components/form-list";
+import { SecondaryText } from "@/components/form-list";
 import { PushedForm } from "@/components/pushed-form";
 import { ActionRow, DestructiveRow } from "@/components/rows";
 import { TimeRangeRow } from "@/components/time-range-row";
@@ -126,7 +126,7 @@ export default function PeriodsEditScreen() {
         ))}
         <ActionRow label={t.school.periodGrid.add} onPress={add} />
         <FieldGroup.SectionFooter>
-          <FooterText>{t.school.periodGrid.footer}</FooterText>
+          <SecondaryText>{t.school.periodGrid.footer}</SecondaryText>
         </FieldGroup.SectionFooter>
       </FieldGroup.Section>
 
