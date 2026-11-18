@@ -34,9 +34,9 @@ A release starts on GitHub: draft a new release with a new tag of the form `vX.Y
 
 - it reads the text of the release and stops if there is none,
 - builds iOS and uploads it to TestFlight with the text as "What to Test",
-- builds the Android APK, attaches it to the release as `SchoolOS.apk` and only then makes the release the latest one.
+- builds the Android APK, attaches it to the release as `SchoolOS.apk` and only then makes the release the latest one (unless a newer release already is).
 
-`schoolos.jarox.dev/apk` downloads the `SchoolOS.apk` of the latest release, so it keeps the previous APK until the new one is attached (or if the Android build fails).
+`schoolos.jarox.dev/apk` downloads the `SchoolOS.apk` of the latest release, so it keeps the previous APK until the new one is attached, or for good if the Android build fails. A release published with "Set as the latest release" ticked has no APK until its build is done: `/apk` fails in the meantime.
 
 The tag becomes the app version, so only plain `vX.Y.Z` tags give a valid release; suffixes like `-beta` do not. Attaching the APK needs the Expo environment variable `GITHUB_RELEASE_TOKEN` (production, secret): a fine-grained GitHub token for this repository with "Contents: Read and write".
 
@@ -54,4 +54,4 @@ bun run build   # static site in landing/dist
 bun run check   # type-check the Astro files
 ```
 
-It is deployed as the Cloudflare Worker `schoolos-landing` (static assets, config in `landing/wrangler.jsonc`). Workers Builds builds and deploys every push to `master`. The redirects `/beta` (TestFlight) and `/apk` (the APK of the newest GitHub release) are Cloudflare Redirect Rules on the `jarox.dev` zone, not part of this project.
+It is deployed as the Cloudflare Worker `schoolos-landing` (static assets, config in `landing/wrangler.jsonc`). Workers Builds builds and deploys every push to `master`. The redirects `/beta` (TestFlight) and `/apk` and `/android` (the `SchoolOS.apk` of the latest GitHub release) are Cloudflare Redirect Rules on the `jarox.dev` zone, not part of this project.
