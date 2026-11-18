@@ -17,7 +17,12 @@ import {
   type Subject,
   type Table,
 } from "@/db/schema";
-import { TRANSFER_FORMAT, type TransferFile, type TransferKind } from "@/db/transfer";
+import {
+  TRANSFER_FORMAT,
+  type TransferFile,
+  type TransferKind,
+  type TransferSource,
+} from "@/db/transfer";
 
 // Rows per insert statement, so a large file stays below SQLite's limit of bound variables
 const INSERT_CHUNK_SIZE = 500;
@@ -64,7 +69,8 @@ export function dataOperations(db: Database) {
     });
   }
 
-  function exportData(kind: TransferKind): TransferFile {
+  // `source`: where the export is made; only a backup holds it, see TransferSource
+  function exportData(kind: TransferKind, source?: TransferSource): TransferFile {
     const header = {
       app: "SchoolOS" as const,
       format: TRANSFER_FORMAT,
@@ -91,6 +97,7 @@ export function dataOperations(db: Database) {
     return {
       ...header,
       kind,
+      source,
       periods: allPeriods,
       teachers: allTeachers,
       subjects: allSubjects,

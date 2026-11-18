@@ -4,6 +4,8 @@ import * as Device from "expo-device";
 import * as Updates from "expo-updates";
 import { Platform } from "react-native";
 
+import type { TransferSource } from "@/db/transfer";
+import journal from "@/drizzle/meta/_journal.json";
 import { t } from "@/i18n";
 
 export const WEBSITE_URL = "https://schoolos.jarox.dev/";
@@ -25,17 +27,18 @@ const dateFormat = new Intl.DateTimeFormat(t.locale, { dateStyle: "medium", time
 
 const texts = t.settings.appInfo;
 
-const appVersion = isDevelopmentClient
-  ? (Constants.expoConfig?.version ?? texts.unknown)
-  : (Application.nativeApplicationVersion ?? texts.unknown);
+const appVersion =
+  (isDevelopmentClient ? Constants.expoConfig?.version : Application.nativeApplicationVersion) ??
+  null;
+const shownVersion = appVersion ?? texts.unknown;
 
 const appBuild = isDevelopmentClient ? null : Application.nativeBuildVersion;
 
 export const versionLabel = isDevelopmentClient
-  ? texts.versionInDevelopment(appVersion)
+  ? texts.versionInDevelopment(shownVersion)
   : appBuild
-    ? texts.versionWithBuild({ version: appVersion, build: appBuild })
-    : texts.version(appVersion);
+    ? texts.versionWithBuild({ version: shownVersion, build: appBuild })
+    : texts.version(shownVersion);
 
 // The update info of our own builds. In Expo Go expo-updates describes Expo Go and the Metro
 // bundle instead, so there is nothing meaningful to show.
@@ -55,7 +58,7 @@ function updateLabel(): string {
 
 export function appInfoRows(): AppInfoRow[] {
   return [
-    { label: texts.rows.version, value: appVersion },
+    { label: texts.rows.version, value: shownVersion },
     { label: texts.rows.build, value: appBuild ?? texts.unknown },
     {
       label: texts.rows.update,
@@ -82,4 +85,21 @@ export function appInfoText(): string {
     texts.copyLine({ label: row.label, value: row.copyValue ?? row.value })
   );
   return [t.common.appName, ...rows].join("\n");
+}
+
+// The same app info for the head of a backup, plus the last database migration and the time zone
+export function exportSource(): TransferSource {
+  return {
+    appVersion,
+    build: appBuild,
+    updateId: updates?.id ?? null,
+    channel: updates?.channel ?? null,
+    runtimeVersion: updates?.runtime ?? null,
+    development: isDevelopmentClient,
+    platform: Platform.OS,
+    osVersion: Device.osVersion,
+    device: Device.modelName,
+    schema: journal.entries.at(-1)!.tag,
+    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+  };
 }
