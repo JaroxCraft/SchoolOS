@@ -2,24 +2,23 @@ name: Release
 
 # Start a release by publishing a GitHub release with a new tag (v1.2.3) and the text for the
 # testers, without "Set as the latest release": publishing creates the tag, which runs this
-# workflow. The text becomes "What to Test" on TestFlight, and the Android APK is attached to the
-# release as SchoolOS.apk. Only then the release becomes the latest one, so
-# schoolos.jarox.dev/apk (the SchoolOS.apk of the latest release) keeps working during the build.
+# workflow. It uploads the iOS build to App Store Connect (testflight-notes.yml then sets the text
+# as "What to Test"), and attaches the Android APK to the release as SchoolOS.apk. Only then the
+# release becomes the latest one, so schoolos.jarox.dev/apk (the SchoolOS.apk of the latest
+# release) keeps working during the build.
 
 on:
   push:
     tags: ["v*.*.*"]
 
 jobs:
+  # Stops before building if the release has no text for the testers
   release_notes:
     name: Read the release notes
-    outputs:
-      notes: ${{ steps.read.outputs.notes }}
     env:
       TAG: ${{ github.ref_name }}
     steps:
-      - id: read
-        run: |
+      - run: |
           # With the token when there is one: unauthenticated calls share a small rate limit. A
           # token GitHub rejects (expired, revoked) fails even on this public release, so then
           # once more without it; a wrong token should only stop attaching the APK.
@@ -33,7 +32,6 @@ jobs:
             exit 1
           fi
           printf '%s\n' "$NOTES"
-          set-output notes "$NOTES"
 
   build_ios:
     name: Build iOS
@@ -46,14 +44,15 @@ jobs:
       profile: production
       message: ${{ github.ref_name }}
 
-  testflight_ios:
+  # The `testflight` job could set "What to Test" here too, but needs a paid Expo plan for an
+  # Expo build: submit uploads it, and testflight-notes.yml sets the text afterwards
+  submit_ios:
     name: Submit to TestFlight
-    needs: [build_ios, release_notes]
-    type: testflight
+    needs: [build_ios]
+    type: submit
     params:
       build_id: ${{ needs.build_ios.outputs.build_id }}
       profile: production
-      changelog: ${{ needs.release_notes.outputs.notes }}
 
   build_android:
     name: Build Android APK

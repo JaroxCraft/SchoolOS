@@ -1,0 +1,51 @@
+name: TestFlight notes
+
+# Sets "What to Test" of a build that release.yml uploaded to App Store Connect: the text of the
+# GitHub release of its version (1.2.3 → release v1.2.3). On the free Expo plan the `testflight`
+# job only takes a build that is already in App Store Connect (asc_build_id), not an Expo build,
+# so this runs once Apple reports the upload as complete. Needs the App Store Connect connection in
+# the Expo project settings. If it fails, the build is in TestFlight anyway, just without the text.
+
+on:
+  app_store_connect:
+    build_upload:
+      states: [complete]
+
+jobs:
+  release_notes:
+    name: Read the release notes
+    outputs:
+      notes: ${{ steps.read.outputs.notes }}
+    env:
+      TAG: v${{ app_store_connect.build_upload.cf_bundle_short_version_string }}
+      ASC_BUILD_ID: ${{ app_store_connect.build_upload.build.id || '' }}
+    steps:
+      - id: read
+        run: |
+          if [ -z "$ASC_BUILD_ID" ]; then
+            echo "App Store Connect build ID is missing: set \"What to Test\" in App Store Connect by hand."
+            exit 1
+          fi
+          # The same request as in release.yml: with the token when there is one, and once more
+          # without it if GitHub rejects the token
+          URL="https://api.github.com/repos/JaroxCraft/SchoolOS/releases/tags/$TAG"
+          RELEASE=""
+          [ -n "$GITHUB_RELEASE_TOKEN" ] && RELEASE=$(curl -fsSL -H "Authorization: Bearer $GITHUB_RELEASE_TOKEN" "$URL") || RELEASE=""
+          [ -z "$RELEASE" ] && RELEASE=$(curl -fsSL "$URL") || true
+          NOTES=$(printf '%s' "$RELEASE" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>process.stdout.write((JSON.parse(s).body||"").trim()))') || NOTES=""
+          if [ -z "$NOTES" ]; then
+            echo "No GitHub release with text for $TAG: set \"What to Test\" in App Store Connect by hand."
+            exit 1
+          fi
+          printf '%s\n' "$NOTES"
+          set-output notes "$NOTES"
+
+  what_to_test:
+    name: Set "What to Test"
+    needs: [release_notes]
+    type: testflight
+    params:
+      asc_build_id: ${{ app_store_connect.build_upload.build.id }}
+      changelog: ${{ needs.release_notes.outputs.notes }}
+      # Only the text: adding the build to the external group stays a step in App Store Connect
+      submit_beta_review: false
