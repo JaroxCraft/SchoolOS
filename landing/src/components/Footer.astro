@@ -1,6 +1,6 @@
 ---
 import Container from "@/components/Container.astro";
-import { BETA_URL, EMAIL } from "@/links";
+import { APK_URL, BETA_URL, EMAIL } from "@/links";
 
 // The mark is a week of the timetable, Mon–Fri with four periods, drawn like the app icon:
 // [weekday, first period, periods, colour]
@@ -53,12 +53,9 @@ const link =
           </a>
         </li>
         <li>
-          <span
-            aria-disabled="true"
-            title="Noch nicht verfügbar"
-            class="inline-block cursor-not-allowed py-[3px]">
-            APK für Android (bald)
-          </span>
+          <a class={link} href={APK_URL}>
+            APK für Android
+          </a>
         </li>
       </ul>
       <ul>

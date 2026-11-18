@@ -4,7 +4,7 @@ import PageHead from "@/components/PageHead.astro";
 import PlatformIcon from "@/components/PlatformIcon.astro";
 import Steps, { type Step } from "@/components/Steps.astro";
 import Base from "@/layouts/Base.astro";
-import { BETA_URL } from "@/links";
+import { APK_URL, BETA_URL } from "@/links";
 
 const setup: Step = {
   title: "Stundenplan einrichten",
@@ -28,7 +28,7 @@ const android: Step[] = [
   {
     title: "APK herunterladen",
     text: "Die App kommt als Datei statt aus dem Play Store. Sie ist rund 100 MB gross, lade sie am besten im WLAN.",
-    action: { label: "APK folgt bald" },
+    action: { href: APK_URL, label: "APK herunterladen" },
   },
   {
     title: "Installation erlauben",
