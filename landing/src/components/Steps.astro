@@ -5,8 +5,7 @@ import type { Platform } from "@/scripts/platform";
 export interface Step {
   title: string;
   text: string;
-  /** Without `href` the action is not available yet and shows as a muted label. */
-  action?: { href?: string; label: string };
+  action?: { href: string; label: string };
 }
 
 interface Props {
@@ -45,16 +44,7 @@ const tiles = ["bg-deutsch", "bg-mathe", "bg-nt", "bg-englisch"];
           <p class="mt-2 max-w-[48ch] text-muted">{text}</p>
           {action && (
             <p class="mt-4">
-              {action.href ? (
-                <Button href={action.href}>{action.label}</Button>
-              ) : (
-                <span
-                  aria-disabled="true"
-                  title="Noch nicht verfügbar"
-                  class="inline-flex min-h-12 cursor-not-allowed items-center rounded-ui bg-surface px-6 font-medium text-muted">
-                  {action.label}
-                </span>
-              )}
+              <Button href={action.href}>{action.label}</Button>
             </p>
           )}
         </div>
