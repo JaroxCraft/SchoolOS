@@ -3,10 +3,11 @@ export const settings = {
   school: {
     title: "Schule",
   },
-  share: {
-    title: "Teilen",
+  // Sharing the timetable, the backup and importing either
+  files: {
+    title: "Teilen und Backup",
     footer:
-      "Schick deiner Klasse Lektionenraster, Fächer, Lehrpersonen und Stundenplan als Datei, damit niemand alles von Hand erfassen muss. Einträge und Noten bleiben privat. Importieren lassen sich nur Stundenplan- und Backup-Dateien von SchoolOS (JSON), keine PDFs oder Bilder.",
+      "«Stundenplan teilen» schickt deiner Klasse Lektionenraster, Fächer, Lehrpersonen und Stundenplan, damit niemand alles von Hand erfassen muss; Einträge und Noten bleiben privat. «Backup sichern» sichert alle Daten, zum Beispiel für ein neues Gerät. «Datei importieren» nimmt beide Dateien auf, nur SchoolOS-Dateien (JSON), keine PDFs oder Bilder.",
   },
   notifications: {
     title: "Mitteilungen",
@@ -19,11 +20,6 @@ export const settings = {
     footerDenied:
       "Mitteilungen sind für SchoolOS in den Systemeinstellungen ausgeschaltet. Beim Einschalten öffnen sich die Einstellungen, um sie zu erlauben.",
     footerOff: "Keine Erinnerungen an Hausaufgaben, Prüfungen und andere Einträge.",
-  },
-  backup: {
-    title: "Backup",
-    footer:
-      "Sichert alle Daten in einer Datei, zum Beispiel für ein neues Gerät. Wiederherstellen mit «Datei importieren».",
   },
   info: {
     title: "Info",
