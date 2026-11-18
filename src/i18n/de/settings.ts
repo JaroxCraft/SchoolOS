@@ -13,7 +13,8 @@ export const settings = {
     title: "Mitteilungen",
     reminders: "Erinnerungen",
     secondReminder: "Zweite Erinnerung",
-    noLessonSummary: "Zusammenfassung an freien Tagen",
+    // When the summary comes on days without lessons; the footer explains the summary
+    noLessonSummary: "An freien Tagen",
     // `time`: when the summary comes on days without lessons, e.g. "16:00"
     footerOn: ({ minutes, time }: { minutes: number; time: string }) =>
       `${minutes} Minuten nach der letzten Lektion kommt eine Zusammenfassung von allem, was bis zum nächsten Schultag ansteht: Hausaufgaben, Prüfungen, Präsentationen, Abgaben und andere Einträge. An freien Tagen kommt sie um ${time}. Die zweite Erinnerung wiederholt das am Abend, solange noch etwas offen ist.`,
