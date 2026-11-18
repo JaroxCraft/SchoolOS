@@ -47,3 +47,6 @@ example
 
 # ide
 .idea
+
+# EAS Simulator session (holds a token)
+.env.eas-simulator
