@@ -154,14 +154,14 @@ export default function SettingsScreen() {
               <ListItem>{texts.developer.nothingScheduled}</ListItem>
             )}
             {reminders.scheduled.map((reminder) => (
-              <ListItem key={reminder.id} supportingText={reminder.body}>
+              // The time it is sent, then the notification as it appears
+              <ListItem key={reminder.id} supportingText={`${reminder.title}\n${reminder.body}`}>
                 {reminder.at
-                  ? texts.developer.scheduledAt({
+                  ? texts.developer.sendsAt({
                       date: formatDate(toISODate(reminder.at)),
                       time: dateToTime(reminder.at),
-                      title: reminder.title,
                     })
-                  : texts.developer.scheduledNow(reminder.title)}
+                  : texts.developer.sendsNow}
               </ListItem>
             ))}
             <ActionRow

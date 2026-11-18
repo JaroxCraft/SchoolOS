@@ -32,9 +32,9 @@ export const settings = {
   developer: {
     title: "Entwicklung: Erinnerungen",
     nothingScheduled: "Keine Mitteilungen geplant",
-    scheduledAt: ({ date, time, title }: { date: string; time: string; title: string }) =>
-      `${date} ${time} · ${title}`,
-    scheduledNow: (title: string) => `Gleich · ${title}`,
+    // When a scheduled notification is sent: "Mo, 16. Nov., 18:00"
+    sendsAt: ({ date, time }: { date: string; time: string }) => `${date}, ${time}`,
+    sendsNow: "Gleich",
     sendNext: "Nächste in 10 s senden",
     refresh: "Liste aktualisieren",
     footer:
