@@ -10,9 +10,11 @@ import {
   parseTransferFile,
   TransferError,
   type TransferFile,
+  transferFileOrigin,
   type TransferKind,
 } from "@/db/transfer";
 import { t } from "@/i18n";
+import { exportSource } from "@/lib/app-info";
 import { confirm, showError } from "@/lib/confirm";
 import { today } from "@/lib/dates";
 import { showOverview } from "@/lib/routes";
@@ -32,7 +34,7 @@ export async function shareExport(kind: TransferKind) {
   try {
     const file = new File(Paths.cache, fileName(kind));
     file.create({ overwrite: true });
-    await file.write(JSON.stringify(data.exportData(kind), null, 2));
+    await file.write(JSON.stringify(data.exportData(kind, exportSource()), null, 2));
 
     await Sharing.shareAsync(file.uri, {
       mimeType: "application/json",
@@ -81,19 +83,19 @@ export async function pickAndImport() {
     return;
   }
 
-  const contents = describeTransferFile(file);
+  const described = { origin: transferFileOrigin(file), contents: describeTransferFile(file) };
   confirm(
     file.kind === "timetable"
       ? {
           title: t.transfer.confirmTimetable.title,
-          message: t.transfer.confirmTimetable.message(contents),
+          message: t.transfer.confirmTimetable.message(described),
           confirmLabel: t.transfer.confirmTimetable.confirm,
           destructive: false,
           onConfirm: () => runImport(file),
         }
       : {
           title: t.transfer.confirmBackup.title,
-          message: t.transfer.confirmBackup.message(contents),
+          message: t.transfer.confirmBackup.message(described),
           confirmLabel: t.transfer.confirmBackup.confirm,
           onConfirm: () => runImport(file),
         }

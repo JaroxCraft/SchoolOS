@@ -1,6 +1,14 @@
 import { entries } from "@/i18n/de/entries";
 import { school } from "@/i18n/de/school";
 
+// When and with which app version the file was made, each left out when the file does not say
+type Origin = { date?: string; version?: string };
+
+// "Die Datei vom Di, 17. Nov. (SchoolOS 1.3.0)"
+function theFile({ date, version }: Origin) {
+  return `Die Datei${date ? ` vom ${date}` : ""}${version ? ` (SchoolOS ${version})` : ""}`;
+}
+
 // Export and import of timetable and backup files
 export const transfer = {
   fileNames: {
@@ -30,14 +38,14 @@ export const transfer = {
   // `contents`: what the file holds, see `contents` below
   confirmTimetable: {
     title: "Stundenplan importieren?",
-    message: (contents: string) =>
-      `Die Datei enthält ${contents}. Dein Lektionenraster, deine Fächer, Lehrpersonen und dein Stundenplan werden ersetzt. Einträge und Noten bleiben erhalten.`,
+    message: ({ origin, contents }: { origin: Origin; contents: string }) =>
+      `${theFile(origin)} enthält ${contents}. Dein Lektionenraster, deine Fächer, Lehrpersonen und dein Stundenplan werden ersetzt. Einträge und Noten bleiben erhalten.`,
     confirm: "Importieren",
   },
   confirmBackup: {
     title: "Backup wiederherstellen?",
-    message: (contents: string) =>
-      `Die Datei enthält ${contents}. Alle Daten auf diesem Gerät werden durch das Backup ersetzt.`,
+    message: ({ origin, contents }: { origin: Origin; contents: string }) =>
+      `${theFile(origin)} enthält ${contents}. Alle Daten auf diesem Gerät werden durch das Backup ersetzt.`,
     confirm: "Wiederherstellen",
   },
   // The parts of the contents, joined to a list: "8 periods per day, 12 subjects, …"
@@ -55,6 +63,9 @@ export const transfer = {
     invalidFormat: "Die Dateiversion ist ungültig.",
     newerFormat:
       "Die Datei stammt aus einer neueren Version von SchoolOS. Aktualisiere SchoolOS, um sie zu importieren.",
+    // A backup names the version it was made with
+    newerApp: (version: string) =>
+      `Die Datei stammt aus SchoolOS ${version}, einer neueren Version. Aktualisiere SchoolOS, um sie zu importieren.`,
     // `list`: see `lists` below
     missingList: (list: string) => `Die Datei enthält keine ${list}.`,
     invalidRow: (row: string) => `${row} ist ungültig.`,

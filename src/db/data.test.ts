@@ -16,7 +16,13 @@ import {
   type Entry,
 } from "@/db/schema";
 import { createTestDatabase } from "@/db/test-database";
-import { parseTransferFile, TransferError, type TransferFile } from "@/db/transfer";
+import {
+  parseTransferFile,
+  TransferError,
+  type TransferFile,
+  transferFileOrigin,
+  type TransferSource,
+} from "@/db/transfer";
 
 const TODAY = "2026-11-17";
 
@@ -397,6 +403,45 @@ describe("parseTransferFile", () => {
 
     expect(() => parseTransferFile(JSON.stringify(file), TODAY)).toThrow(
       "Fach 1: Die ID 0 ist ungültig."
+    );
+  });
+});
+
+describe("source", () => {
+  const SOURCE: TransferSource = {
+    appVersion: "1.3.0",
+    build: "15",
+    updateId: null,
+    channel: "production",
+    runtimeVersion: null,
+    development: false,
+    platform: "ios",
+    osVersion: "26.1",
+    device: "iPhone 15",
+    schema: "0005_complete_past_events",
+    timeZone: "Europe/Zurich",
+  };
+
+  test("only a backup holds where it was made, and the confirmation names it", () => {
+    const { db, exportData } = setup();
+    seedBackup(db);
+
+    expect(exportData("timetable", SOURCE)).not.toHaveProperty("source");
+    const backup = exportData("backup", SOURCE);
+    const parsed = parseTransferFile(JSON.stringify(backup), TODAY);
+    expect(parsed).toMatchObject({ source: SOURCE });
+    expect(transferFileOrigin({ ...parsed, exportedAt: "2026-11-17T12:45:13.416Z" })).toEqual({
+      date: "Di, 17. Nov.",
+      version: "1.3.0",
+    });
+  });
+
+  test("a backup from a newer format names the app version", () => {
+    const { exportData } = setup();
+    const file = { ...exportData("backup", SOURCE), format: 99 };
+
+    expect(() => parseTransferFile(JSON.stringify(file), TODAY)).toThrow(
+      "Die Datei stammt aus SchoolOS 1.3.0, einer neueren Version."
     );
   });
 });

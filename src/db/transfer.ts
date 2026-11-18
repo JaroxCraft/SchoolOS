@@ -20,7 +20,7 @@ import {
   type Teacher,
 } from "@/db/schema";
 import { t } from "@/i18n";
-import { today as currentDay } from "@/lib/dates";
+import { today as currentDay, formatDate, toISODate } from "@/lib/dates";
 import { completePastEvents } from "@/lib/entry-status";
 
 // The file format of export and import. A timetable file holds what a class shares (period grid,
@@ -51,8 +51,28 @@ type PersonalData = {
   settings: Settings;
 };
 
+// Where a backup was made, for looking into a tester's file: the app info of "Über SchoolOS",
+// the last database migration and the time zone (dates and times in the file are local,
+// exportedAt is UTC). Timetable files are shared with the class and leave it out. Optional, so
+// older files stay valid; the import only reads it for its messages and never stores it.
+export type TransferSource = {
+  appVersion: string | null;
+  build: string | null;
+  updateId: string | null;
+  channel: string | null;
+  runtimeVersion: string | null;
+  // Exported from Expo Go or a development build: version and build are not SchoolOS's own
+  development: boolean;
+  platform: string;
+  osVersion: string | null;
+  device: string | null;
+  schema: string;
+  timeZone: string;
+};
+
 export type TransferFile = { app: "SchoolOS"; format: number; exportedAt: string } & (
-  ({ kind: "timetable" } & TimetableData) | ({ kind: "backup" } & TimetableData & PersonalData)
+  | ({ kind: "timetable" } & TimetableData)
+  | ({ kind: "backup"; source?: TransferSource } & TimetableData & PersonalData)
 );
 
 export class TransferError extends Error {}
@@ -148,8 +168,14 @@ export function parseTransferFile(text: string, today: string = currentDay()): T
   if (typeof data.format !== "number" || !Number.isInteger(data.format) || data.format < 1) {
     throw new TransferError(errors.invalidFormat);
   }
+  // Only a backup names the app it comes from; from a file, nothing in it is certain
+  const source = data.kind === "backup" && isObject(data.source) ? data.source : undefined;
   if (data.format > TRANSFER_FORMAT) {
-    throw new TransferError(errors.newerFormat);
+    throw new TransferError(
+      typeof source?.appVersion === "string"
+        ? errors.newerApp(source.appVersion)
+        : errors.newerFormat
+    );
   }
   if (data.kind !== "timetable" && data.kind !== "backup") {
     throw new TransferError(errors.notSchoolOSFile);
@@ -241,6 +267,7 @@ export function parseTransferFile(text: string, today: string = currentDay()): T
     }
   }
 
+  data.source = source;
   return data as unknown as TransferFile;
 }
 
@@ -255,4 +282,15 @@ export function describeTransferFile(file: TransferFile): string {
   ];
   if (file.kind === "backup") parts.push(contents.entries(file.entries.length));
   return t.common.list(parts);
+}
+
+// When and with which app version a file was made, for the import confirmation; left out when
+// the file does not say
+export function transferFileOrigin(file: TransferFile): { date?: string; version?: string } {
+  const exported = new Date(file.exportedAt);
+  const version = file.kind === "backup" ? file.source?.appVersion : null;
+  return {
+    date: Number.isNaN(exported.getTime()) ? undefined : formatDate(toISODate(exported)),
+    version: typeof version === "string" ? version : undefined,
+  };
 }
