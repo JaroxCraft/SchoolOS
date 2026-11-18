@@ -1,9 +1,10 @@
 name: Release
 
 # Start a release by publishing a GitHub release with a new tag (v1.2.3) and the text for the
-# testers: publishing creates the tag, which runs this workflow. The text becomes "What to Test"
-# on TestFlight, and the Android APK is attached to the release as SchoolOS.apk
-# (schoolos.jarox.dev/apk redirects to the APK of the newest release).
+# testers, without "Set as the latest release": publishing creates the tag, which runs this
+# workflow. The text becomes "What to Test" on TestFlight, and the Android APK is attached to the
+# release as SchoolOS.apk. Only then the release becomes the latest one, so
+# schoolos.jarox.dev/apk (the SchoolOS.apk of the latest release) keeps working during the build.
 
 on:
   push:
@@ -111,4 +112,6 @@ jobs:
           if [ -n "$OLD" ] && ! remove "$OLD"; then
             echo "The previous APK is left as SchoolOS.old.apk"
           fi
-          echo "Attached SchoolOS.apk to $TAG"
+          # Only now /apk may point to this release
+          curl -fsSL -X PATCH -H "$AUTH" -H "Content-Type: application/json" -d '{"make_latest":"true"}' "$API/releases/$RELEASE_ID" > /dev/null
+          echo "Attached SchoolOS.apk to $TAG and made it the latest release"

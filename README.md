@@ -30,11 +30,13 @@ bun start
 
 ## Releases
 
-A release starts on GitHub: draft a new release with a new tag of the form `vX.Y.Z` (e.g. `v1.3.0`) and write what changed for the testers, then publish it. Publishing creates the tag, which runs `.eas/workflows/release.yml`:
+A release starts on GitHub: draft a new release with a new tag of the form `vX.Y.Z` (e.g. `v1.3.0`), write what changed for the testers, untick "Set as the latest release", then publish it. Publishing creates the tag, which runs `.eas/workflows/release.yml`:
 
 - it reads the text of the release and stops if there is none,
 - builds iOS and uploads it to TestFlight with the text as "What to Test",
-- builds the Android APK and attaches it to the release as `SchoolOS.apk`.
+- builds the Android APK, attaches it to the release as `SchoolOS.apk` and only then makes the release the latest one.
+
+`schoolos.jarox.dev/apk` downloads the `SchoolOS.apk` of the latest release, so it keeps the previous APK until the new one is attached (or if the Android build fails).
 
 The tag becomes the app version, so only plain `vX.Y.Z` tags give a valid release; suffixes like `-beta` do not. Attaching the APK needs the Expo environment variable `GITHUB_RELEASE_TOKEN` (production, secret): a fine-grained GitHub token for this repository with "Contents: Read and write".
 
