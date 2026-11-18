@@ -95,7 +95,9 @@ export function exportSource(): TransferSource {
     updateId: updates?.id ?? null,
     channel: updates?.channel ?? null,
     runtimeVersion: updates?.runtime ?? null,
-    development: isDevelopmentClient,
+    // Expo Go, or our own development build: it has SchoolOS's app id, but runs a development
+    // bundle
+    development: isDevelopmentClient || __DEV__,
     platform: Platform.OS,
     osVersion: Device.osVersion,
     device: Device.modelName,

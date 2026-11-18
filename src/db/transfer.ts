@@ -61,7 +61,7 @@ export type TransferSource = {
   updateId: string | null;
   channel: string | null;
   runtimeVersion: string | null;
-  // Exported from Expo Go or a development build: version and build are not SchoolOS's own
+  // Exported from Expo Go or a development build, not from a release (TestFlight, APK)
   development: boolean;
   platform: string;
   osVersion: string | null;
