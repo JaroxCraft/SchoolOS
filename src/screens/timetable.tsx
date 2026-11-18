@@ -4,10 +4,10 @@ import { useState } from "react";
 import { Platform } from "react-native";
 
 import { EmptyState } from "@/components/empty-state";
-import { FooterText } from "@/components/form-list";
+import { SecondaryText } from "@/components/form-list";
 import { PushedForm } from "@/components/pushed-form";
 import { RowActions } from "@/components/row-actions";
-import { ActionRow } from "@/components/rows";
+import { ActionRow, rowDetail } from "@/components/rows";
 import { NONE } from "@/components/search-picker";
 import { SegmentedControl } from "@/components/segmented-control";
 import { SubjectDot } from "@/components/subject-dot";
@@ -26,7 +26,6 @@ import { endEditing } from "@/lib/focused-fields";
 import { openScreen, useSchoolRoutes } from "@/lib/routes";
 import type { RowAction } from "@/lib/row-action";
 import { lessonAt, periodLabel, periodNumber, periodRange, shownWeekday } from "@/lib/schedule";
-import { typography } from "@/lib/typography";
 
 type LessonRowsProps = {
   period: Period;
@@ -87,11 +86,11 @@ function lessonRows({
       supportingText={
         Platform.OS === "android" && roomField ? (
           <Column spacing={4}>
-            <Text {...typography("footnote", { color: ink.secondary })}>{periodRange(period)}</Text>
+            <SecondaryText>{periodRange(period)}</SecondaryText>
             {roomField}
           </Column>
         ) : (
-          periodRange(period)
+          rowDetail(periodRange(period))
         )
       }
       trailing={
@@ -254,7 +253,7 @@ export default function TimetableEditScreen() {
             });
           })}
           <FieldGroup.SectionFooter>
-            <FooterText>{t.school.timetableEditor.footer}</FooterText>
+            <SecondaryText>{t.school.timetableEditor.footer}</SecondaryText>
           </FieldGroup.SectionFooter>
         </FieldGroup.Section>
 

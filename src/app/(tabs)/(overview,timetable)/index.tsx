@@ -1,7 +1,7 @@
 import { FieldGroup, Text } from "@expo/ui";
 
 import { EntryRow } from "@/components/entry-row";
-import { FooterText, FormList, rowsKey } from "@/components/form-list";
+import { FormList, rowsKey, SecondaryText } from "@/components/form-list";
 import { RowActions } from "@/components/row-actions";
 import { ActionRow, NavigationRow } from "@/components/rows";
 import { Screen } from "@/components/screen";
@@ -75,14 +75,14 @@ function Setup({ periods, subjects }: SetupProps) {
           </NavigationRow>
         ))}
         <FieldGroup.SectionFooter>
-          <FooterText>{t.overview.setup.footer}</FooterText>
+          <SecondaryText>{t.overview.setup.footer}</SecondaryText>
         </FieldGroup.SectionFooter>
       </FieldGroup.Section>
 
       <FieldGroup.Section title={t.overview.importShortcut.title}>
         <ActionRow label={t.overview.importShortcut.action} onPress={() => pickAndImport()} />
         <FieldGroup.SectionFooter>
-          <FooterText>{t.overview.importShortcut.footer}</FooterText>
+          <SecondaryText>{t.overview.importShortcut.footer}</SecondaryText>
         </FieldGroup.SectionFooter>
       </FieldGroup.Section>
     </FormList>

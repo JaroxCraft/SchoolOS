@@ -1,9 +1,10 @@
-import { Button, Icon, ListItem, type ListItemProps, Text } from "@expo/ui";
+import { Icon, ListItem, type ListItemProps, Text } from "@expo/ui";
 import type { AndroidSymbol, SFSymbol } from "expo-symbols";
 import * as WebBrowser from "expo-web-browser";
 import type { ReactElement } from "react";
 import { Platform } from "react-native";
 
+import { SecondaryText } from "@/components/form-list";
 import { RowIcon } from "@/components/row-icon";
 import { type Ink, useInk } from "@/hooks/use-ink";
 import { useSymbol } from "@/hooks/use-symbol";
@@ -29,9 +30,15 @@ type NavigationRowProps = Omit<ListItemProps, "trailing"> & {
   icon?: RowSymbol;
 };
 
-const navigationItem = ({ icon, leading, ...props }: NavigationRowProps) => (
+// The details below a row's label. @expo/ui draws a plain string there in the label color on iOS,
+// so details are passed as secondary text, like those of the entries.
+export const rowDetail = (text: string | undefined) =>
+  text ? <SecondaryText>{text}</SecondaryText> : undefined;
+
+const navigationItem = ({ icon, leading, supportingText, ...props }: NavigationRowProps) => (
   <ListItem
     {...props}
+    supportingText={typeof supportingText === "string" ? rowDetail(supportingText) : supportingText}
     leading={icon ? <RowIcon {...icon} /> : leading}
     trailing={<Accessory sf="chevron.right" md="chevron_right" />}
   />
@@ -66,6 +73,8 @@ type ActionRowProps = {
   onPress: () => void;
 };
 
+// A whole-row button with its label in the accent (or danger) color. A plain text button would
+// show the label in the text color on iOS and only take taps on the label itself.
 const coloredItem = (label: string, color: string, onPress: () => void, icon?: RowSymbol) => (
   <ListItem onPress={onPress} leading={icon ? <RowIcon {...icon} /> : undefined}>
     <Text textStyle={{ color }}>{label}</Text>
@@ -74,29 +83,22 @@ const coloredItem = (label: string, color: string, onPress: () => void, icon?: R
 
 type IconActionRowProps = ActionRowProps & { icon?: RowSymbol };
 
+const actionItem = ({ label, onPress, icon }: IconActionRowProps, ink: Ink) =>
+  coloredItem(label, ink.accent, onPress, icon);
+
 export const ActionRow: RowComponent<IconActionRowProps> = Object.assign(
-  function ActionRowComponent({ label, onPress, icon }: IconActionRowProps) {
-    const ink = useInk();
-    if (icon) return coloredItem(label, ink.accent, onPress, icon);
-    return <Button variant="text" label={label} onPress={onPress} />;
+  function ActionRowComponent(props: IconActionRowProps) {
+    return actionItem(props, useInk());
   },
-  {
-    asListItem: ({ label, onPress, icon }: IconActionRowProps, ink: Ink) =>
-      coloredItem(label, ink.accent, onPress, icon),
-  }
+  { asListItem: actionItem }
 );
 
+const destructiveItem = ({ label, onPress }: ActionRowProps, ink: Ink) =>
+  coloredItem(label, ink.danger, onPress);
+
 export const DestructiveRow: RowComponent<ActionRowProps> = Object.assign(
-  function DestructiveRowComponent({ label, onPress }: ActionRowProps) {
-    const ink = useInk();
-    return (
-      <Button variant="text" onPress={onPress}>
-        <Text textStyle={{ color: ink.danger }}>{label}</Text>
-      </Button>
-    );
+  function DestructiveRowComponent(props: ActionRowProps) {
+    return destructiveItem(props, useInk());
   },
-  {
-    asListItem: ({ label, onPress }: ActionRowProps, ink: Ink) =>
-      coloredItem(label, ink.danger, onPress),
-  }
+  { asListItem: destructiveItem }
 );

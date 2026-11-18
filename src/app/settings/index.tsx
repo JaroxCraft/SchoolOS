@@ -3,8 +3,8 @@ import { router, Stack } from "expo-router";
 import { Platform } from "react-native";
 
 import { DateField } from "@/components/date-field";
-import { FooterText, FormList } from "@/components/form-list";
-import { ActionRow, NavigationRow } from "@/components/rows";
+import { FormList, SecondaryText } from "@/components/form-list";
+import { ActionRow, NavigationRow, rowDetail } from "@/components/rows";
 import { updateSettings } from "@/db/actions";
 import { useLessons, usePeriods, useSettings, useSubjects, useTeachers } from "@/db/queries";
 import { useNotificationPermission } from "@/hooks/use-notification-permission";
@@ -103,7 +103,7 @@ export default function SettingsScreen() {
             onPress={pickAndImport}
           />
           <FieldGroup.SectionFooter>
-            <FooterText>{texts.files.footer}</FooterText>
+            <SecondaryText>{texts.files.footer}</SecondaryText>
           </FieldGroup.SectionFooter>
         </FieldGroup.Section>
 
@@ -130,7 +130,7 @@ export default function SettingsScreen() {
             />
           )}
           <FieldGroup.SectionFooter>
-            <FooterText>{notificationsFooter}</FooterText>
+            <SecondaryText>{notificationsFooter}</SecondaryText>
           </FieldGroup.SectionFooter>
         </FieldGroup.Section>
 
@@ -150,7 +150,9 @@ export default function SettingsScreen() {
             )}
             {reminders.scheduled.map((reminder) => (
               // The time it is sent, then the notification as it appears
-              <ListItem key={reminder.id} supportingText={`${reminder.title}\n${reminder.body}`}>
+              <ListItem
+                key={reminder.id}
+                supportingText={rowDetail(`${reminder.title}\n${reminder.body}`)}>
                 {reminder.at
                   ? texts.developer.sendsAt({
                       date: formatDate(toISODate(reminder.at)),
@@ -169,7 +171,7 @@ export default function SettingsScreen() {
             />
             <ActionRow label={texts.developer.refresh} onPress={reminders.refresh} />
             <FieldGroup.SectionFooter>
-              <FooterText>{texts.developer.footer}</FooterText>
+              <SecondaryText>{texts.developer.footer}</SecondaryText>
             </FieldGroup.SectionFooter>
           </FieldGroup.Section>
         )}

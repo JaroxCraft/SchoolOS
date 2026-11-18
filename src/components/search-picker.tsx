@@ -3,6 +3,7 @@ import * as Haptics from "expo-haptics";
 import type { ReactNode } from "react";
 
 import { RowActions } from "@/components/row-actions";
+import { rowDetail } from "@/components/rows";
 import { useInk } from "@/hooks/use-ink";
 import { useSaving } from "@/hooks/use-saving";
 import { useSymbol } from "@/hooks/use-symbol";
@@ -141,7 +142,7 @@ export function usePickerSections<T extends { id: number }>(
               key={item.id}
               onPress={() => choose(item.id)}
               leading={renderLeading?.(item)}
-              supportingText={getSupportingText?.(item)}
+              supportingText={rowDetail(getSupportingText?.(item))}
               trailing={checkmark(item.id === value)}>
               {getLabel(item)}
             </ListItem>
