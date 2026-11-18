@@ -1,12 +1,34 @@
 name: Release
 
+# Start a release by publishing a GitHub release with a new tag (v1.2.3) and the text for the
+# testers: publishing creates the tag, which runs this workflow. The text becomes "What to Test"
+# on TestFlight, and the Android APK is attached to the release as SchoolOS.apk
+# (schoolos.jarox.dev/apk redirects to the APK of the newest release).
+
 on:
   push:
     tags: ["v*.*.*"]
 
 jobs:
+  release_notes:
+    name: Read the release notes
+    outputs:
+      notes: ${{ steps.read.outputs.notes }}
+    steps:
+      - id: read
+        run: |
+          URL="https://api.github.com/repos/JaroxCraft/SchoolOS/releases/tags/${{ github.ref_name }}"
+          NOTES=$(curl -fsSL "$URL" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>process.stdout.write((JSON.parse(s).body||"").trim()))') || NOTES=""
+          if [ -z "$NOTES" ]; then
+            echo "No GitHub release with text for ${{ github.ref_name }}: publish the release on GitHub with the notes for the testers, which creates the tag."
+            exit 1
+          fi
+          printf '%s\n' "$NOTES"
+          set-output notes "$NOTES"
+
   build_ios:
     name: Build iOS
+    needs: [release_notes]
     type: build
     env:
       APP_VERSION: ${{ github.ref_name }}
@@ -15,16 +37,18 @@ jobs:
       profile: production
       message: ${{ github.ref_name }}
 
-  submit_ios:
+  testflight_ios:
     name: Submit to TestFlight
-    needs: [build_ios]
-    type: submit
+    needs: [build_ios, release_notes]
+    type: testflight
     params:
       build_id: ${{ needs.build_ios.outputs.build_id }}
       profile: production
+      changelog: ${{ needs.release_notes.outputs.notes }}
 
   build_android:
     name: Build Android APK
+    needs: [release_notes]
     type: build
     env:
       APP_VERSION: ${{ github.ref_name }}
@@ -32,3 +56,37 @@ jobs:
       platform: android
       profile: preview
       message: ${{ github.ref_name }}
+
+  publish_apk:
+    name: Attach the APK to the GitHub release
+    needs: [build_android]
+    env:
+      TAG: ${{ github.ref_name }}
+    steps:
+      - id: download
+        uses: eas/download_build
+        with:
+          build_id: ${{ needs.build_android.outputs.build_id }}
+          extensions: [apk]
+      - name: Upload SchoolOS.apk
+        run: |
+          # GITHUB_RELEASE_TOKEN: Expo environment variable (production, secret), a fine-grained
+          # GitHub token with "Contents: Read and write" on JaroxCraft/SchoolOS
+          if [ -z "$GITHUB_RELEASE_TOKEN" ]; then
+            echo "GITHUB_RELEASE_TOKEN is missing in the production environment of Expo"
+            exit 1
+          fi
+          API="https://api.github.com/repos/JaroxCraft/SchoolOS"
+          AUTH="Authorization: Bearer $GITHUB_RELEASE_TOKEN"
+          RELEASE=$(curl -fsSL -H "$AUTH" "$API/releases/tags/$TAG")
+          RELEASE_ID=$(printf '%s' "$RELEASE" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>process.stdout.write(String(JSON.parse(s).id)))')
+          # A rerun replaces the APK of the release
+          OLD_ASSET=$(printf '%s' "$RELEASE" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const a=JSON.parse(s).assets.find(a=>a.name==="SchoolOS.apk");process.stdout.write(a?String(a.id):"")})')
+          if [ -n "$OLD_ASSET" ]; then
+            curl -fsSL -X DELETE -H "$AUTH" "$API/releases/assets/$OLD_ASSET"
+          fi
+          curl -fsSL -X POST -H "$AUTH" \
+            -H "Content-Type: application/vnd.android.package-archive" \
+            --data-binary @"${{ steps.download.outputs.artifact_path }}" \
+            "https://uploads.github.com/repos/JaroxCraft/SchoolOS/releases/$RELEASE_ID/assets?name=SchoolOS.apk" > /dev/null
+          echo "Attached SchoolOS.apk to $TAG"
