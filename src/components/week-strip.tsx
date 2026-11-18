@@ -11,6 +11,7 @@ import Animated, {
 
 import { MIN_TAP_TARGET } from "@/constants/layout";
 import { useInk } from "@/hooks/use-ink";
+import { t } from "@/i18n";
 import { type Weekday, weekdayName, weekdayShort } from "@/lib/dates";
 import type { SchoolDay } from "@/lib/schedule";
 
@@ -86,7 +87,7 @@ function WeekDay({ weekday, selected, isToday, onSelect }: WeekDayProps) {
       hitSlop={{ top: HIT_SLOP, bottom: HIT_SLOP }}
       accessibilityRole="tab"
       accessibilityState={{ selected }}
-      accessibilityLabel={`${weekdayName(weekday)}${isToday ? ", heute" : ""}`}
+      accessibilityLabel={t.school.timetable.dayLabel({ weekday: weekdayName(weekday), isToday })}
       onPress={() => onSelect(weekday)}>
       <View style={styles.circle}>
         <Animated.View style={[styles.fill, { backgroundColor: dayColor }, circleStyle]} />

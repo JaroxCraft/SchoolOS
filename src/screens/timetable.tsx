@@ -19,13 +19,13 @@ import type { LessonDraft, Period, Subject } from "@/db/schema";
 import { useDraftEditor } from "@/hooks/use-draft-editor";
 import { useStepButton } from "@/hooks/use-header-button";
 import { type Ink, useInk } from "@/hooks/use-ink";
+import { t } from "@/i18n";
 import { SCHOOL_WEEKDAYS, today, weekdayName, weekdayShort } from "@/lib/dates";
 import { findById } from "@/lib/find";
 import { endEditing } from "@/lib/focused-fields";
 import { openScreen, useSchoolRoutes } from "@/lib/routes";
 import type { RowAction } from "@/lib/row-action";
 import { lessonAt, periodLabel, periodNumber, periodRange, shownWeekday } from "@/lib/schedule";
-import { countOf } from "@/lib/text";
 import { typography } from "@/lib/typography";
 
 type LessonRowsProps = {
@@ -40,7 +40,7 @@ type LessonRowsProps = {
 };
 
 // One row per period with its time and the subject (color dot and name) on the right. A period
-// with a subject gets a "Zimmer" field: on iOS as a row right below it (rows of a section are
+// with a subject gets a "Room" field: on iOS as a row right below it (rows of a section are
 // joined), on Android inside the lesson's own card, since Android draws every row as a card of its
 // own. On iOS a lesson is made free by swiping it left; a long press offers to pick another
 // subject or to remove it. Returned as an array, not a component: the Android section only
@@ -58,10 +58,10 @@ function lessonRows({
 }: LessonRowsProps) {
   const roomField = lesson && subject && (
     <Row key={`room-${period.id}`} alignment="center" spacing={12}>
-      <Text textStyle={{ color: ink.secondary }}>Zimmer</Text>
+      <Text textStyle={{ color: ink.secondary }}>{t.school.timetableEditor.room}</Text>
       <TextField
         key={`${lesson.weekday}-${lesson.subjectId}`}
-        placeholder={`Zimmer für ${subject.abbreviation}`}
+        placeholder={t.school.timetableEditor.roomPlaceholder(subject.abbreviation)}
         defaultValue={lesson.room ?? ""}
         // Android: right after the label, since the field's width depends on the subject's name
         textAlign={Platform.OS === "android" ? "left" : "right"}
@@ -74,7 +74,7 @@ function lessonRows({
   );
 
   const remove: RowAction = {
-    label: "Entfernen",
+    label: t.common.remove,
     icon: "minus.circle",
     destructive: true,
     onPress: onClear,
@@ -98,7 +98,7 @@ function lessonRows({
         <Row spacing={8} alignment="center">
           {subject && <SubjectDot color={subject.color} />}
           <Text textStyle={{ color: subject ? ink.label : ink.secondary }}>
-            {subject?.name ?? "Frei"}
+            {subject?.name ?? t.school.timetableEditor.free}
           </Text>
         </Row>
       }>
@@ -111,7 +111,10 @@ function lessonRows({
       <RowActions
         key={`lesson-${period.id}`}
         trailing={[remove]}
-        menu={[{ label: "Fach wählen", icon: "books.vertical", onPress }, remove]}>
+        menu={[
+          { label: t.school.timetableEditor.chooseSubject, icon: "books.vertical", onPress },
+          remove,
+        ]}>
         {row}
       </RowActions>
     ) : (
@@ -160,7 +163,7 @@ export default function TimetableEditScreen() {
     // Both buttons leave the screen, so the lock stays after saving: ✓ can still be tapped while
     // the screen slides away
     closesOnSuccess: true,
-    // A subject deleted meanwhile ("Fach hinzufügen" opens the subject form) leaves the draft
+    // A subject deleted meanwhile ("Add subject" opens the subject form) leaves the draft
     tidy: (slots) =>
       slots.filter((lesson) => subjects.some((subject) => subject.id === lesson.subjectId)),
   });
@@ -173,23 +176,22 @@ export default function TimetableEditScreen() {
 
   if (periods.length === 0 || subjects.length === 0) {
     const noPeriods = periods.length === 0;
+    const empty = noPeriods
+      ? t.school.timetableEditor.noPeriods
+      : t.school.timetableEditor.noSubjects;
     return (
       <>
-        <Stack.Title>Stundenplan</Stack.Title>
+        <Stack.Title>{t.common.tabs.timetable}</Stack.Title>
         <EmptyState
           icon={
             noPeriods
               ? { ios: "clock", android: "schedule" }
               : { ios: "books.vertical", android: "menu_book" }
           }
-          title={noPeriods ? "Kein Lektionenraster" : "Keine Fächer"}
-          message={
-            noPeriods
-              ? "Lege zuerst fest, wann deine Lektionen beginnen und enden."
-              : "Erfasse zuerst deine Fächer, dann kannst du sie hier den Lektionen zuteilen."
-          }
+          title={empty.title}
+          message={empty.message}
           action={{
-            label: noPeriods ? "Lektionenraster erfassen" : "Fächer erfassen",
+            label: noPeriods ? t.school.setupSteps.periods : t.school.setupSteps.subjects,
             // Replaces this screen, so back still leads to where the timetable was opened from
             onPress: () => router.replace(noPeriods ? routes.periods : routes.subjects),
           }}
@@ -202,13 +204,16 @@ export default function TimetableEditScreen() {
   const lessonCount = timetable.filter((lesson) => lesson.weekday === weekday).length;
   const editedLesson = editing ? lessonAt(timetable, weekday, editing.id) : undefined;
   const editedTitle = editing
-    ? `${weekdayName(weekday)}, ${periodLabel(periodNumber(periods, editing.id))}`
+    ? t.school.period.onWeekday({
+        weekday: weekdayName(weekday),
+        period: periodLabel(periodNumber(periods, editing.id)),
+      })
     : "";
 
   return (
     <>
       <PushedForm
-        title="Stundenplan"
+        title={t.common.tabs.timetable}
         canSave={dirty && !saving}
         dirty={dirty}
         onSave={routes.setup ? undefined : () => saveAndLeave(() => router.back())}
@@ -231,7 +236,10 @@ export default function TimetableEditScreen() {
         </FieldGroup.Section>
 
         <FieldGroup.Section
-          title={`${weekdayName(weekday)} · ${countOf(lessonCount, "Lektion", "Lektionen")}`}>
+          title={t.school.timetableEditor.dayTitle({
+            weekday: weekdayName(weekday),
+            lessons: lessonCount,
+          })}>
           {periods.map((period, index) => {
             const lesson = lessonAt(timetable, weekday, period.id);
             return lessonRows({
@@ -246,16 +254,13 @@ export default function TimetableEditScreen() {
             });
           })}
           <FieldGroup.SectionFooter>
-            <FooterText>
-              Tippe auf eine Lektion, um das Fach zu wählen. Das Zimmer wird vom Fach übernommen und
-              lässt sich darunter ändern.
-            </FooterText>
+            <FooterText>{t.school.timetableEditor.footer}</FooterText>
           </FieldGroup.SectionFooter>
         </FieldGroup.Section>
 
         <FieldGroup.Section>
           <ActionRow
-            label="Fach hinzufügen"
+            label={t.school.subjects.add}
             onPress={() => openScreen({ pathname: routes.subject, params: { id: "new" } })}
           />
         </FieldGroup.Section>
@@ -270,7 +275,7 @@ export default function TimetableEditScreen() {
         subjects={subjects}
         teachers={teachers}
         lessons={timetable}
-        extraChoices={[{ label: "Frei", value: NONE }]}
+        extraChoices={[{ label: t.school.timetableEditor.free, value: NONE }]}
         onChange={(subjectId) => {
           if (!editing || subjectId === (editedLesson?.subjectId ?? NONE)) return;
           if (subjectId === NONE) {

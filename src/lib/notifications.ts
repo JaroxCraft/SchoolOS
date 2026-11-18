@@ -3,6 +3,7 @@ import * as Notifications from "expo-notifications";
 import { AndroidImportance, IosAuthorizationStatus } from "expo-notifications";
 import { Linking, Platform } from "react-native";
 
+import { t } from "@/i18n";
 import type { Reminder } from "@/lib/reminders";
 
 // Android 8+ shows notifications only in a channel; the user can turn it off on its own
@@ -24,8 +25,8 @@ let channel: Promise<void> | undefined;
 export function ensureChannel() {
   if (Platform.OS !== "android") return Promise.resolve();
   channel ??= Notifications.setNotificationChannelAsync(CHANNEL_ID, {
-    name: "Erinnerungen",
-    description: "Was bis zum nächsten Schultag fällig ist",
+    name: t.notifications.channel.name,
+    description: t.notifications.channel.description,
     importance: AndroidImportance.HIGH,
   }).then(
     () => undefined,
@@ -113,7 +114,7 @@ export function scheduleReminders(reminders: Reminder[]) {
       await apply(reminders);
       applied = key;
     } catch (error) {
-      console.warn("Erinnerungen konnten nicht geplant werden", error);
+      console.warn("Could not schedule reminders", error);
     }
   });
 }

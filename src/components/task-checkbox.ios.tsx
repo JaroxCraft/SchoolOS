@@ -17,6 +17,7 @@ import * as Haptics from "expo-haptics";
 import type { TaskCheckboxProps } from "@/components/task-checkbox";
 import { MIN_TAP_TARGET } from "@/constants/layout";
 import { useInk } from "@/hooks/use-ink";
+import { t } from "@/i18n";
 import { SYSTEM_COLORS } from "@/lib/system-colors";
 
 export function toggleHaptic(_checked: boolean) {
@@ -35,10 +36,10 @@ export function TaskCheckbox({
 }: TaskCheckboxProps) {
   const ink = useInk();
   const spokenLabel = accessibilityLabel ?? label;
-  // A visible label names the state itself ("Erledigt"), so VoiceOver answers it with yes or no
-  // instead of reading "Erledigt, Erledigt"; next to a task's title it reads the state
-  const yesOrNo = value ? "Ja" : "Nein";
-  const doneOrOpen = value ? "Erledigt" : "Offen";
+  // A visible label names the state itself ("Done"), so VoiceOver answers it with yes or no
+  // instead of reading "Done, Done"; next to a task's title it reads the state
+  const yesOrNo = value ? t.common.yes : t.common.no;
+  const doneOrOpen = value ? t.entries.done : t.entries.open;
   const spokenValue = label ? yesOrNo : doneOrOpen;
 
   const toggle = () => {

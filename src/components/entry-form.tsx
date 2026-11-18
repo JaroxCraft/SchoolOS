@@ -15,15 +15,16 @@ import type { Entry, EntryType, Lesson, Period, Subject } from "@/db/schema";
 import { useClosingForm } from "@/hooks/use-closing-form";
 import { checkOffEntry } from "@/hooks/use-entry-placement";
 import { useNow } from "@/hooks/use-now";
+import { t } from "@/i18n";
 import { entryDeletion } from "@/lib/confirm-delete";
 import { formatDate } from "@/lib/dates";
 import { type DueChoice, dueChoiceDates, type DueFields, suggestDue } from "@/lib/due-date";
 import { ENTRY_TYPE_INFO, ENTRY_TYPE_OPTIONS, NO_SUBJECT_LABEL } from "@/lib/entry-types";
 import { findById } from "@/lib/find";
 import { periodLabel } from "@/lib/schedule";
-import { ALLGEMEIN_COLOR } from "@/lib/subject-colors";
+import { NO_SUBJECT_COLOR } from "@/lib/subject-colors";
 
-// The subject and Lektion are NONE instead of null, as the pickers need a value
+// The subject and period are NONE instead of null, as the pickers need a value
 type FormState = Omit<DueFields, "subjectId" | "periodId"> & {
   type: EntryType;
   title: string;
@@ -105,20 +106,22 @@ export function EntryForm({ entry, initialSubjectId, subjects, periods, lessons 
 
   const dueOptions: SelectOption<DueChoice>[] = [
     {
-      label: choiceDates.next ? `Nächste Lektion (${formatDate(choiceDates.next)})` : "Morgen",
+      label: choiceDates.next
+        ? t.entries.form.nextLesson(formatDate(choiceDates.next))
+        : t.entries.form.tomorrow,
       value: "next",
     },
   ];
   if (choiceDates.afterNext) {
     dueOptions.push({
-      label: `Übernächste Lektion (${formatDate(choiceDates.afterNext)})`,
+      label: t.entries.form.lessonAfterNext(formatDate(choiceDates.afterNext)),
       value: "afterNext",
     });
   }
-  dueOptions.push({ label: "Datum wählen", value: "custom" });
+  dueOptions.push({ label: t.entries.form.pickDate, value: "custom" });
 
   const subjectPicker = useSubjectPicker({
-    label: "Fach",
+    label: t.entries.form.subject,
     value: form.subjectId,
     subjects,
     teachers: useTeachers(),
@@ -153,13 +156,13 @@ export function EntryForm({ entry, initialSubjectId, subjects, periods, lessons 
   return (
     <>
       <SheetForm
-        title={entry ? entry.title : "Neuer Eintrag"}
+        title={entry ? entry.title : t.entries.newEntry}
         canSave={canSave && !saving}
         dirty={dirty}
         onSave={save}>
         <FieldGroup.Section>
           <SelectRow
-            label="Typ"
+            label={t.entries.form.type}
             value={form.type}
             onChange={(type) => change({ type })}
             options={ENTRY_TYPE_OPTIONS}
@@ -173,48 +176,51 @@ export function EntryForm({ entry, initialSubjectId, subjects, periods, lessons 
           {subjectPicker.row}
         </FieldGroup.Section>
 
-        {/* The same for every type: a quick choice fills in date and Lektion, changing either
-            of them by hand makes it "Datum wählen" */}
-        <FieldGroup.Section title="Termin">
+        {/* The same for every type: a quick choice fills in date and period, changing either
+            of them by hand makes it "Pick a date" */}
+        <FieldGroup.Section title={t.entries.form.dueSection}>
           <SelectRow
-            label="Wann"
+            label={t.entries.form.due}
             value={form.dueChoice}
             onChange={(dueChoice) => change({ dueChoice, periodPickedByUser: false })}
             options={dueOptions}
           />
           <DateField
-            label="Datum"
+            label={t.entries.form.date}
             value={form.date}
             onChange={(date) => change({ date, dueChoice: "custom" })}
           />
           <SelectRow
-            label="Lektion"
+            label={t.entries.form.period}
             value={form.periodId}
             onChange={(periodId) =>
               change({ periodId, periodPickedByUser: true, dueChoice: "custom" })
             }
             options={[
-              { label: "Keine", value: NONE },
+              { label: t.entries.form.noPeriod, value: NONE },
               ...periods.map((period, index) => ({
-                label: `${periodLabel(index + 1)} (${period.startTime})`,
+                label: t.entries.form.periodOption({
+                  period: periodLabel(index + 1),
+                  time: period.startTime,
+                }),
                 value: period.id,
               })),
             ]}
           />
           {entry && (
             <TaskCheckbox
-              label="Erledigt"
+              label={t.entries.done}
               value={form.completed}
-              color={findById(subjects, form.subjectId)?.color ?? ALLGEMEIN_COLOR}
+              color={findById(subjects, form.subjectId)?.color ?? NO_SUBJECT_COLOR}
               onValueChange={(completed) => change({ completed })}
             />
           )}
         </FieldGroup.Section>
 
         {info.gradable && (
-          <FieldGroup.Section title="Vorbereitung">
+          <FieldGroup.Section title={t.entries.form.preparationSection}>
             <TextField
-              placeholder="Stoff"
+              placeholder={t.entries.form.topicPlaceholder}
               defaultValue={form.topic}
               multiline
               onChangeText={(topic) => edit({ topic })}
@@ -222,9 +228,9 @@ export function EntryForm({ entry, initialSubjectId, subjects, periods, lessons 
           </FieldGroup.Section>
         )}
 
-        <FieldGroup.Section title="Notizen">
+        <FieldGroup.Section title={t.entries.form.notesSection}>
           <TextField
-            placeholder="Beschreibung"
+            placeholder={t.entries.form.descriptionPlaceholder}
             defaultValue={form.description}
             multiline
             onChangeText={(description) => edit({ description })}
@@ -233,7 +239,7 @@ export function EntryForm({ entry, initialSubjectId, subjects, periods, lessons 
 
         {entry && (
           <FieldGroup.Section>
-            <DestructiveRow label="Eintrag löschen" onPress={remove} />
+            <DestructiveRow label={t.entries.form.delete} onPress={remove} />
           </FieldGroup.Section>
         )}
       </SheetForm>

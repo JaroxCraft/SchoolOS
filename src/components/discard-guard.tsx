@@ -12,10 +12,10 @@ type DiscardGuardProps = {
   children: ReactNode;
 };
 
-// iOS: asks "Änderungen verwerfen?" (useDiscardGuard) as soon as the user tries to leave a pushed
+// iOS: asks "Discard changes?" (useDiscardGuard) as soon as the user tries to leave a pushed
 // form with unsaved changes, while the form stays where it is. The native back button and swipe
 // would take the screen away first and bring it back with the question afterwards. So while there
-// are changes, × "Abbrechen", which asks first, takes the place of the back button, and the native
+// are changes, × "Cancel", which asks first, takes the place of the back button, and the native
 // swipe is off: a swipe to the right from the left edge asks right away instead. Android asks before
 // leaving with its own back arrow and gesture, so it only shows the form.
 export function DiscardGuard({ dirty, children }: DiscardGuardProps) {

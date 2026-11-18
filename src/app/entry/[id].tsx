@@ -4,6 +4,7 @@ import { EmptyState } from "@/components/empty-state";
 import { EntryForm } from "@/components/entry-form";
 import { useEntries, useLessons, usePeriods, useSubjects } from "@/db/queries";
 import { useLastDefined } from "@/hooks/use-last-defined";
+import { t } from "@/i18n";
 
 export default function EntryScreen() {
   const { id, subjectId } = useLocalSearchParams<{ id: string; subjectId?: string }>();
@@ -17,9 +18,9 @@ export default function EntryScreen() {
     return (
       <EmptyState
         icon={{ ios: "questionmark.circle", android: "help" }}
-        title="Eintrag nicht gefunden"
-        message="Dieser Eintrag existiert nicht mehr."
-        action={{ label: "Schliessen", onPress: () => router.back() }}
+        title={t.entries.notFound.title}
+        message={t.entries.notFound.message}
+        action={{ label: t.common.close, onPress: () => router.back() }}
       />
     );
   }

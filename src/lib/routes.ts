@@ -28,7 +28,7 @@ export function openScreen(href: Href) {
   if (claimOpening()) router.push(href);
 }
 
-// Closes everything (settings, pushed screens) and shows the Übersicht, e.g. after the data was
+// Closes everything (settings, pushed screens) and shows the overview, e.g. after the data was
 // replaced. dismissTo goes back to the existing tabs; replace would put a second set on top.
 export function showOverview() {
   router.dismissTo("/");

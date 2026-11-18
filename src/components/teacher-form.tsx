@@ -5,6 +5,7 @@ import { DestructiveRow } from "@/components/rows";
 import { useTeacherDraft } from "@/components/teacher-draft";
 import type { Teacher } from "@/db/schema";
 import { useClosingForm } from "@/hooks/use-closing-form";
+import { t } from "@/i18n";
 import { teacherDeletion } from "@/lib/confirm-delete";
 
 type TeacherFormProps = {
@@ -23,7 +24,7 @@ export function TeacherForm({ teacher }: TeacherFormProps) {
 
   return (
     <PushedForm
-      title={teacher ? teacher.name : "Neue Lehrperson"}
+      title={teacher ? teacher.name : t.school.teachers.newTitle}
       canSave={draft.canSave && !saving}
       dirty={draft.dirty}
       onSave={save}>
@@ -31,7 +32,7 @@ export function TeacherForm({ teacher }: TeacherFormProps) {
 
       {teacher && (
         <FieldGroup.Section>
-          <DestructiveRow label="Lehrperson löschen" onPress={remove} />
+          <DestructiveRow label={t.school.teachers.delete} onPress={remove} />
         </FieldGroup.Section>
       )}
     </PushedForm>

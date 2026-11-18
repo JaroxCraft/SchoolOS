@@ -1,11 +1,9 @@
+import { t } from "@/i18n";
+
 // Joins the details of a row with " · ", skipping empty ones. Nothing left gives undefined, so a
 // row without details gets no empty second line (Android keeps one for an empty string).
 export function joinDetails(...parts: (string | null | undefined)[]): string | undefined {
-  return parts.filter(Boolean).join(" · ") || undefined;
-}
-
-export function countOf(count: number, singular: string, plural: string): string {
-  return `${count} ${count === 1 ? singular : plural}`;
+  return parts.filter(Boolean).join(t.common.detailSeparator) || undefined;
 }
 
 export const subjectAbbreviation = (name: string) => name.trim().slice(0, 3).trim();

@@ -11,9 +11,9 @@ type PushedFormProps = {
   // Unsaved changes: leaving asks first (see DiscardGuard). The screen passes the same value to
   // useClosingForm or useDiscardGuard.
   dirty: boolean;
-  // ✓ "Sichern" at the top right; left out in a setup step, whose button in `toolbar` saves
+  // ✓ "Save" at the top right; left out in a setup step, whose button in `toolbar` saves
   onSave?: () => void;
-  // More buttons at the top right, before ✓, e.g. "Weiter" of a setup step. <Stack.Toolbar.Button>
+  // More buttons at the top right, before ✓, e.g. "Next" of a setup step. <Stack.Toolbar.Button>
   // elements, not wrapped in another component: iOS ignores those.
   toolbar?: ReactNode;
   children: ReactNode;

@@ -9,6 +9,7 @@ import { EmptyState } from "@/components/empty-state";
 import { Reminders } from "@/components/reminders";
 import { useDatabaseMigrations } from "@/db/migrate";
 import { useNavigationTheme } from "@/hooks/use-navigation-theme";
+import { t } from "@/i18n";
 
 // Opened by a link straight into a sheet (e.g. an entry), the tabs are still beneath it
 export const unstable_settings = { anchor: "(tabs)" };
@@ -29,7 +30,7 @@ export default function RootLayout() {
     return (
       <EmptyState
         icon={{ ios: "exclamationmark.triangle", android: "warning" }}
-        title="Datenbank konnte nicht geladen werden"
+        title={t.common.database.failed}
         message={cause ? `${error.message}\n\n${cause}` : error.message}
       />
     );

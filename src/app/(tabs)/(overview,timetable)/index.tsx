@@ -11,15 +11,16 @@ import type { Period, Subject } from "@/db/schema";
 import { useEntryPlacement } from "@/hooks/use-entry-placement";
 import { useInk } from "@/hooks/use-ink";
 import { useNow } from "@/hooks/use-now";
+import { t } from "@/i18n";
 import { formatDate, relativeDay } from "@/lib/dates";
 import { findById } from "@/lib/find";
 import { lessonActions } from "@/lib/lesson-actions";
 import { openScreen, openSubject, SCHOOL_ROUTES } from "@/lib/routes";
 import { nextLessons, periodNumber, periodRange } from "@/lib/schedule";
 import { SETUP_STEP_ICONS } from "@/lib/setup";
-import { ALLGEMEIN_COLOR } from "@/lib/subject-colors";
+import { NO_SUBJECT_COLOR } from "@/lib/subject-colors";
 import { SYSTEM_COLORS } from "@/lib/system-colors";
-import { countOf, joinDetails } from "@/lib/text";
+import { joinDetails } from "@/lib/text";
 import { pickAndImport } from "@/lib/transfer-file";
 
 const DONE_ICON = { sf: "checkmark", md: "check", color: SYSTEM_COLORS.green } as const;
@@ -29,27 +30,33 @@ type SetupProps = { periods: Period[]; subjects: Subject[] };
 function Setup({ periods, subjects }: SetupProps) {
   const steps = [
     {
-      title: "Lektionenraster erfassen",
+      title: t.school.setupSteps.periods,
       done: periods.length > 0,
       detail:
         periods.length > 0
-          ? `${countOf(periods.length, "Lektionszeit", "Lektionszeiten")}, ${periods[0].startTime}–${periods.at(-1)!.endTime}`
-          : "Wann deine Lektionen beginnen und enden",
+          ? t.overview.setup.periods.detail({
+              count: periods.length,
+              start: periods[0].startTime,
+              end: periods.at(-1)!.endTime,
+            })
+          : t.overview.setup.periods.empty,
       icon: SETUP_STEP_ICONS.periods,
       href: SCHOOL_ROUTES.setup.periods,
     },
     {
-      title: "Fächer erfassen",
+      title: t.school.setupSteps.subjects,
       done: subjects.length > 0,
       detail:
-        subjects.length > 0 ? countOf(subjects.length, "Fach", "Fächer") : "Mit Kürzel und Farbe",
+        subjects.length > 0
+          ? t.school.counts.subjects(subjects.length)
+          : t.overview.setup.subjects.empty,
       icon: SETUP_STEP_ICONS.subjects,
       href: SCHOOL_ROUTES.setup.subjects,
     },
     {
-      title: "Stundenplan ausfüllen",
+      title: t.school.setupSteps.timetable,
       done: false,
-      detail: "Welches Fach du wann hast",
+      detail: t.overview.setup.timetable.detail,
       icon: SETUP_STEP_ICONS.timetable,
       href: SCHOOL_ROUTES.setup.timetable,
     },
@@ -57,7 +64,7 @@ function Setup({ periods, subjects }: SetupProps) {
 
   return (
     <FormList floatingButton>
-      <FieldGroup.Section title="Einrichten">
+      <FieldGroup.Section title={t.overview.setup.title}>
         {steps.map((step) => (
           <NavigationRow
             key={step.title}
@@ -68,20 +75,14 @@ function Setup({ periods, subjects }: SetupProps) {
           </NavigationRow>
         ))}
         <FieldGroup.SectionFooter>
-          <FooterText>
-            Danach zeigt die Übersicht deine nächsten Lektionen und alle offenen Einträge.
-          </FooterText>
+          <FooterText>{t.overview.setup.footer}</FooterText>
         </FieldGroup.SectionFooter>
       </FieldGroup.Section>
 
-      <FieldGroup.Section title="Schneller">
-        <ActionRow label="Stundenplan importieren" onPress={() => pickAndImport()} />
+      <FieldGroup.Section title={t.overview.importShortcut.title}>
+        <ActionRow label={t.overview.importShortcut.action} onPress={() => pickAndImport()} />
         <FieldGroup.SectionFooter>
-          <FooterText>
-            Hat jemand aus deiner Klasse SchoolOS schon eingerichtet? Unter Einstellungen › Teilen
-            lässt sich der Stundenplan als Datei schicken. Importieren lassen sich nur solche
-            SchoolOS-Dateien (JSON), keine PDFs oder Bilder eines Stundenplans.
-          </FooterText>
+          <FooterText>{t.overview.importShortcut.footer}</FooterText>
         </FieldGroup.SectionFooter>
       </FieldGroup.Section>
     </FormList>
@@ -99,7 +100,7 @@ export default function OverviewScreen() {
 
   if (lessons.length === 0) {
     return (
-      <Screen title="Übersicht" showAddButton>
+      <Screen title={t.common.tabs.overview} showAddButton>
         <Setup periods={periods} subjects={subjects} />
       </Screen>
     );
@@ -111,16 +112,19 @@ export default function OverviewScreen() {
   const lessonsDate = upcomingLessons[0]?.date;
 
   return (
-    <Screen title="Übersicht" showAddButton>
+    <Screen title={t.common.tabs.overview} showAddButton>
       <FormList floatingButton rowsKey={rowsKey(openEntries)}>
         <FieldGroup.Section
           title={
             lessonsDate
-              ? `Lektionen ${relativeDay(lessonsDate, now.date)}, ${formatDate(lessonsDate)}`
-              : "Lektionen"
+              ? t.overview.lessons.titleOn({
+                  day: relativeDay(lessonsDate, now.date),
+                  date: formatDate(lessonsDate),
+                })
+              : t.overview.lessons.title
           }>
           {upcomingLessons.length === 0 && (
-            <Text textStyle={{ color: ink.secondary }}>Keine Lektionen im Stundenplan</Text>
+            <Text textStyle={{ color: ink.secondary }}>{t.overview.lessons.empty}</Text>
           )}
           {upcomingLessons.map(({ lesson, period }) => {
             const subject = findById(subjects, lesson.subjectId);
@@ -128,18 +132,21 @@ export default function OverviewScreen() {
               <RowActions key={lesson.id} menu={lessonActions(lesson.subjectId)}>
                 <NavigationRow
                   onPress={() => openSubject(lesson.subjectId)}
-                  leading={<SubjectDot color={subject?.color ?? ALLGEMEIN_COLOR} />}
+                  leading={<SubjectDot color={subject?.color ?? NO_SUBJECT_COLOR} />}
                   supportingText={joinDetails(periodRange(period), lesson.room)}>
-                  {`${periodNumber(periods, period.id)}. ${subject?.name ?? ""}`}
+                  {t.overview.lessons.row({
+                    number: periodNumber(periods, period.id),
+                    subject: subject?.name ?? "",
+                  })}
                 </NavigationRow>
               </RowActions>
             );
           })}
         </FieldGroup.Section>
 
-        <FieldGroup.Section title="Offene Einträge">
+        <FieldGroup.Section title={t.entries.openEntries}>
           {openEntries.length === 0 && (
-            <Text textStyle={{ color: ink.secondary }}>Alles erledigt</Text>
+            <Text textStyle={{ color: ink.secondary }}>{t.overview.allDone}</Text>
           )}
           {openEntries.map((entry) => (
             <EntryRow

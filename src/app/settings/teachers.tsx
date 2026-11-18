@@ -6,6 +6,7 @@ import { RowActions } from "@/components/row-actions";
 import { ActionRow, NavigationRow } from "@/components/rows";
 import { useSubjects, useTeachers } from "@/db/queries";
 import { useInk } from "@/hooks/use-ink";
+import { t } from "@/i18n";
 import { deleteAction, editAction, teacherDeletion } from "@/lib/confirm-delete";
 import { openScreen } from "@/lib/routes";
 import { joinDetails } from "@/lib/text";
@@ -20,11 +21,11 @@ export default function TeachersScreen() {
 
   return (
     <>
-      <Stack.Title>Lehrpersonen</Stack.Title>
+      <Stack.Title>{t.school.teachers.title}</Stack.Title>
       <FormList>
         <FieldGroup.Section>
           {teachers.length === 0 && (
-            <Text textStyle={{ color: ink.secondary }}>Keine Lehrpersonen</Text>
+            <Text textStyle={{ color: ink.secondary }}>{t.school.teachers.empty}</Text>
           )}
           {teachers.map((teacher) => {
             const remove = deleteAction(teacherDeletion(teacher));
@@ -45,7 +46,7 @@ export default function TeachersScreen() {
               </RowActions>
             );
           })}
-          <ActionRow label="Lehrperson hinzufügen" onPress={() => openTeacher("new")} />
+          <ActionRow label={t.school.teachers.add} onPress={() => openTeacher("new")} />
         </FieldGroup.Section>
       </FormList>
     </>

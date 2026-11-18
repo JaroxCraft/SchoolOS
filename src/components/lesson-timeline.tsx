@@ -6,6 +6,7 @@ import { Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { LessonMenu } from "@/components/lesson-menu";
 import { colors, useNativeColorsRefresh } from "@/constants/colors";
 import type { Lesson, Period, Subject, Teacher } from "@/db/schema";
+import { t } from "@/i18n";
 import { minutesOf, minutesToTime } from "@/lib/dates";
 import { findById } from "@/lib/find";
 import { lessonActions } from "@/lib/lesson-actions";
@@ -39,7 +40,11 @@ type LessonTimelineProps = {
   now: Now;
 };
 
-const STATE_LABELS = { past: "vorbei", current: "jetzt", upcoming: undefined } as const;
+const STATE_LABELS = {
+  past: t.school.timetable.lessonStates.past,
+  current: t.school.timetable.lessonStates.current,
+  upcoming: undefined,
+} as const;
 
 export function LessonTimeline({
   periods,
@@ -112,7 +117,7 @@ export function LessonTimeline({
             })}
             {!compact && blocks.length === 0 && (
               <Text style={styles.free} maxFontSizeMultiplier={MAX_FONT_SCALE}>
-                Keine Lektionen
+                {t.school.noLessons}
               </Text>
             )}
             {isToday && nowVisible && (
@@ -137,17 +142,16 @@ type LessonCardProps = {
   state: LessonState;
 };
 
-// "3. Lektion", "3. und 4. Lektion" or "3.–5. Lektion"
+// "3rd period", "3rd and 4th period" or "3rd–5th period"
 function periodsLabelOf(block: LessonBlock): string {
-  if (block.firstNumber === block.lastNumber) return periodLabel(block.firstNumber);
-  if (block.lastNumber - block.firstNumber === 1) {
-    return `${block.firstNumber}. und ${block.lastNumber}. Lektion`;
-  }
-  return `${block.firstNumber}.–${block.lastNumber}. Lektion`;
+  const { firstNumber: first, lastNumber: last } = block;
+  if (first === last) return periodLabel(first);
+  if (last - first === 1) return t.school.period.pair({ first, last });
+  return t.school.period.range({ first, last });
 }
 
 function LessonCard({ block, subject, teacher, compact, top, height, state }: LessonCardProps) {
-  const time = `${minutesToTime(block.start)}–${minutesToTime(block.end)}`;
+  const time = t.dates.timeRange(minutesToTime(block.start), minutesToTime(block.end));
   const details = compact
     ? block.lesson.room
     : joinDetails(time, block.lesson.room, teacher?.abbreviation || undefined);
@@ -224,7 +228,11 @@ function LessonCard({ block, subject, teacher, compact, top, height, state }: Le
             )}
           </Pressable>
         </Link.Trigger>
-        <Link.Menu title={`${subject.name} · ${periodsLabel}`}>
+        <Link.Menu
+          title={t.school.timetable.lessonMenuTitle({
+            subject: subject.name,
+            periods: periodsLabel,
+          })}>
           {actions.map((action) => (
             <Link.MenuAction key={action.label} icon={action.icon} onPress={action.onPress}>
               {action.label}

@@ -10,6 +10,7 @@ import { LabeledRow } from "@/components/labeled-row";
 import { ActionRow, DestructiveRow, LinkRow, NavigationRow } from "@/components/rows";
 import { resetDatabase } from "@/db/actions";
 import { useInk } from "@/hooks/use-ink";
+import { t } from "@/i18n";
 import { appInfoRows, appInfoText, FEEDBACK_URL, versionLabel, WEBSITE_URL } from "@/lib/app-info";
 import { confirm } from "@/lib/confirm";
 import { openScreen, showOverview } from "@/lib/routes";
@@ -25,12 +26,13 @@ const ICON_SIZE = 80;
 
 const COPIED_LABEL_MS = 2000;
 
+const texts = t.settings.about;
+
 function confirmReset() {
   confirm({
-    title: "App zurücksetzen?",
-    message:
-      "Stundenplan, Fächer, Lehrpersonen, Einträge, Noten und Einstellungen werden gelöscht. Sichere vorher ein Backup, wenn du die Daten behalten möchtest.",
-    confirmLabel: "Zurücksetzen",
+    title: texts.resetConfirm.title,
+    message: texts.resetConfirm.message,
+    confirmLabel: texts.resetConfirm.confirm,
     onConfirm: () => {
       resetDatabase();
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -70,7 +72,7 @@ export default function AboutScreen() {
 
   return (
     <>
-      <Stack.Title>Über SchoolOS</Stack.Title>
+      <Stack.Title>{texts.title}</Stack.Title>
 
       <FormList>
         <FieldGroup.Section>
@@ -78,44 +80,44 @@ export default function AboutScreen() {
             <Spacer flexible />
             <Column alignment="center" spacing={6} style={{ paddingVertical: 12 }}>
               <RNHostView matchContents>{appIcon}</RNHostView>
-              <Text {...typography("title2", { color: ink.label, bold: true })}>SchoolOS</Text>
+              <Text {...typography("title2", { color: ink.label, bold: true })}>
+                {t.common.appName}
+              </Text>
               <Text {...typography("footnote", { color: ink.secondary })}>{versionLabel}</Text>
             </Column>
             <Spacer flexible />
           </Row>
         </FieldGroup.Section>
 
-        <FieldGroup.Section title="Links">
+        <FieldGroup.Section title={texts.links}>
           <LinkRow icon={{ sf: "globe", md: "code", color: SYSTEM_COLORS.gray }} url={WEBSITE_URL}>
-            Website
+            {texts.website}
           </LinkRow>
           <LinkRow
             icon={{ sf: "bubble.left", md: "chat_bubble", color: SYSTEM_COLORS.blue }}
             url={FEEDBACK_URL}>
-            Feedback
+            {texts.feedback}
           </LinkRow>
           <NavigationRow
             icon={{ sf: "hand.raised", md: "privacy_tip", color: SYSTEM_COLORS.indigo }}
             onPress={() => openScreen("/settings/privacy")}>
-            Datenschutz
+            {t.settings.privacy.title}
           </NavigationRow>
         </FieldGroup.Section>
 
-        <FieldGroup.Section title="Technische Infos">
+        <FieldGroup.Section title={texts.technicalInfo}>
           {appInfoRows().map((row) => (
             <LabeledRow key={row.label} label={row.label}>
               <Text textStyle={{ color: ink.secondary }}>{row.value}</Text>
             </LabeledRow>
           ))}
-          <ActionRow label={copied ? "Kopiert ✓" : "Infos kopieren"} onPress={copyInfo} />
+          <ActionRow label={copied ? texts.copied : texts.copyInfo} onPress={copyInfo} />
         </FieldGroup.Section>
 
         <FieldGroup.Section>
-          <DestructiveRow label="App zurücksetzen" onPress={confirmReset} />
+          <DestructiveRow label={texts.reset} onPress={confirmReset} />
           <FieldGroup.SectionFooter>
-            <FooterText>
-              Löscht alle Daten auf diesem Gerät. Die App ist danach wie frisch installiert.
-            </FooterText>
+            <FooterText>{texts.resetFooter}</FooterText>
           </FieldGroup.SectionFooter>
         </FieldGroup.Section>
       </FormList>

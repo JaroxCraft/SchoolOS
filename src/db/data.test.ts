@@ -289,7 +289,7 @@ describe("timetable", () => {
     expect(exam?.subjectId).toBe(3);
   });
 
-  test("an ungraded subject missing from the file is dropped, its entries become Allgemein", () => {
+  test("an ungraded subject missing from the file is dropped, its entries lose their subject", () => {
     const db = importClassmateTimetable();
 
     expect(

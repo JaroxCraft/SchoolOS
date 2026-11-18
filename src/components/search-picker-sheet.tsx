@@ -13,10 +13,11 @@ import { type SearchPickerSheetProps, usePickerSections } from "@/components/sea
 import { TextField } from "@/components/text-field";
 import { useInk } from "@/hooks/use-ink";
 import { useSymbol } from "@/hooks/use-symbol";
+import { t } from "@/i18n";
 
 // Android: a Material bottom sheet that opens at half height with the drag handle on top, so it
-// can be pulled up or swiped down to close (also: tapping the scrim, the back gesture). "… hinzufügen"
-// and "Bearbeiten" in the menu of an item's long press expand it to full height and show the form
+// can be pulled up or swiped down to close (also: tapping the scrim, the back gesture). "Add …"
+// and "Edit" in the menu of an item's long press expand it to full height and show the form
 // in place of the list, like the pushed form in the iOS sheet (search-picker-sheet.ios.tsx). The
 // Compose sheet is used instead of the universal BottomSheet, which does not offer to expand it.
 export function SearchPickerSheet<T extends { id: number }>(props: SearchPickerSheetProps<T>) {
@@ -77,11 +78,11 @@ export function SearchPickerSheet<T extends { id: number }>(props: SearchPickerS
             <FieldGroup.Section>
               <Button
                 variant="text"
-                label={formMode === "new" ? "Hinzufügen" : "Sichern"}
+                label={formMode === "new" ? t.common.add : t.common.save}
                 disabled={!form.canSave || saving}
                 onPress={() => saveForm(formMode !== "new", () => setFormMode(null))}
               />
-              <Button variant="text" label="Abbrechen" onPress={() => setFormMode(null)} />
+              <Button variant="text" label={t.common.cancel} onPress={() => setFormMode(null)} />
             </FieldGroup.Section>
           </FormGroup>
         ) : (

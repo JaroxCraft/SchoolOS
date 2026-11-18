@@ -1,8 +1,6 @@
+import { t } from "@/i18n";
 import { showError } from "@/lib/confirm";
 
 export function saveFailed() {
-  showError(
-    "Sichern nicht möglich",
-    "Die Eingaben konnten nicht gesichert werden. Versuche es noch einmal."
-  );
+  showError(t.common.saveFailed.title, t.common.saveFailed.message);
 }
