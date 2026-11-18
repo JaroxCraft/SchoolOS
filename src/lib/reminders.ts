@@ -3,11 +3,13 @@ import { t } from "@/i18n";
 import {
   addDays,
   dateAt,
+  daysBetween,
   formatDate,
   type IsoDate,
   isoWeekday,
   minutesOf,
   toISODate,
+  weekdayName,
 } from "@/lib/dates";
 import { ENTRY_TYPE_INFO } from "@/lib/entry-types";
 import { findById } from "@/lib/find";
@@ -74,7 +76,10 @@ export function planReminders({
     if (due.length === 0) continue;
 
     const content = {
-      title: formatDate(schoolDay),
+      title: t.notifications.title({
+        isTomorrow: daysBetween(day, schoolDay) === 1,
+        weekday: weekdayName(isoWeekday(schoolDay)),
+      }),
       body: joinLines(
         due.map((entry) => entryLine(entry, findById(subjects, entry.subjectId), schoolDay))
       ),
