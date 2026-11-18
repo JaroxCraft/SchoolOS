@@ -15,13 +15,18 @@ jobs:
     name: Read the release notes
     outputs:
       notes: ${{ steps.read.outputs.notes }}
+    env:
+      TAG: ${{ github.ref_name }}
     steps:
       - id: read
         run: |
-          URL="https://api.github.com/repos/JaroxCraft/SchoolOS/releases/tags/${{ github.ref_name }}"
-          NOTES=$(curl -fsSL "$URL" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>process.stdout.write((JSON.parse(s).body||"").trim()))') || NOTES=""
+          # With the token when there is one: unauthenticated calls share a small rate limit
+          AUTH=()
+          [ -n "$GITHUB_RELEASE_TOKEN" ] && AUTH=(-H "Authorization: Bearer $GITHUB_RELEASE_TOKEN")
+          URL="https://api.github.com/repos/JaroxCraft/SchoolOS/releases/tags/$TAG"
+          NOTES=$(curl -fsSL "${AUTH[@]}" "$URL" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>process.stdout.write((JSON.parse(s).body||"").trim()))') || NOTES=""
           if [ -z "$NOTES" ]; then
-            echo "No GitHub release with text for ${{ github.ref_name }}: publish the release on GitHub with the notes for the testers, which creates the tag."
+            echo "No GitHub release with text for $TAG: publish the release on GitHub with the notes for the testers, which creates the tag."
             exit 1
           fi
           printf '%s\n' "$NOTES"
@@ -112,6 +117,13 @@ jobs:
           if [ -n "$OLD" ] && ! remove "$OLD"; then
             echo "The previous APK is left as SchoolOS.old.apk"
           fi
-          # Only now /apk may point to this release
+          # Only now /apk may point to this release, and only if no newer release is the latest
+          # (a rerun of an older tag, or two releases whose builds finish out of order)
+          LATEST=$(curl -fsSL -H "$AUTH" "$API/releases/latest" | json 'j.tag_name') || LATEST=""
+          NEWER=$(node -e 'const v=t=>t.replace(/^v/,"").split(".").map(Number);const [a,b]=[v(process.argv[1]),v(process.argv[2]||"v0.0.0")];const d=b[0]-a[0]||b[1]-a[1]||b[2]-a[2];process.stdout.write(d>0?"yes":"")' "$TAG" "$LATEST")
+          if [ -n "$NEWER" ]; then
+            echo "Attached SchoolOS.apk to $TAG; $LATEST stays the latest release"
+            exit 0
+          fi
           curl -fsSL -X PATCH -H "$AUTH" -H "Content-Type: application/json" -d '{"make_latest":"true"}' "$API/releases/$RELEASE_ID" > /dev/null
           echo "Attached SchoolOS.apk to $TAG and made it the latest release"
