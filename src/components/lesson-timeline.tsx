@@ -99,6 +99,13 @@ export function LessonTimeline({
               { left: columnLeft(index), width: columnWidth, height: y(latestEnd) },
               compact && isToday && styles.todayColumn,
             ]}>
+            {/* Behind the cards, so it does not cross their text; it shows through the tinted
+            cards and fully in the breaks */}
+            {isToday && nowVisible && (
+              <View pointerEvents="none" style={[styles.nowLine, { top: y(now.minutes) - 1 }]}>
+                <View style={styles.nowDot} />
+              </View>
+            )}
             {blocks.map((block) => {
               const subject = findById(subjects, block.lesson.subjectId);
               if (!subject) return null;
@@ -119,11 +126,6 @@ export function LessonTimeline({
               <Text style={styles.free} maxFontSizeMultiplier={MAX_FONT_SCALE}>
                 {t.school.noLessons}
               </Text>
-            )}
-            {isToday && nowVisible && (
-              <View pointerEvents="none" style={[styles.nowLine, { top: y(now.minutes) - 1 }]}>
-                <View style={styles.nowDot} />
-              </View>
             )}
           </View>
         );
