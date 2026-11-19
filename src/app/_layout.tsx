@@ -10,6 +10,8 @@ import { Reminders } from "@/components/reminders";
 import { useDatabaseMigrations } from "@/db/migrate";
 import { useNavigationTheme } from "@/hooks/use-navigation-theme";
 import { t } from "@/i18n";
+import { useDrizzleStudio } from "expo-drizzle-studio-plugin";
+import { sqlite } from "@/db/client";
 
 // Opened by a link straight into a sheet (e.g. an entry), the tabs are still beneath it
 export const unstable_settings = { anchor: "(tabs)" };
@@ -17,6 +19,7 @@ export const unstable_settings = { anchor: "(tabs)" };
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+  useDrizzleStudio(sqlite)
   const theme = useNavigationTheme();
   const { success, error } = useDatabaseMigrations();
 

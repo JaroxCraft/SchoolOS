@@ -14,6 +14,7 @@
         "expo-dev-client": "~58.0.21",
         "expo-device": "~58.0.5",
         "expo-document-picker": "~58.0.5",
+        "expo-drizzle-studio-plugin": "^0.2.1",
         "expo-file-system": "~58.0.14",
         "expo-font": "~58.0.12",
         "expo-haptics": "~58.0.8",
@@ -867,6 +868,8 @@
     "expo-device": ["expo-device@58.0.5", "", { "dependencies": { "ua-parser-js": "^0.7.33" }, "peerDependencies": { "expo": "*" } }, "sha512-GNyaHPwoiI/z2SGR14R6d9J7hFSW2JabZieJtC3l6/LO2mJYVCbhEsQ7/1ljGBeTUnFFWHcFLccdaWEhOWtaQQ=="],
 
     "expo-document-picker": ["expo-document-picker@58.0.5", "", { "peerDependencies": { "expo": "*" } }, "sha512-DHv8GhjDwu2BbDWhV2j52iaqwWsA9P7n5nAwreiKRGQSxv0wpF/C0Cqpqj1B72io8E2KXddwxxKPWVPlV/kgtA=="],
+
+    "expo-drizzle-studio-plugin": ["expo-drizzle-studio-plugin@0.2.1", "", { "peerDependencies": { "expo": ">=53.0.5", "expo-sqlite": ">=15.2.9" } }, "sha512-AjMC7SOutMAv/MkeJSp/26gnHLAA17SG8EtsjIKW6tDcBkq4plDVhjMLusoGe9f0vzYK8KrOvWjEWZ/R+KvIGg=="],
 
     "expo-eas-client": ["expo-eas-client@58.0.2", "", {}, "sha512-mhRYnE35MzGxR1Xnl9FAg7/yHaocy4xoVzgsDmS9cbK+1wM6l74/I/73/E4Kr6wChdVZfeS6S+Tv4I1qYbGY2g=="],
 
